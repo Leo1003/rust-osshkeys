@@ -1,0 +1,6 @@
+##
+## Rust Library Gitignore file
+##
+
+# Library cargo lock file
+/Cargo.lock
