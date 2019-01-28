@@ -1,0 +1,19 @@
+##
+## Top Level Workspace Gitignore file
+##
+
+# VS Code Workspace
+*.code-workspace
+.vscode/
+
+# Vim swap files
+*.swp
+
+# Mac Desktop Services Store
+.DS_Store
+
+# Cargo build directory
+target/
+
+# Backup files
+**/*.rs.bk
