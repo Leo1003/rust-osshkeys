@@ -1,0 +1,6 @@
+##
+## Rust Binary Gitignore file
+##
+
+# Binary cargo lock file
+!/Cargo.lock

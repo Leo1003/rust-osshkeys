@@ -15,5 +15,8 @@
 # Cargo build directory
 target/
 
+# Library cargo lock file
+Cargo.lock
+
 # Backup files
 **/*.rs.bk
