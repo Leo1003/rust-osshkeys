@@ -5,4 +5,5 @@ authors = ["Leo <leo881003@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+byteorder = "^1.3.1"
 openssl = "^0.10.16"
