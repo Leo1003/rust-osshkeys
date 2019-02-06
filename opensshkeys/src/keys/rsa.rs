@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::FingerprintHash;
 use crate::keys::{PublicKey, PrivateKey};
 use openssl::bn::BigNum;
@@ -20,7 +20,7 @@ impl RsaPublicKey {
                 rsa: rsa,
                 comment: String::new()
             }),
-            Result::Err(e) => Result::Err(Error::new(e.errors()[0].reason().unwrap_or("OpenSSL Error")))
+            Result::Err(e) => Result::Err(Error::from(ErrorKind::OpenSslError, e))
         }
     }
 }
@@ -31,6 +31,7 @@ impl PublicKey for RsaPublicKey {
     }
     fn fingerprint(&self, hash: FingerprintHash) -> Vec<u8> {
         //TODO: Unimplemented
+        unimplemented!();
         vec![]
     }
     fn keytype(&self) -> &'static str {
@@ -38,9 +39,9 @@ impl PublicKey for RsaPublicKey {
     }
     fn verify(&self, data: &[u8]) -> Result<bool, Error> {
         if self.size() < RSA_MIN_SIZE {
-            return Result::Err(Error::new("Invalid Rsa Key Size"));
+            return Result::Err(Error::new_msg(ErrorKind::InvalidKeySize, "Rsa key size too short"));
         }
-        Result::Err(Error::new("Not Implemented!"))
+        unimplemented!();
     }
     fn comment(&self) -> &String {
         &self.comment
