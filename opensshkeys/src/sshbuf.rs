@@ -1,10 +1,10 @@
-pub use openssl::bn::BigNum;
-use byteorder::{BigEndian, ReadBytesExt};
+pub use openssl::bn::{BigNum, BigNumRef};
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::io;
 
 const MAX_BIGNUM: usize = 16384 / 8;
 
-pub struct SshReader<R> {
+pub struct SshReader<R: io::Read> {
     stream: R,
 }
 
@@ -18,10 +18,8 @@ impl<R: io::Read> SshReader<R> {
         self.stream.read(buf)
     }
     pub fn read_bool(&mut self) -> io::Result<bool> {
-        match self.stream.read_u8() {
-            Ok(n) => Ok(n != 0),
-            Err(e) => Err(e)
-        }
+        let i = self.stream.read_u8()?;
+        Ok(i != 0)
     }
     pub fn read_u32(&mut self) -> io::Result<u32> {
         self.stream.read_u32::<BigEndian>()
@@ -30,7 +28,7 @@ impl<R: io::Read> SshReader<R> {
         self.stream.read_u64::<BigEndian>()
     }
     pub fn read_string(&mut self) -> io::Result<Vec<u8>> {
-        let length = match self.read_u32()? as usize;
+        let length = self.read_u32()? as usize;
         let mut buf = vec![0u8; length];
         if self.read_bytes(&mut buf)? == length {
             Ok(buf)
@@ -68,5 +66,68 @@ impl<R: io::Read> SshReader<R> {
     pub fn read_list(&mut self) -> io::Result<Vec<String>> {
         let string = self.read_utf8()?;
         Ok(string.split(',').map(String::from).collect())
+    }
+}
+
+pub struct SshWriter<W: io::Write> {
+    stream: W,
+}
+
+impl<W: io::Write> SshWriter<W> {
+    pub fn new(stream: W) -> SshWriter<W> {
+        SshWriter {
+            stream: stream
+        }
+    }
+    pub fn write_bytes(&mut self, buf: &[u8]) -> io::Result<usize> {
+        Ok(self.stream.write(buf)?)
+    }
+    pub fn write_bool(&mut self, value: bool) -> io::Result<()> {
+        let i = if value {
+            1u8
+        } else {
+            0u8
+        };
+        self.stream.write_u8(i)?;
+        Ok(())
+    }
+    pub fn write_u32(&mut self, value: u32) -> io::Result<()> {
+        self.stream.write_u32::<BigEndian>(value)?;
+        Ok(())
+    }
+    pub fn write_u64(&mut self, value: u64) -> io::Result<()> {
+        self.stream.write_u64::<BigEndian>(value)?;
+        Ok(())
+    }
+    pub fn write_string(&mut self, buf: &[u8]) -> io::Result<()> {
+        self.write_u32(buf.len() as u32)?;
+        self.write_bytes(buf)?;
+        Ok(())
+    }
+    pub fn write_utf8(&mut self, value: &str) -> io::Result<()> {
+        self.write_string(value.as_bytes())?;
+        Ok(())
+    }
+    pub fn write_mpint(&mut self, value: &BigNumRef) -> io::Result<()> {
+        let buf = value.to_vec();
+        self.write_string(&buf)?;
+        Ok(())
+    }
+    pub fn write_list(&mut self, values: &[&str]) -> io::Result<()> {
+        let mut list_str = String::new();
+        for s in values {
+            if s.contains(",") {
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "List elements can't contain ','"));
+            }
+            if !s.is_ascii() {
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "List elements should only contain ascii characters"));
+            }
+            if list_str.len() > 0 {
+                list_str.push_str(",");
+            }
+            list_str.push_str(s);
+        }
+        self.write_utf8(&list_str)?;
+        Ok(())
     }
 }

@@ -1,9 +1,9 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
+use crate::keys::{PrivateKey, PublicKey};
 use crate::FingerprintHash;
-use crate::keys::{PublicKey, PrivateKey};
 use openssl::bn::BigNum;
+use openssl::pkey::{PKey, Private, Public};
 use openssl::rsa::Rsa;
-use openssl::pkey::{PKey, Public, Private};
 use openssl::sign::Verifier;
 
 const RSA_MIN_SIZE: usize = 1024;
@@ -15,13 +15,11 @@ pub struct RsaPublicKey {
 
 impl RsaPublicKey {
     pub fn new(n: BigNum, e: BigNum) -> Result<RsaPublicKey, Error> {
-        match Rsa::from_public_components(n, e) {
-            Result::Ok(rsa) => Result::Ok(RsaPublicKey {
-                rsa: rsa,
-                comment: String::new()
-            }),
-            Result::Err(e) => Result::Err(Error::from(ErrorKind::OpenSslError, e))
-        }
+        let rsa = Rsa::from_public_components(n, e)?;
+        Ok(RsaPublicKey {
+            rsa: rsa,
+            comment: String::new(),
+        })
     }
 }
 
@@ -29,26 +27,30 @@ impl PublicKey for RsaPublicKey {
     fn size(&self) -> usize {
         self.rsa.size() as usize
     }
-    fn fingerprint(&self, hash: FingerprintHash) -> Vec<u8> {
-        //TODO: Unimplemented
-        unimplemented!();
-        vec![]
-    }
+
     fn keytype(&self) -> &'static str {
         "ssh-rsa"
     }
+
+    fn blob(&self) -> Result<Vec<u8>, Error> {
+        unimplemented!();
+    }
+
     fn verify(&self, data: &[u8]) -> Result<bool, Error> {
         if self.size() < RSA_MIN_SIZE {
-            return Result::Err(Error::new_msg(ErrorKind::InvalidKeySize, "Rsa key size too short"));
+            return Err(Error::InvalidKeySize);
         }
         unimplemented!();
     }
+
     fn comment(&self) -> &String {
         &self.comment
     }
+
     fn comment_mut(&mut self) -> &mut String {
         &mut self.comment
     }
+
     fn set_comment(&mut self, comment: &str) -> () {
         self.comment = String::from(comment);
     }
