@@ -8,7 +8,7 @@ pub trait PublicKey {
     fn size(&self) -> usize;
 
     fn keytype(&self) -> &'static str;
-    fn verify(&self, data: &[u8]) -> Result<bool, Error>;
+    fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error>;
     fn comment(&self) -> &String;
     fn comment_mut(&mut self) -> &mut String;
     fn set_comment(&mut self, comment: &str) -> ();

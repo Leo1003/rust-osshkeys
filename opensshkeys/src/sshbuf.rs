@@ -67,6 +67,10 @@ impl<R: io::Read> SshReader<R> {
         let string = self.read_utf8()?;
         Ok(string.split(',').map(String::from).collect())
     }
+
+    pub fn into_inner(self) -> R {
+        self.stream
+    }
 }
 
 pub struct SshWriter<W: io::Write> {
@@ -129,5 +133,9 @@ impl<W: io::Write> SshWriter<W> {
         }
         self.write_utf8(&list_str)?;
         Ok(())
+    }
+
+    pub fn into_inner(self) -> W {
+        self.stream
     }
 }

@@ -6,6 +6,7 @@ pub mod keys;
 pub mod sshbuf;
 use openssl::hash::MessageDigest;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FingerprintHash {
     MD5,
     SHA256,
