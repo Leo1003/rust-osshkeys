@@ -24,6 +24,7 @@ pub trait PublicKey {
 }
 
 pub trait PrivateKey: PublicKey {
+    type Public;
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error>;
-    fn as_public_key(&self) -> &PublicKey;
+    fn as_public_key(&self) -> Result<Self::Public, Error>;
 }
