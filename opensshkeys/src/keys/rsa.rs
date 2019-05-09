@@ -1,33 +1,59 @@
-use crate::FingerprintHash;
+use super::{Key, PubKey, PrivKey};
 use crate::error::Error;
-use crate::keys::{PrivateKey, PublicKey};
-use crate::sshbuf::SshWriter;
+use crate::sshbuf::{SshReadExt, SshWriteExt};
 use openssl::bn::{BigNum, BigNumRef};
+use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Private, Public};
 use openssl::rsa::Rsa;
 use openssl::sign::{Signer, Verifier};
+use std::fmt;
 
 const RSA_MIN_SIZE: usize = 1024;
 const RSA_NAME: &'static str = "ssh-rsa";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RsaSignature {
+    SHA1,
+    SHA2_256,
+    SHA2_512,
+}
+
+impl RsaSignature {
+    fn get_digest(&self) -> MessageDigest {
+        use RsaSignature::*;
+        match self {
+            SHA1 => MessageDigest::md5(),
+            SHA2_256 => MessageDigest::sha256(),
+            SHA2_512 => MessageDigest::sha512(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct RsaPublicKey {
     rsa: Rsa<Public>,
-    signhash: FingerprintHash,
-    pub comment: String,
+    signhash: RsaSignature,
 }
 
 impl RsaPublicKey {
-    pub fn new(n: BigNum, e: BigNum, sig_hash: FingerprintHash) -> Result<RsaPublicKey, Error> {
+    pub fn new(n: BigNum, e: BigNum, sig_hash: RsaSignature) -> Result<RsaPublicKey, Error> {
         let rsa = Rsa::from_public_components(n, e)?;
         Ok(RsaPublicKey {
             rsa: rsa,
             signhash: sig_hash,
-            comment: String::new(),
         })
+    }
+
+    pub fn sign_type(&self) -> RsaSignature {
+        self.signhash
+    }
+
+    pub fn set_sign_type(&mut self, sig: RsaSignature) {
+        self.signhash = sig;
     }
 }
 
-impl PublicKey for RsaPublicKey {
+impl Key for RsaPublicKey {
     fn size(&self) -> usize {
         self.rsa.size() as usize
     }
@@ -35,7 +61,9 @@ impl PublicKey for RsaPublicKey {
     fn keytype(&self) -> &'static str {
         RSA_NAME
     }
+}
 
+impl PubKey for RsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         rsa_blob(self.rsa.e(), self.rsa.n())
     }
@@ -49,27 +77,36 @@ impl PublicKey for RsaPublicKey {
         veri.update(data)?;
         Ok(veri.verify(sig)?)
     }
+}
 
-    fn comment(&self) -> &String {
-        &self.comment
-    }
-
-    fn comment_mut(&mut self) -> &mut String {
-        &mut self.comment
-    }
-
-    fn set_comment(&mut self, comment: &str) -> () {
-        self.comment = String::from(comment);
+impl PartialEq for RsaPublicKey {
+    fn eq(&self, other: &RsaPublicKey) -> bool {
+        self.rsa.e() == other.rsa.e() && self.rsa.n() == other.rsa.n()
     }
 }
 
-pub struct RsaPrivateKey {
+pub struct RsaKeyPair {
     rsa: Rsa<Private>,
-    signhash: FingerprintHash,
-    comment: String,
+    signhash: RsaSignature,
 }
 
-impl PublicKey for RsaPrivateKey {
+impl RsaKeyPair {
+    pub fn sign_type(&self) -> RsaSignature {
+        self.signhash
+    }
+
+    pub fn set_sign_type(&mut self, sig: RsaSignature) {
+        self.signhash = sig;
+    }
+
+    pub fn clone_public_key(&self) -> Result<RsaPublicKey, Error> {
+        let n = self.rsa.n().to_owned()?;
+        let e = self.rsa.e().to_owned()?;
+        Ok(RsaPublicKey::new(n, e, self.signhash)?)
+    }
+}
+
+impl Key for RsaKeyPair {
     fn size(&self) -> usize {
         self.rsa.size() as usize
     }
@@ -77,38 +114,23 @@ impl PublicKey for RsaPrivateKey {
     fn keytype(&self) -> &'static str {
         RSA_NAME
     }
+}
 
+impl PubKey for RsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         rsa_blob(self.rsa.e(), self.rsa.n())
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
-        self.as_public_key()?.verify(data, sig)
-    }
-
-    fn comment(&self) -> &String {
-        &self.comment
-    }
-
-    fn comment_mut(&mut self) -> &mut String {
-        &mut self.comment
-    }
-
-    fn set_comment(&mut self, comment: &str) -> () {
-        self.comment = String::from(comment);
+        self.clone_public_key()?.verify(data, sig)
     }
 }
 
-impl PrivateKey for RsaPrivateKey {
-    type Public = RsaPublicKey;
-
-    fn as_public_key(&self) -> Result<RsaPublicKey, Error> {
-        let n = self.rsa.n().to_owned()?;
-        let e = self.rsa.e().to_owned()?;
-        Ok(RsaPublicKey::new(n, e, self.signhash)?)
-    }
-
+impl PrivKey for RsaKeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
+        if self.size() < RSA_MIN_SIZE {
+            return Err(Error::InvalidKeySize);
+        }
         let pkey = PKey::from_rsa(self.rsa.clone())?;
         let mut sign = Signer::new(self.signhash.get_digest(), &pkey)?;
         sign.update(data)?;
@@ -119,12 +141,11 @@ impl PrivateKey for RsaPrivateKey {
 fn rsa_blob(e: &BigNumRef, n: &BigNumRef) -> Result<Vec<u8>, Error> {
     use std::io::Cursor;
 
-    let buf = Cursor::new(Vec::new());
-    let mut writer = SshWriter::new(buf);
+    let mut buf = Cursor::new(Vec::new());
 
-    writer.write_utf8(RSA_NAME)?;
-    writer.write_mpint(e)?;
-    writer.write_mpint(n)?;
+    buf.write_utf8(RSA_NAME)?;
+    buf.write_mpint(e)?;
+    buf.write_mpint(n)?;
 
-    Ok(writer.into_inner().into_inner())
+    Ok(buf.into_inner())
 }
