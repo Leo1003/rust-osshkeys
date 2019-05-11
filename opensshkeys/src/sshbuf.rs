@@ -1,7 +1,7 @@
-pub use openssl::bn::{BigNum, BigNumRef};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
-use std::io::Result;
+pub use openssl::bn::{BigNum, BigNumRef};
 use std::io;
+use std::io::Result;
 
 const MAX_BIGNUM: usize = 16384 / 8;
 
@@ -39,17 +39,26 @@ impl<R: io::Read> SshReadExt for R {
         let data = self.read_string()?;
         match String::from_utf8(data) {
             Ok(string) => Ok(string),
-            Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid UTF-8 sequence"))
+            Err(_) => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Invalid UTF-8 sequence",
+            )),
         }
     }
     fn read_mpint(&mut self) -> io::Result<BigNum> {
         let data = self.read_string()?;
 
         if data.len() != 0 && data[0] & 0x80 != 0 {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Negative Big Number"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Negative Big Number",
+            ));
         }
         if (data.len() > MAX_BIGNUM + 1) || (data.len() == MAX_BIGNUM + 1 && data[0] != 0) {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Big Number Too Long"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Big Number Too Long",
+            ));
         }
         // Remove Leading zeros
         let mut i = 0;
@@ -59,7 +68,10 @@ impl<R: io::Read> SshReadExt for R {
         }
         match BigNum::from_slice(&data[i..]) {
             Ok(bn) => Ok(bn),
-            Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid Big Number"))
+            Err(_) => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Invalid Big Number",
+            )),
         }
     }
     fn read_list(&mut self) -> io::Result<Vec<String>> {
@@ -76,16 +88,13 @@ pub trait SshWriteExt {
     fn write_string(&mut self, buf: &[u8]) -> io::Result<()>;
     fn write_utf8(&mut self, value: &str) -> io::Result<()>;
     fn write_mpint(&mut self, value: &BigNumRef) -> io::Result<()>;
-    fn write_list<S: AsRef<str>, I: IntoIterator<Item = S>>(&mut self, values: I) -> io::Result<()>;
+    fn write_list<S: AsRef<str>, I: IntoIterator<Item = S>>(&mut self, values: I)
+        -> io::Result<()>;
 }
 
 impl<W: io::Write> SshWriteExt for W {
     fn write_bool(&mut self, value: bool) -> io::Result<()> {
-        let i = if value {
-            1u8
-        } else {
-            0u8
-        };
+        let i = if value { 1u8 } else { 0u8 };
         self.write_u8(i)?;
         Ok(())
     }
@@ -107,19 +116,33 @@ impl<W: io::Write> SshWriteExt for W {
         Ok(())
     }
     fn write_mpint(&mut self, value: &BigNumRef) -> io::Result<()> {
-        let buf = value.to_vec();
-        self.write_string(&buf)?;
-        Ok(())
+        let mut buf = vec![0x00u8];
+        buf.append(&mut value.to_vec());
+        // Add a zero byte to make the intgeter unsigned
+        if (buf[1] & 0x80) > 0 {
+            self.write_string(&buf[..])
+        } else {
+            self.write_string(&buf[1..])
+        }
     }
-    fn write_list<S: AsRef<str>, I: IntoIterator<Item = S>>(&mut self, values: I) -> io::Result<()> {
+    fn write_list<S: AsRef<str>, I: IntoIterator<Item = S>>(
+        &mut self,
+        values: I,
+    ) -> io::Result<()> {
         let mut list_str = String::new();
         for s in values {
             let s = s.as_ref();
             if s.contains(",") {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "List elements can't contain ','"));
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "List elements can't contain ','",
+                ));
             }
             if !s.is_ascii() {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "List elements should only contain ascii characters"));
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "List elements should only contain ascii characters",
+                ));
             }
             if list_str.len() > 0 {
                 list_str.push_str(",");
