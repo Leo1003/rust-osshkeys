@@ -1,5 +1,15 @@
-[workspace]
-members = [
-    "rsagent",
-    "opensshkeys",
-]
+[package]
+name = "osshkeys"
+description = "A library to read and write OpenSSH public and private keys"
+version = "0.1.0"
+authors = ["Leo <leo881003@gmail.com>"]
+keywords = ["ssh", "ssh-keys", "keys", "openssh"]
+edition = "2018"
+
+[dependencies]
+base64 = "^0.10"
+byteorder = "^1.3.1"
+custom_error = "^1.6.0"
+openssl = "^0.10.20"
+cryptovec = "^0.4"
+log = "^0.4"
