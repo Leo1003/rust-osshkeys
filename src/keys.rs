@@ -3,18 +3,19 @@ use crate::FingerprintHash;
 use openssl::hash::Hasher;
 
 pub mod rsa;
+pub mod dsa;
 
 #[derive(Debug, PartialEq)]
 enum PublicKeyType {
     RSA(rsa::RsaPublicKey),
-    DSA,
+    DSA(dsa::DsaPublicKey),
     ECDSA,
     ED25519,
 }
 
 enum KeyPairType {
     RSA(rsa::RsaKeyPair),
-    DSA,
+    DSA(dsa::DsaKeyPair),
     ECDSA,
     ED25519,
 }
@@ -36,6 +37,7 @@ impl PublicKey {
     fn inner_key(&self) -> &PubKey {
         match &self.key {
             PublicKeyType::RSA(key) => key,
+            PublicKeyType::DSA(key) => key,
             _ => unimplemented!(),
         }
     }
@@ -80,19 +82,21 @@ impl KeyPair {
     }
 
     pub fn clone_public_key(&self) -> Result<PublicKey, Error> {
-        let pubkey = match &self.key {
-            KeyPairType::RSA(key) => PublicKey {
-                key: PublicKeyType::RSA(key.clone_public_key()?),
-                comment: self.comment.clone(),
-            },
+        let key = match &self.key {
+            KeyPairType::RSA(key) => PublicKeyType::RSA(key.clone_public_key()?),
+            KeyPairType::DSA(key) => PublicKeyType::DSA(key.clone_public_key()?),
             _ => unimplemented!(),
         };
-        Ok(pubkey)
+        Ok(PublicKey {
+            key: key,
+            comment: self.comment().clone()
+        })
     }
 
     fn inner_key(&self) -> &PrivKey {
         match &self.key {
             KeyPairType::RSA(key) => key,
+            KeyPairType::DSA(key) => key,
             _ => unimplemented!(),
         }
     }
@@ -100,6 +104,7 @@ impl KeyPair {
     fn inner_key_pub(&self) -> &PubKey {
         match &self.key {
             KeyPairType::RSA(key) => key,
+            KeyPairType::DSA(key) => key,
             _ => unimplemented!(),
         }
     }
