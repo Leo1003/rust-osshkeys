@@ -4,19 +4,20 @@ use openssl::hash::Hasher;
 
 pub mod rsa;
 pub mod dsa;
+pub mod ecdsa;
 
 #[derive(Debug, PartialEq)]
 enum PublicKeyType {
     RSA(rsa::RsaPublicKey),
     DSA(dsa::DsaPublicKey),
-    ECDSA,
+    ECDSA(ecdsa::EcDsaPublicKey),
     ED25519,
 }
 
 enum KeyPairType {
     RSA(rsa::RsaKeyPair),
     DSA(dsa::DsaKeyPair),
-    ECDSA,
+    ECDSA(ecdsa::EcDsaKeyPair),
     ED25519,
 }
 
