@@ -3,4 +3,5 @@ custom_error!{pub Error
     IOError{ source: std::io::Error } = "I/O Error",
     InvalidFormat = "Invalid Format",
     InvalidKeySize = "Invalid Key Size",
+    UnsupportedCurve = "Unsupported Elliptic Curve",
 }

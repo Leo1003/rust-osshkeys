@@ -1,14 +1,16 @@
 use super::{Key, PrivKey, PubKey};
 use crate::error::Error;
 use crate::sshbuf::{SshReadExt, SshWriteExt};
-use openssl::bn::{BigNum, BigNumContext, BigNumRef};
-use openssl::ec::{EcGroupRef, EcKey, EcKeyRef, EcPointRef, PointConversionForm};
+use openssl::bn::BigNumContext;
+use openssl::ec::{EcGroup, EcGroupRef, EcKey, EcKeyRef, EcPointRef, PointConversionForm};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::{HasParams, HasPublic, PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
+use std::convert::TryInto;
 use std::fmt;
 use std::io::Cursor;
+use std::str::FromStr;
 
 const NIST_P256_NAME: &'static str = "ecdsa-sha2-nistp256";
 const NIST_P384_NAME: &'static str = "ecdsa-sha2-nistp384";
@@ -52,6 +54,25 @@ impl EcCurve {
             EcCurve::Nistp384 => "nistp384",
             EcCurve::Nistp521 => "nistp521",
         }
+    }
+}
+
+impl FromStr for EcCurve {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "nistp256" => Ok(EcCurve::Nistp256),
+            "nistp384" => Ok(EcCurve::Nistp384),
+            "nistp521" => Ok(EcCurve::Nistp521),
+            _ => Err(Error::UnsupportedCurve),
+        }
+    }
+}
+
+impl TryInto<EcGroup> for EcCurve {
+    type Error = Error;
+    fn try_into(self) -> Result<EcGroup, Self::Error> {
+        Ok(EcGroup::from_curve_name(self.nid())?)
     }
 }
 
@@ -193,4 +214,42 @@ fn eckey_blob<T: HasPublic + HasParams>(
     )?)?;
 
     Ok(buf.into_inner())
+}
+
+#[allow(non_upper_case_globals)]
+#[cfg(test)]
+mod test {
+    use super::*;
+    use openssl::bn::BigNumContext;
+    use openssl::ec::EcPoint;
+
+    const pub_str: &'static str = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKtcK82cEoqjiXyqPpyQAlkOQYs8LL5dDahPah5dqoaJfVHcKS5CJYBX0Ow+Dlj9xKtSQRCyJXOCEtJx+k4LUV0=";
+    const ident: [u8; 0x08] = [0x6e, 0x69, 0x73, 0x74, 0x70, 0x32, 0x35, 0x36];
+    const pub_key: [u8; 0x41] = [
+        0x04, 0xab, 0x5c, 0x2b, 0xcd, 0x9c, 0x12, 0x8a, 0xa3, 0x89, 0x7c, 0xaa, 0x3e, 0x9c, 0x90,
+        0x02, 0x59, 0x0e, 0x41, 0x8b, 0x3c, 0x2c, 0xbe, 0x5d, 0x0d, 0xa8, 0x4f, 0x6a, 0x1e, 0x5d,
+        0xaa, 0x86, 0x89, 0x7d, 0x51, 0xdc, 0x29, 0x2e, 0x42, 0x25, 0x80, 0x57, 0xd0, 0xec, 0x3e,
+        0x0e, 0x58, 0xfd, 0xc4, 0xab, 0x52, 0x41, 0x10, 0xb2, 0x25, 0x73, 0x82, 0x12, 0xd2, 0x71,
+        0xfa, 0x4e, 0x0b, 0x51, 0x5d,
+    ];
+
+    fn get_test_pubkey() -> Result<EcDsaPublicKey, Error> {
+        let ident_str = std::str::from_utf8(&ident).unwrap();
+        let mut bn_ctx = BigNumContext::new()?;
+        let group: EcGroup = EcCurve::from_str(ident_str)?.try_into()?;
+        let point = EcPoint::from_bytes(&group, &pub_key, &mut bn_ctx)?;
+        EcDsaPublicKey::new(&group, &point)
+    }
+
+    #[test]
+    fn ecdsa_publickey_serialize() {
+        let key = get_test_pubkey().unwrap();
+        assert_eq!(key.to_string(), String::from(pub_str));
+    }
+
+    #[test]
+    fn ecdsa_publickey_size() {
+        let key = get_test_pubkey().unwrap();
+        assert_eq!(key.size(), 256);
+    }
 }

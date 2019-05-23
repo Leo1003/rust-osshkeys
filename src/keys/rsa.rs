@@ -68,7 +68,7 @@ impl RsaPublicKey {
 
 impl Key for RsaPublicKey {
     fn size(&self) -> usize {
-        self.rsa.size() as usize
+        self.rsa.n().num_bits() as usize
     }
 
     fn keytype(&self) -> &'static str {
@@ -128,7 +128,7 @@ impl RsaKeyPair {
 
 impl Key for RsaKeyPair {
     fn size(&self) -> usize {
-        self.rsa.size() as usize
+        self.rsa.n().num_bits() as usize
     }
 
     fn keytype(&self) -> &'static str {
@@ -197,11 +197,21 @@ mod test {
         0x5e, 0x69,
     ];
 
+    fn get_test_pubkey() -> Result<RsaPublicKey, Error> {
+        let rsa_e = BigNum::from_slice(&e)?;
+        let rsa_n = BigNum::from_slice(&n)?;
+        RsaPublicKey::new(rsa_n, rsa_e)
+    }
+
     #[test]
     fn rsa_publickey_serialize() {
-        let rsa_e = BigNum::from_slice(&e).unwrap();
-        let rsa_n = BigNum::from_slice(&n).unwrap();
-        let key = RsaPublicKey::new(rsa_n, rsa_e).unwrap();
+        let key = get_test_pubkey().unwrap();
         assert_eq!(key.to_string(), String::from(pub_str));
+    }
+
+    #[test]
+    fn rsa_publickey_size() {
+        let key = get_test_pubkey().unwrap();
+        assert_eq!(key.size(), 2048);
     }
 }
