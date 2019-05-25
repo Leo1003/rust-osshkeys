@@ -39,6 +39,7 @@ impl PublicKey {
         match &self.key {
             PublicKeyType::RSA(key) => key,
             PublicKeyType::DSA(key) => key,
+            PublicKeyType::ECDSA(key) => key,
             _ => unimplemented!(),
         }
     }
@@ -86,6 +87,7 @@ impl KeyPair {
         let key = match &self.key {
             KeyPairType::RSA(key) => PublicKeyType::RSA(key.clone_public_key()?),
             KeyPairType::DSA(key) => PublicKeyType::DSA(key.clone_public_key()?),
+            KeyPairType::ECDSA(key) => PublicKeyType::ECDSA(key.clone_public_key()?),
             _ => unimplemented!(),
         };
         Ok(PublicKey {
@@ -98,6 +100,7 @@ impl KeyPair {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
+            KeyPairType::ECDSA(key) => key,
             _ => unimplemented!(),
         }
     }
@@ -106,6 +109,7 @@ impl KeyPair {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
+            KeyPairType::ECDSA(key) => key,
             _ => unimplemented!(),
         }
     }
