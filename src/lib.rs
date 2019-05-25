@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate custom_error;
+extern crate rand;
+extern crate ed25519_dalek;
 
 pub mod error;
 pub mod keys;

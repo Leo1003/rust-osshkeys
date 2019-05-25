@@ -5,20 +5,21 @@ use openssl::hash::Hasher;
 pub mod rsa;
 pub mod dsa;
 pub mod ecdsa;
+pub mod ed25519;
 
 #[derive(Debug, PartialEq)]
 enum PublicKeyType {
     RSA(rsa::RsaPublicKey),
     DSA(dsa::DsaPublicKey),
     ECDSA(ecdsa::EcDsaPublicKey),
-    ED25519,
+    ED25519(ed25519::Ed25519PublicKey),
 }
 
 enum KeyPairType {
     RSA(rsa::RsaKeyPair),
     DSA(dsa::DsaKeyPair),
     ECDSA(ecdsa::EcDsaKeyPair),
-    ED25519,
+    ED25519(ed25519::Ed25519KeyPair),
 }
 
 pub struct PublicKey {
@@ -40,7 +41,7 @@ impl PublicKey {
             PublicKeyType::RSA(key) => key,
             PublicKeyType::DSA(key) => key,
             PublicKeyType::ECDSA(key) => key,
-            _ => unimplemented!(),
+            PublicKeyType::ED25519(key) => key,
         }
     }
 }
@@ -88,7 +89,7 @@ impl KeyPair {
             KeyPairType::RSA(key) => PublicKeyType::RSA(key.clone_public_key()?),
             KeyPairType::DSA(key) => PublicKeyType::DSA(key.clone_public_key()?),
             KeyPairType::ECDSA(key) => PublicKeyType::ECDSA(key.clone_public_key()?),
-            _ => unimplemented!(),
+            KeyPairType::ED25519(key) => PublicKeyType::ED25519(key.clone_public_key()?),
         };
         Ok(PublicKey {
             key: key,
@@ -101,7 +102,7 @@ impl KeyPair {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
             KeyPairType::ECDSA(key) => key,
-            _ => unimplemented!(),
+            KeyPairType::ED25519(key) => key,
         }
     }
 
@@ -110,7 +111,7 @@ impl KeyPair {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
             KeyPairType::ECDSA(key) => key,
-            _ => unimplemented!(),
+            KeyPairType::ED25519(key) => key,
         }
     }
 }
