@@ -1,9 +1,12 @@
 [package]
 name = "osshkeys"
 description = "A library to read and write OpenSSH public and private keys"
-version = "0.2.0-alpha"
+version = "0.1.0"
 authors = ["Leo <leo881003@gmail.com>"]
 keywords = ["ssh", "ssh-keys", "keys", "openssh"]
+repository = "https://github.com/Leo1003/rust-osshkeys"
+readme = "README.md"
+exclude = [".gitignore"]
 edition = "2018"
 
 [dependencies]
@@ -15,3 +18,4 @@ rand = "^0.6.5"
 ed25519-dalek = "^1.0.0-pre.1"
 cryptovec = "^0.4"
 log = "^0.4"
+
