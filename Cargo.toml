@@ -5,6 +5,7 @@ version = "0.1.0"
 authors = ["Leo <leo881003@gmail.com>"]
 keywords = ["ssh", "ssh-keys", "keys", "openssh"]
 repository = "https://github.com/Leo1003/rust-osshkeys"
+license = "MIT"
 readme = "README.md"
 exclude = [".gitignore"]
 edition = "2018"
