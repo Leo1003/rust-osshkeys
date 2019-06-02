@@ -71,7 +71,7 @@ impl Key for RsaPublicKey {
         self.rsa.n().num_bits() as usize
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         RSA_NAME
     }
 }
@@ -131,7 +131,7 @@ impl Key for RsaKeyPair {
         self.rsa.n().num_bits() as usize
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         RSA_NAME
     }
 }

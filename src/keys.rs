@@ -51,8 +51,8 @@ impl Key for PublicKey {
         self.inner_key().size()
     }
 
-    fn keytype(&self) -> &'static str {
-        self.inner_key().keytype()
+    fn keyname(&self) -> &'static str {
+        self.inner_key().keyname()
     }
 }
 
@@ -120,8 +120,8 @@ impl Key for KeyPair {
     fn size(&self) -> usize {
         self.inner_key().size()
     }
-    fn keytype(&self) -> &'static str {
-        self.inner_key().keytype()
+    fn keyname(&self) -> &'static str {
+        self.inner_key().keyname()
     }
 }
 
@@ -142,7 +142,7 @@ impl PrivKey for KeyPair {
 
 pub trait Key {
     fn size(&self) -> usize;
-    fn keytype(&self) -> &'static str;
+    fn keyname(&self) -> &'static str;
 }
 
 pub trait PubKey: Key {

@@ -117,7 +117,7 @@ impl Key for EcDsaPublicKey {
         self.curve.size()
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         self.curve.name()
     }
 }
@@ -174,7 +174,7 @@ impl Key for EcDsaKeyPair {
         self.curve.size()
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         self.curve.name()
     }
 }

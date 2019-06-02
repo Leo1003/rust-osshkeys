@@ -25,7 +25,7 @@ impl Key for Ed25519PublicKey {
         256
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         ED25519_NAME
     }
 }
@@ -63,7 +63,7 @@ impl Key for Ed25519KeyPair {
         256
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         ED25519_NAME
     }
 }

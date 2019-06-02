@@ -28,7 +28,7 @@ impl Key for DsaPublicKey {
         self.dsa.p().num_bits() as usize
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         DSA_NAME
     }
 }
@@ -81,7 +81,7 @@ impl Key for DsaKeyPair {
         self.dsa.p().num_bits() as usize
     }
 
-    fn keytype(&self) -> &'static str {
+    fn keyname(&self) -> &'static str {
         DSA_NAME
     }
 }
