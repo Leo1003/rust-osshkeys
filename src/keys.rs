@@ -7,6 +7,14 @@ pub mod dsa;
 pub mod ecdsa;
 pub mod ed25519;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KeyType {
+    RSA,
+    DSA,
+    ECDSA,
+    ED25519,
+}
+
 #[derive(Debug, PartialEq)]
 enum PublicKeyType {
     RSA(rsa::RsaPublicKey),
@@ -28,6 +36,15 @@ pub struct PublicKey {
 }
 
 impl PublicKey {
+    pub fn keytype(&self) -> KeyType {
+        match &self.key {
+            PublicKeyType::RSA(_) => KeyType::RSA,
+            PublicKeyType::DSA(_) => KeyType::DSA,
+            PublicKeyType::ECDSA(_) => KeyType::ECDSA,
+            PublicKeyType::ED25519(_) => KeyType::ED25519,
+        }
+    }
+
     pub fn comment(&self) -> &String {
         &self.comment
     }
@@ -76,6 +93,15 @@ pub struct KeyPair {
 }
 
 impl KeyPair {
+    pub fn keytype(&self) -> KeyType {
+        match &self.key {
+            KeyPairType::RSA(_) => KeyType::RSA,
+            KeyPairType::DSA(_) => KeyType::DSA,
+            KeyPairType::ECDSA(_) => KeyType::ECDSA,
+            KeyPairType::ED25519(_) => KeyType::ED25519,
+        }
+    }
+
     pub fn comment(&self) -> &String {
         &self.comment
     }
