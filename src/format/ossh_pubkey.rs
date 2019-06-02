@@ -17,19 +17,15 @@ pub fn parse_ossh_pubkey(keystr: &str) -> Result<PublicKey, Error> {
     if key_split.len() < 2 || key_split.len() > 3 {
         return Err(Error::InvalidFormat);
     }
-    let keytype = match key_split[0] {
-        RSA_NAME => KeyType::RSA,
-        DSA_NAME => KeyType::DSA,
-        NIST_P256_NAME | NIST_P384_NAME | NIST_P521_NAME => KeyType::ECDSA,
-        ED25519_NAME => KeyType::ED25519,
-        _ => return Err(Error::InvalidFormat),
-    };
     let blob = base64::decode(key_split[1])?;
-    let mut pubkey: PublicKey = match keytype {
-        KeyType::RSA => decode_rsa_pubkey(&blob)?.into(),
-        KeyType::DSA => decode_dsa_pubkey(&blob)?.into(),
-        KeyType::ECDSA => decode_ecdsa_pubkey(&blob)?.into(),
-        KeyType::ED25519 => decode_ed25519_pubkey(&blob)?.into(),
+    let mut pubkey: PublicKey = match key_split[0] {
+        RSA_NAME => decode_rsa_pubkey(&blob)?.into(),
+        DSA_NAME => decode_dsa_pubkey(&blob)?.into(),
+        NIST_P256_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp256))?.into(),
+        NIST_P384_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp384))?.into(),
+        NIST_P521_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp521))?.into(),
+        ED25519_NAME => decode_ed25519_pubkey(&blob)?.into(),
+        _ => return Err(Error::InvalidFormat),
     };
     if key_split.len() == 3 {
         pubkey.comment_mut().clone_from(&key_split[2].into());
@@ -62,7 +58,7 @@ fn decode_dsa_pubkey(keyblob: &[u8]) -> Result<DsaPublicKey, Error> {
     DsaPublicKey::new(p, q, g, y)
 }
 
-fn decode_ecdsa_pubkey(keyblob: &[u8]) -> Result<EcDsaPublicKey, Error> {
+fn decode_ecdsa_pubkey(keyblob: &[u8], curve_hint: Option<EcCurve>) -> Result<EcDsaPublicKey, Error> {
     let mut reader = io::Cursor::new(keyblob);
     let curve = match reader.read_utf8()?.as_str() {
         NIST_P256_NAME | NIST_P384_NAME | NIST_P521_NAME => {
@@ -71,6 +67,11 @@ fn decode_ecdsa_pubkey(keyblob: &[u8]) -> Result<EcDsaPublicKey, Error> {
         }
         _ => return Err(Error::InvalidFormat),
     };
+    if let Some(curve_hint) = curve_hint {
+        if curve != curve_hint {
+            return Err(Error::InvalidFormat);
+        }
+    }
     let pub_key = reader.read_string()?;
 
     let mut bn_ctx = BigNumContext::new()?;
