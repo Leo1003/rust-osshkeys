@@ -12,9 +12,9 @@ use std::fmt;
 use std::io::Cursor;
 use std::str::FromStr;
 
-const NIST_P256_NAME: &'static str = "ecdsa-sha2-nistp256";
-const NIST_P384_NAME: &'static str = "ecdsa-sha2-nistp384";
-const NIST_P521_NAME: &'static str = "ecdsa-sha2-nistp521";
+pub(crate) const NIST_P256_NAME: &'static str = "ecdsa-sha2-nistp256";
+pub(crate) const NIST_P384_NAME: &'static str = "ecdsa-sha2-nistp384";
+pub(crate) const NIST_P521_NAME: &'static str = "ecdsa-sha2-nistp521";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EcCurve {

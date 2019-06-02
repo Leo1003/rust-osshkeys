@@ -87,6 +87,43 @@ impl PubKey for PublicKey {
     }
 }
 
+impl From<rsa::RsaPublicKey> for PublicKey {
+    fn from(inner: rsa::RsaPublicKey) -> PublicKey {
+        PublicKey {
+            key: PublicKeyType::RSA(inner),
+            comment: String::new(),
+        }
+    }
+}
+
+impl From<dsa::DsaPublicKey> for PublicKey {
+    fn from(inner: dsa::DsaPublicKey) -> PublicKey {
+        PublicKey {
+            key: PublicKeyType::DSA(inner),
+            comment: String::new(),
+        }
+    }
+}
+
+impl From<ecdsa::EcDsaPublicKey> for PublicKey {
+    fn from(inner: ecdsa::EcDsaPublicKey) -> PublicKey {
+        PublicKey {
+            key: PublicKeyType::ECDSA(inner),
+            comment: String::new(),
+        }
+    }
+}
+
+impl From<ed25519::Ed25519PublicKey> for PublicKey {
+    fn from(inner: ed25519::Ed25519PublicKey) -> PublicKey {
+        PublicKey {
+            key: PublicKeyType::ED25519(inner),
+            comment: String::new(),
+        }
+    }
+}
+
+
 pub struct KeyPair {
     key: KeyPairType,
     comment: String,
@@ -165,6 +202,43 @@ impl PrivKey for KeyPair {
         self.inner_key().sign(data)
     }
 }
+
+impl From<rsa::RsaKeyPair> for KeyPair {
+    fn from(inner: rsa::RsaKeyPair) -> KeyPair {
+        KeyPair {
+            key: KeyPairType::RSA(inner),
+            comment: String::new(),
+        }
+    }
+}
+
+impl From<dsa::DsaKeyPair> for KeyPair {
+    fn from(inner: dsa::DsaKeyPair) -> KeyPair {
+        KeyPair {
+            key: KeyPairType::DSA(inner),
+            comment: String::new(),
+        }
+    }
+}
+
+impl From<ecdsa::EcDsaKeyPair> for KeyPair {
+    fn from(inner: ecdsa::EcDsaKeyPair) -> KeyPair {
+        KeyPair {
+            key: KeyPairType::ECDSA(inner),
+            comment: String::new(),
+        }
+    }
+}
+
+impl From<ed25519::Ed25519KeyPair> for KeyPair {
+    fn from(inner: ed25519::Ed25519KeyPair) -> KeyPair {
+        KeyPair {
+            key: KeyPairType::ED25519(inner),
+            comment: String::new(),
+        }
+    }
+}
+
 
 pub trait Key {
     fn size(&self) -> usize;

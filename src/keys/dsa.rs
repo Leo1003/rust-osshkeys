@@ -9,7 +9,7 @@ use openssl::sign::{Signer, Verifier};
 use std::fmt;
 use std::io::Cursor;
 
-const DSA_NAME: &'static str = "ssh-dss";
+pub(crate) const DSA_NAME: &'static str = "ssh-dss";
 
 #[derive(Debug, Clone)]
 pub struct DsaPublicKey {

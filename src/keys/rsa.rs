@@ -4,13 +4,13 @@ use crate::sshbuf::{SshReadExt, SshWriteExt};
 use openssl::bn::{BigNum, BigNumRef};
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Private, Public};
-use openssl::rsa::Rsa;
+use openssl::rsa::{Rsa, RsaRef};
 use openssl::sign::{Signer, Verifier};
 use std::fmt;
 use std::io::Cursor;
 
 const RSA_MIN_SIZE: usize = 1024;
-const RSA_NAME: &'static str = "ssh-rsa";
+pub(crate) const RSA_NAME: &'static str = "ssh-rsa";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RsaSignature {
@@ -111,6 +111,17 @@ pub struct RsaKeyPair {
 }
 
 impl RsaKeyPair {
+    pub(crate) fn from_ossl_rsa(key: Rsa<Private>, signhash: RsaSignature) -> Self {
+        Self {
+            rsa: key,
+            signhash: signhash,
+        }
+    }
+
+    pub(crate) fn ossl_rsa(&self) -> &RsaRef<Private> {
+        &self.rsa
+    }
+
     pub fn sign_type(&self) -> RsaSignature {
         self.signhash
     }

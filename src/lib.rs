@@ -6,6 +6,7 @@ extern crate ed25519_dalek;
 pub mod error;
 pub mod keys;
 pub mod sshbuf;
+mod format;
 use openssl::hash::MessageDigest;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
