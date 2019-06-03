@@ -29,11 +29,8 @@ impl<R: io::Read> SshReadExt for R {
     fn read_string(&mut self) -> io::Result<Vec<u8>> {
         let length = self.read_uint32()? as usize;
         let mut buf = vec![0u8; length];
-        if self.read(&mut buf)? == length {
-            Ok(buf)
-        } else {
-            Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid length"))
-        }
+        self.read_exact(&mut buf)?;
+        Ok(buf)
     }
     fn read_utf8(&mut self) -> io::Result<String> {
         let data = self.read_string()?;
@@ -80,7 +77,6 @@ impl<R: io::Read> SshReadExt for R {
     }
 }
 
-// TODO: Default implement doesn't consider full buffer condition
 pub trait SshWriteExt {
     fn write_bool(&mut self, value: bool) -> io::Result<()>;
     fn write_uint32(&mut self, value: u32) -> io::Result<()>;
@@ -108,7 +104,7 @@ impl<W: io::Write> SshWriteExt for W {
     }
     fn write_string(&mut self, buf: &[u8]) -> io::Result<()> {
         self.write_uint32(buf.len() as u32)?;
-        self.write(buf)?;
+        self.write_all(buf)?;
         Ok(())
     }
     fn write_utf8(&mut self, value: &str) -> io::Result<()> {
