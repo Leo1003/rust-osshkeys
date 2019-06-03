@@ -1,3 +1,4 @@
+use std::iter::FromIterator;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 pub use openssl::bn::{BigNum, BigNumRef};
 use std::io;
@@ -12,7 +13,7 @@ pub trait SshReadExt {
     fn read_string(&mut self) -> io::Result<Vec<u8>>;
     fn read_utf8(&mut self) -> io::Result<String>;
     fn read_mpint(&mut self) -> io::Result<BigNum>;
-    fn read_list(&mut self) -> io::Result<Vec<String>>;
+    fn read_list<B: FromIterator<String>>(&mut self) -> io::Result<B>;
 }
 
 impl<R: io::Read> SshReadExt for R {
@@ -71,7 +72,7 @@ impl<R: io::Read> SshReadExt for R {
             )),
         }
     }
-    fn read_list(&mut self) -> io::Result<Vec<String>> {
+    fn read_list<B: FromIterator<String>>(&mut self) -> io::Result<B> {
         let string = self.read_utf8()?;
         Ok(string.split(',').map(String::from).collect())
     }
