@@ -29,6 +29,7 @@ pub fn parse_ossh_pubkey(keystr: &str) -> Result<PublicKey, Error> {
     };
     if key_split.len() == 3 {
         pubkey.comment_mut().clone_from(&key_split[2].into());
+        //Unstable: key_split[2].clone_into(pubkey.comment_mut());
     }
     Ok(pubkey)
 }
