@@ -1,13 +1,12 @@
 use super::{Key, PrivKey, PubKey};
 use crate::error::Error;
-use crate::sshbuf::{SshReadExt, SshWriteExt};
-use openssl::bn::{BigNum, BigNumRef};
+use crate::format::ossh_pubkey::*;
+use openssl::bn::BigNum;
 use openssl::dsa::Dsa;
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
 use std::fmt;
-use std::io::Cursor;
 
 pub(crate) const DSA_NAME: &'static str = "ssh-dss";
 
@@ -35,7 +34,7 @@ impl Key for DsaPublicKey {
 
 impl PubKey for DsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        dsa_blob(self.dsa.p(), self.dsa.q(), self.dsa.g(), self.dsa.pub_key())
+        encode_dsa_pubkey(&self.dsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -88,7 +87,7 @@ impl Key for DsaKeyPair {
 
 impl PubKey for DsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        dsa_blob(self.dsa.p(), self.dsa.q(), self.dsa.g(), self.dsa.pub_key())
+        encode_dsa_pubkey(&self.dsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -103,18 +102,6 @@ impl PrivKey for DsaKeyPair {
         sign.update(data)?;
         Ok(sign.sign_to_vec()?)
     }
-}
-
-fn dsa_blob(p: &BigNumRef, q: &BigNumRef, g: &BigNumRef, y: &BigNumRef) -> Result<Vec<u8>, Error> {
-    let mut buf = Cursor::new(Vec::new());
-
-    buf.write_utf8(DSA_NAME)?;
-    buf.write_mpint(p)?;
-    buf.write_mpint(q)?;
-    buf.write_mpint(g)?;
-    buf.write_mpint(y)?;
-
-    Ok(buf.into_inner())
 }
 
 #[allow(non_upper_case_globals)]

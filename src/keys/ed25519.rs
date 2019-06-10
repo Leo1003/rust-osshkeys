@@ -1,9 +1,8 @@
 use super::{Key, PrivKey, PubKey};
 use crate::error::Error;
-use crate::sshbuf::{SshReadExt, SshWriteExt};
+use crate::format::ossh_pubkey::*;
 use ed25519_dalek::{Keypair, PublicKey, Signature, PUBLIC_KEY_LENGTH};
 use std::fmt;
-use std::io::Cursor;
 
 pub(crate) const ED25519_NAME: &'static str = "ssh-ed25519";
 
@@ -32,7 +31,7 @@ impl Key for Ed25519PublicKey {
 
 impl PubKey for Ed25519PublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        ed25519key_blob(&self.key)
+        encode_ed25519_pubkey(&self.key)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -78,7 +77,7 @@ impl Ed25519KeyPair {
 
 impl PubKey for Ed25519KeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        ed25519key_blob(&self.key.public)
+        encode_ed25519_pubkey(&self.key.public)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -91,15 +90,6 @@ impl PrivKey for Ed25519KeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         Ok(self.key.sign(data).to_bytes().to_vec())
     }
-}
-
-fn ed25519key_blob(pub_key: &PublicKey) -> Result<Vec<u8>, Error> {
-    let mut buf = Cursor::new(Vec::new());
-
-    buf.write_utf8(ED25519_NAME)?;
-    buf.write_string(pub_key.as_bytes())?;
-
-    Ok(buf.into_inner())
 }
 
 #[allow(non_upper_case_globals)]

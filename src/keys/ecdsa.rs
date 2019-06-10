@@ -1,15 +1,14 @@
 use super::{Key, PrivKey, PubKey};
 use crate::error::Error;
-use crate::sshbuf::{SshReadExt, SshWriteExt};
+use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNumContext;
-use openssl::ec::{EcGroup, EcGroupRef, EcKey, EcKeyRef, EcPointRef, PointConversionForm};
+use openssl::ec::{EcGroup, EcGroupRef, EcKey, EcPointRef};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
-use openssl::pkey::{HasParams, HasPublic, PKey, Private, Public};
+use openssl::pkey::{PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
 use std::convert::TryInto;
 use std::fmt;
-use std::io::Cursor;
 use std::str::FromStr;
 
 pub(crate) const NIST_P256_NAME: &'static str = "ecdsa-sha2-nistp256";
@@ -124,7 +123,7 @@ impl Key for EcDsaPublicKey {
 
 impl PubKey for EcDsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        eckey_blob(self.curve, &self.key)
+        encode_ecdsa_pubkey(self.curve, &self.key)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -181,7 +180,7 @@ impl Key for EcDsaKeyPair {
 
 impl PubKey for EcDsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        eckey_blob(self.curve, &self.key)
+        encode_ecdsa_pubkey(self.curve, &self.key)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -196,24 +195,6 @@ impl PrivKey for EcDsaKeyPair {
         sign.update(data)?;
         Ok(sign.sign_to_vec()?)
     }
-}
-
-fn eckey_blob<T: HasPublic + HasParams>(
-    curve: EcCurve,
-    key: &EcKeyRef<T>,
-) -> Result<Vec<u8>, Error> {
-    let mut buf = Cursor::new(Vec::new());
-    let mut bn_ctx = BigNumContext::new()?;
-
-    buf.write_utf8(curve.name())?;
-    buf.write_utf8(curve.ident())?;
-    buf.write_string(&key.public_key().to_bytes(
-        key.group(),
-        PointConversionForm::UNCOMPRESSED,
-        &mut bn_ctx,
-    )?)?;
-
-    Ok(buf.into_inner())
 }
 
 #[allow(non_upper_case_globals)]

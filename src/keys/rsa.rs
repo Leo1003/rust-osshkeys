@@ -1,13 +1,12 @@
 use super::{Key, PrivKey, PubKey};
 use crate::error::Error;
-use crate::sshbuf::{SshReadExt, SshWriteExt};
-use openssl::bn::{BigNum, BigNumRef};
+use crate::format::ossh_pubkey::*;
+use openssl::bn::BigNum;
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Private, Public};
 use openssl::rsa::{Rsa, RsaRef};
 use openssl::sign::{Signer, Verifier};
 use std::fmt;
-use std::io::Cursor;
 
 const RSA_MIN_SIZE: usize = 1024;
 pub(crate) const RSA_NAME: &'static str = "ssh-rsa";
@@ -78,7 +77,7 @@ impl Key for RsaPublicKey {
 
 impl PubKey for RsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        rsa_blob(self.rsa.e(), self.rsa.n())
+        encode_rsa_pubkey(&self.rsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -149,7 +148,7 @@ impl Key for RsaKeyPair {
 
 impl PubKey for RsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        rsa_blob(self.rsa.e(), self.rsa.n())
+        encode_rsa_pubkey(&self.rsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -167,16 +166,6 @@ impl PrivKey for RsaKeyPair {
         sign.update(data)?;
         Ok(sign.sign_to_vec()?)
     }
-}
-
-fn rsa_blob(e: &BigNumRef, n: &BigNumRef) -> Result<Vec<u8>, Error> {
-    let mut buf = Cursor::new(Vec::new());
-
-    buf.write_utf8(RSA_NAME)?;
-    buf.write_mpint(e)?;
-    buf.write_mpint(n)?;
-
-    Ok(buf.into_inner())
 }
 
 #[allow(non_upper_case_globals)]
