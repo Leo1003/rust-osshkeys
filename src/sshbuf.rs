@@ -1,8 +1,8 @@
-use std::iter::FromIterator;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 pub use openssl::bn::{BigNum, BigNumRef};
 use std::io;
 use std::io::Result;
+use std::iter::FromIterator;
 
 const MAX_BIGNUM: usize = 16384 / 8;
 

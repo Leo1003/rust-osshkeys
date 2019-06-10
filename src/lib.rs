@@ -1,12 +1,12 @@
 #[macro_use]
 extern crate custom_error;
-extern crate rand;
 extern crate ed25519_dalek;
+extern crate rand;
 
 pub mod error;
+mod format;
 pub mod keys;
 pub mod sshbuf;
-mod format;
 use openssl::hash::MessageDigest;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -2,10 +2,10 @@ use crate::error::Error;
 use crate::FingerprintHash;
 use openssl::hash::Hasher;
 
-pub mod rsa;
 pub mod dsa;
 pub mod ecdsa;
 pub mod ed25519;
+pub mod rsa;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyType {
@@ -123,7 +123,6 @@ impl From<ed25519::Ed25519PublicKey> for PublicKey {
     }
 }
 
-
 pub struct KeyPair {
     key: KeyPairType,
     comment: String,
@@ -156,7 +155,7 @@ impl KeyPair {
         };
         Ok(PublicKey {
             key: key,
-            comment: self.comment().clone()
+            comment: self.comment().clone(),
         })
     }
 
@@ -238,7 +237,6 @@ impl From<ed25519::Ed25519KeyPair> for KeyPair {
         }
     }
 }
-
 
 pub trait Key {
     fn size(&self) -> usize;
