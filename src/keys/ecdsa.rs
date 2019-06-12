@@ -149,8 +149,7 @@ impl PartialEq for EcDsaPublicKey {
 
 impl fmt::Display for EcDsaPublicKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let body = base64::encode_config(&self.blob().unwrap(), base64::STANDARD);
-        write!(f, "{} {}", self.curve.name(), &body)
+        f.write_str(&stringify_ossh_pubkey(self, None).unwrap())
     }
 }
 

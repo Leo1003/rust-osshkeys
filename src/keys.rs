@@ -1,4 +1,5 @@
-use crate::error::Error;
+use crate::error::{Error, OsshResult};
+use crate::format::ossh_pubkey::*;
 use openssl::hash::{Hasher, MessageDigest};
 
 pub mod dsa;
@@ -52,6 +53,10 @@ pub struct PublicKey {
 }
 
 impl PublicKey {
+    pub fn from_keystring(keystr: &str) -> OsshResult<Self> {
+        parse_ossh_pubkey(keystr)
+    }
+
     pub fn keytype(&self) -> KeyType {
         match &self.key {
             PublicKeyType::RSA(_) => KeyType::RSA,

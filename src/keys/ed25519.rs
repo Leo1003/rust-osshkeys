@@ -48,8 +48,7 @@ impl PartialEq for Ed25519PublicKey {
 
 impl fmt::Display for Ed25519PublicKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let body = base64::encode_config(&self.blob().unwrap(), base64::STANDARD);
-        write!(f, "{} {}", ED25519_NAME, &body)
+        f.write_str(&stringify_ossh_pubkey(self, None).unwrap())
     }
 }
 
