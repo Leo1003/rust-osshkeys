@@ -3,6 +3,7 @@ use crate::keys::dsa::{DsaPublicKey, DSA_NAME};
 use crate::keys::ecdsa::{EcCurve, EcDsaPublicKey, NIST_P256_NAME, NIST_P384_NAME, NIST_P521_NAME};
 use crate::keys::ed25519::{Ed25519PublicKey, ED25519_NAME};
 use crate::keys::rsa::{RsaPublicKey, RSA_NAME};
+use crate::keys::PubKey;
 use crate::keys::{KeyType, PublicKey};
 use crate::sshbuf::{SshReadExt, SshWriteExt};
 use ed25519_dalek::PublicKey as Ed25519PubKey;
@@ -13,6 +14,7 @@ use openssl::ec::{EcGroup, EcKeyRef, EcPoint, PointConversionForm};
 use openssl::pkey::{HasParams, HasPublic};
 use openssl::rsa::RsaRef;
 use std::convert::TryInto;
+use std::fmt::Write as _;
 use std::io;
 use std::str::FromStr;
 
@@ -100,6 +102,20 @@ pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> Result<Ed25519PublicKey, 
     }
 
     Ed25519PublicKey::new(pub_key.as_slice().try_into().unwrap())
+}
+
+pub(crate) fn stringify_ossh_pubkey(key: &PubKey, comment: Option<&str>) -> Result<String, Error> {
+    let mut keystr = String::new();
+    write!(
+        &mut keystr,
+        "{} {}",
+        key.keyname(),
+        base64::encode(&key.blob()?)
+    )?;
+    if let Some(comment) = comment {
+        write!(&mut keystr, " {}", comment)?;
+    }
+    Ok(keystr)
 }
 
 pub(crate) fn encode_rsa_pubkey<T: HasPublic + HasParams>(
