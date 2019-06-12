@@ -1,10 +1,10 @@
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::keys::dsa::{DsaPublicKey, DSA_NAME};
 use crate::keys::ecdsa::{EcCurve, EcDsaPublicKey, NIST_P256_NAME, NIST_P384_NAME, NIST_P521_NAME};
 use crate::keys::ed25519::{Ed25519PublicKey, ED25519_NAME};
 use crate::keys::rsa::{RsaPublicKey, RSA_NAME};
 use crate::keys::PubKey;
-use crate::keys::{KeyType, PublicKey};
+use crate::keys::PublicKey;
 use crate::sshbuf::{SshReadExt, SshWriteExt};
 use ed25519_dalek::PublicKey as Ed25519PubKey;
 use ed25519_dalek::PUBLIC_KEY_LENGTH;
@@ -21,7 +21,7 @@ use std::str::FromStr;
 pub fn parse_ossh_pubkey(keystr: &str) -> Result<PublicKey, Error> {
     let key_split: Vec<&str> = keystr.split_ascii_whitespace().collect();
     if key_split.len() < 2 || key_split.len() > 3 {
-        return Err(Error::InvalidFormat);
+        return Err(ErrorKind::InvalidFormat.into());
     }
     let blob = base64::decode(key_split[1])?;
     let mut pubkey: PublicKey = match key_split[0] {
@@ -31,7 +31,7 @@ pub fn parse_ossh_pubkey(keystr: &str) -> Result<PublicKey, Error> {
         NIST_P384_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp384))?.into(),
         NIST_P521_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp521))?.into(),
         ED25519_NAME => decode_ed25519_pubkey(&blob)?.into(),
-        _ => return Err(Error::InvalidFormat),
+        _ => return Err(ErrorKind::InvalidFormat.into()),
     };
     if key_split.len() == 3 {
         pubkey.comment_mut().clone_from(&key_split[2].into());
@@ -43,7 +43,7 @@ pub fn parse_ossh_pubkey(keystr: &str) -> Result<PublicKey, Error> {
 pub(crate) fn decode_rsa_pubkey(keyblob: &[u8]) -> Result<RsaPublicKey, Error> {
     let mut reader = io::Cursor::new(keyblob);
     if reader.read_utf8()? != RSA_NAME {
-        return Err(Error::InvalidFormat);
+        return Err(ErrorKind::InvalidFormat.into());
     }
     let e = reader.read_mpint()?;
     let n = reader.read_mpint()?;
@@ -54,7 +54,7 @@ pub(crate) fn decode_rsa_pubkey(keyblob: &[u8]) -> Result<RsaPublicKey, Error> {
 pub(crate) fn decode_dsa_pubkey(keyblob: &[u8]) -> Result<DsaPublicKey, Error> {
     let mut reader = io::Cursor::new(keyblob);
     if reader.read_utf8()? != DSA_NAME {
-        return Err(Error::InvalidFormat);
+        return Err(ErrorKind::InvalidFormat.into());
     }
 
     let p = reader.read_mpint()?;
@@ -75,11 +75,11 @@ pub(crate) fn decode_ecdsa_pubkey(
             let ident_str = reader.read_utf8()?;
             EcCurve::from_str(&ident_str)?
         }
-        _ => return Err(Error::InvalidFormat),
+        _ => return Err(ErrorKind::InvalidFormat.into()),
     };
     if let Some(curve_hint) = curve_hint {
         if curve != curve_hint {
-            return Err(Error::InvalidFormat);
+            return Err(ErrorKind::InvalidFormat.into());
         }
     }
     let pub_key = reader.read_string()?;
@@ -93,12 +93,12 @@ pub(crate) fn decode_ecdsa_pubkey(
 pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> Result<Ed25519PublicKey, Error> {
     let mut reader = io::Cursor::new(keyblob);
     if reader.read_utf8()? != ED25519_NAME {
-        return Err(Error::InvalidFormat);
+        return Err(ErrorKind::InvalidFormat.into());
     }
 
     let pub_key = reader.read_string()?;
     if pub_key.len() != PUBLIC_KEY_LENGTH {
-        return Err(Error::InvalidFormat);
+        return Err(ErrorKind::InvalidFormat.into());
     }
 
     Ed25519PublicKey::new(pub_key.as_slice().try_into().unwrap())

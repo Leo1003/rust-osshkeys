@@ -1,5 +1,5 @@
 use super::{Key, PrivKey, PubKey};
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNumContext;
 use openssl::ec::{EcGroup, EcGroupRef, EcKey, EcPointRef};
@@ -63,7 +63,7 @@ impl FromStr for EcCurve {
             "nistp256" => Ok(EcCurve::Nistp256),
             "nistp384" => Ok(EcCurve::Nistp384),
             "nistp521" => Ok(EcCurve::Nistp521),
-            _ => Err(Error::UnsupportedCurve),
+            _ => Err(ErrorKind::UnsupportedCurve.into()),
         }
     }
 }
@@ -98,10 +98,10 @@ impl EcDsaPublicKey {
                 Nid::X9_62_PRIME256V1 => EcCurve::Nistp256,
                 Nid::SECP384R1 => EcCurve::Nistp384,
                 Nid::SECP521R1 => EcCurve::Nistp521,
-                _ => return Err(Error::InvalidFormat),
+                _ => return Err(ErrorKind::InvalidFormat.into()),
             }
         } else {
-            return Err(Error::InvalidFormat);
+            return Err(ErrorKind::InvalidFormat.into());
         };
 
         Ok(Self {

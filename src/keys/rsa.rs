@@ -1,5 +1,5 @@
 use super::{Key, PrivKey, PubKey};
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNum;
 use openssl::hash::MessageDigest;
@@ -82,7 +82,7 @@ impl PubKey for RsaPublicKey {
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
         if self.size() < RSA_MIN_SIZE {
-            return Err(Error::InvalidKeySize);
+            return Err(ErrorKind::InvalidKeySize.into());
         }
         let pkey = PKey::from_rsa(self.rsa.clone())?;
         let mut veri = Verifier::new(self.signhash.get_digest(), &pkey)?;
@@ -159,7 +159,7 @@ impl PubKey for RsaKeyPair {
 impl PrivKey for RsaKeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         if self.size() < RSA_MIN_SIZE {
-            return Err(Error::InvalidKeySize);
+            return Err(ErrorKind::InvalidKeySize.into());
         }
         let pkey = PKey::from_rsa(self.rsa.clone())?;
         let mut sign = Signer::new(self.signhash.get_digest(), &pkey)?;
