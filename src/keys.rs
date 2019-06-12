@@ -159,7 +159,7 @@ impl KeyPair {
         }
     }
 
-    pub fn comment(&self) -> &String {
+    pub fn comment(&self) -> &str {
         &self.comment
     }
 
@@ -176,7 +176,7 @@ impl KeyPair {
         };
         Ok(PublicKey {
             key: key,
-            comment: self.comment().clone(),
+            comment: self.comment.clone(),
         })
     }
 
