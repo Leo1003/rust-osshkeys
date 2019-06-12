@@ -45,7 +45,7 @@ impl PublicKey {
         }
     }
 
-    pub fn comment(&self) -> &String {
+    pub fn comment(&self) -> &str {
         &self.comment
     }
 
