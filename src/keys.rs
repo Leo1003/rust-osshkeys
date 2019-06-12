@@ -1,11 +1,27 @@
 use crate::error::Error;
-use crate::FingerprintHash;
-use openssl::hash::Hasher;
+use openssl::hash::{Hasher, MessageDigest};
 
 pub mod dsa;
 pub mod ecdsa;
 pub mod ed25519;
 pub mod rsa;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FingerprintHash {
+    MD5,
+    SHA256,
+    SHA512,
+}
+
+impl FingerprintHash {
+    fn get_digest(&self) -> MessageDigest {
+        match self {
+            FingerprintHash::MD5 => MessageDigest::md5(),
+            FingerprintHash::SHA256 => MessageDigest::sha256(),
+            FingerprintHash::SHA512 => MessageDigest::sha512(),
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyType {
