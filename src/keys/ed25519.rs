@@ -12,7 +12,7 @@ pub struct Ed25519PublicKey {
 }
 
 impl Ed25519PublicKey {
-    pub fn new(key: &[u8; PUBLIC_KEY_LENGTH]) -> Result<Self, Error> {
+    pub fn new(key: &[u8; PUBLIC_KEY_LENGTH]) -> Result<Self, ed25519_dalek::SignatureError> {
         Ok(Self {
             key: PublicKey::from_bytes(key)?,
         })
@@ -31,7 +31,7 @@ impl Key for Ed25519PublicKey {
 
 impl PubKey for Ed25519PublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_ed25519_pubkey(&self.key)
+        Ok(encode_ed25519_pubkey(&self.key)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -76,7 +76,7 @@ impl Ed25519KeyPair {
 
 impl PubKey for Ed25519KeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_ed25519_pubkey(&self.key.public)
+        Ok(encode_ed25519_pubkey(&self.key.public)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -105,7 +105,7 @@ mod test {
     ];
 
     fn get_test_pubkey() -> Result<Ed25519PublicKey, Error> {
-        Ed25519PublicKey::new(&pub_key)
+        Ok(Ed25519PublicKey::new(&pub_key)?)
     }
 
     #[test]

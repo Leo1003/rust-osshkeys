@@ -16,7 +16,12 @@ pub struct DsaPublicKey {
 }
 
 impl DsaPublicKey {
-    pub fn new(p: BigNum, q: BigNum, g: BigNum, pub_key: BigNum) -> Result<Self, Error> {
+    pub fn new(
+        p: BigNum,
+        q: BigNum,
+        g: BigNum,
+        pub_key: BigNum,
+    ) -> Result<Self, openssl::error::ErrorStack> {
         let dsa = Dsa::from_public_components(p, q, g, pub_key)?;
         Ok(Self { dsa: dsa })
     }
@@ -34,7 +39,7 @@ impl Key for DsaPublicKey {
 
 impl PubKey for DsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_dsa_pubkey(&self.dsa)
+        Ok(encode_dsa_pubkey(&self.dsa)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -86,7 +91,7 @@ impl Key for DsaKeyPair {
 
 impl PubKey for DsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_dsa_pubkey(&self.dsa)
+        Ok(encode_dsa_pubkey(&self.dsa)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -153,7 +158,7 @@ mod test {
         let dsa_q = BigNum::from_slice(&q)?;
         let dsa_g = BigNum::from_slice(&g)?;
         let dsa_pub = BigNum::from_slice(&pub_key)?;
-        DsaPublicKey::new(dsa_p, dsa_q, dsa_g, dsa_pub)
+        Ok(DsaPublicKey::new(dsa_p, dsa_q, dsa_g, dsa_pub)?)
     }
 
     #[test]

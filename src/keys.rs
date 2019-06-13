@@ -54,7 +54,7 @@ pub struct PublicKey {
 
 impl PublicKey {
     pub fn from_keystring(keystr: &str) -> OsshResult<Self> {
-        parse_ossh_pubkey(keystr)
+        Ok(parse_ossh_pubkey(keystr)?)
     }
 
     pub fn keytype(&self) -> KeyType {

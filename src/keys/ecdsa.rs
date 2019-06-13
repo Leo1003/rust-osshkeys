@@ -2,7 +2,7 @@ use super::{Key, PrivKey, PubKey};
 use crate::error::{Error, ErrorKind};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNumContext;
-use openssl::ec::{EcGroup, EcGroupRef, EcKey, EcPointRef};
+use openssl::ec::{EcGroup, EcKey, EcPointRef};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::{PKey, Private, Public};
@@ -69,7 +69,7 @@ impl FromStr for EcCurve {
 }
 
 impl TryInto<EcGroup> for EcCurve {
-    type Error = Error;
+    type Error = openssl::error::ErrorStack;
     fn try_into(self) -> Result<EcGroup, Self::Error> {
         Ok(EcGroup::from_curve_name(self.nid())?)
     }
@@ -92,20 +92,14 @@ impl fmt::Debug for EcDsaPublicKey {
 }
 
 impl EcDsaPublicKey {
-    pub fn new(group: &EcGroupRef, public_key: &EcPointRef) -> Result<Self, Error> {
-        let curve = if let Some(nid) = group.curve_name() {
-            match nid {
-                Nid::X9_62_PRIME256V1 => EcCurve::Nistp256,
-                Nid::SECP384R1 => EcCurve::Nistp384,
-                Nid::SECP521R1 => EcCurve::Nistp521,
-                _ => return Err(ErrorKind::InvalidFormat.into()),
-            }
-        } else {
-            return Err(ErrorKind::InvalidFormat.into());
-        };
+    pub fn new(
+        curve: EcCurve,
+        public_key: &EcPointRef,
+    ) -> Result<Self, openssl::error::ErrorStack> {
+        let group: EcGroup = curve.try_into()?;
 
         Ok(Self {
-            key: EcKey::from_public_key(group, public_key)?,
+            key: EcKey::from_public_key(&group, public_key)?,
             curve: curve,
         })
     }
@@ -123,7 +117,7 @@ impl Key for EcDsaPublicKey {
 
 impl PubKey for EcDsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_ecdsa_pubkey(self.curve, &self.key)
+        Ok(encode_ecdsa_pubkey(self.curve, &self.key)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -160,10 +154,7 @@ pub struct EcDsaKeyPair {
 
 impl EcDsaKeyPair {
     pub fn clone_public_key(&self) -> Result<EcDsaPublicKey, Error> {
-        Ok(EcDsaPublicKey::new(
-            self.key.group(),
-            self.key.public_key(),
-        )?)
+        Ok(EcDsaPublicKey::new(self.curve, self.key.public_key())?)
     }
 }
 
@@ -179,7 +170,7 @@ impl Key for EcDsaKeyPair {
 
 impl PubKey for EcDsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_ecdsa_pubkey(self.curve, &self.key)
+        Ok(encode_ecdsa_pubkey(self.curve, &self.key)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -216,9 +207,10 @@ mod test {
     fn get_test_pubkey() -> Result<EcDsaPublicKey, Error> {
         let ident_str = std::str::from_utf8(&ident).unwrap();
         let mut bn_ctx = BigNumContext::new()?;
-        let group: EcGroup = EcCurve::from_str(ident_str)?.try_into()?;
+        let curve: EcCurve = EcCurve::from_str(ident_str)?;
+        let group: EcGroup = curve.try_into()?;
         let point = EcPoint::from_bytes(&group, &pub_key, &mut bn_ctx)?;
-        EcDsaPublicKey::new(&group, &point)
+        Ok(EcDsaPublicKey::new(curve, &point)?)
     }
 
     #[test]

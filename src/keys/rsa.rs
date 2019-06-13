@@ -36,7 +36,7 @@ pub struct RsaPublicKey {
 }
 
 impl RsaPublicKey {
-    pub fn new(n: BigNum, e: BigNum) -> Result<RsaPublicKey, Error> {
+    pub fn new(n: BigNum, e: BigNum) -> Result<RsaPublicKey, openssl::error::ErrorStack> {
         let rsa = Rsa::from_public_components(n, e)?;
         Ok(RsaPublicKey {
             rsa: rsa,
@@ -77,7 +77,7 @@ impl Key for RsaPublicKey {
 
 impl PubKey for RsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_rsa_pubkey(&self.rsa)
+        Ok(encode_rsa_pubkey(&self.rsa)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -147,7 +147,7 @@ impl Key for RsaKeyPair {
 
 impl PubKey for RsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_rsa_pubkey(&self.rsa)
+        Ok(encode_rsa_pubkey(&self.rsa)?)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -199,7 +199,7 @@ mod test {
     fn get_test_pubkey() -> Result<RsaPublicKey, Error> {
         let rsa_e = BigNum::from_slice(&e)?;
         let rsa_n = BigNum::from_slice(&n)?;
-        RsaPublicKey::new(rsa_n, rsa_e)
+        Ok(RsaPublicKey::new(rsa_n, rsa_e)?)
     }
 
     #[test]

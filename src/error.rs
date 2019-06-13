@@ -1,3 +1,4 @@
+use crate::format::error::KeyFormatError;
 use failure::{Error as FailureError, Fail};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -22,6 +23,10 @@ impl Error {
             kind: kind,
             inner: Some(failure.into()),
         }
+    }
+
+    pub(crate) fn into_format_error(self) -> Option<KeyFormatError> {
+        self.inner.and_then(|inner| inner.downcast().ok())
     }
 }
 
@@ -54,6 +59,13 @@ impl From<ErrorKind> for Error {
         Self::from_kind(kind)
     }
 }
+
+impl From<KeyFormatError> for Error {
+    fn from(err: KeyFormatError) -> Self {
+        Self::with_failure(ErrorKind::InvalidKeyFormat, err)
+    }
+}
+
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
         Self::with_failure(ErrorKind::IOError, err)
@@ -87,8 +99,7 @@ pub enum ErrorKind {
     IOError,
     FmtError,
     Base64Error,
-    InvalidPublicKey,
-    InvalidKeyPair,
+    InvalidKeyFormat,
     InvalidFormat,
     InvalidKeySize,
     UnsupportedCurve,
@@ -105,8 +116,7 @@ impl ErrorKind {
             IOError => "I/O Error",
             FmtError => "Formatter Error",
             Base64Error => "Base64 Error",
-            InvalidPublicKey => "Invalid Public Key",
-            InvalidKeyPair => "Invalid Key Pair",
+            InvalidKeyFormat => "Invalid Key Format",
             InvalidFormat => "Invalid Format",
             InvalidKeySize => "Invalid Key Size",
             UnsupportedCurve => "Unsupported Elliptic Curve",
