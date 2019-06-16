@@ -150,6 +150,15 @@ pub struct KeyPair {
 }
 
 impl KeyPair {
+    pub fn generate(keytype: KeyType, bits: usize) -> OsshResult<Self> {
+        Ok(match keytype {
+            KeyType::RSA => rsa::RsaKeyPair::generate(bits)?.into(),
+            KeyType::DSA => dsa::DsaKeyPair::generate(bits)?.into(),
+            KeyType::ECDSA => ecdsa::EcDsaKeyPair::generate(bits)?.into(),
+            KeyType::ED25519 => ed25519::Ed25519KeyPair::generate(bits)?.into(),
+        })
+    }
+
     pub fn keytype(&self) -> KeyType {
         match &self.key {
             KeyPairType::RSA(_) => KeyType::RSA,

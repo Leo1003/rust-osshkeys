@@ -1,5 +1,5 @@
 use super::{Key, PrivKey, PubKey};
-use crate::error::{Error, ErrorKind};
+use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNum;
 use openssl::hash::MessageDigest;
@@ -8,7 +8,9 @@ use openssl::rsa::{Rsa, RsaRef};
 use openssl::sign::{Signer, Verifier};
 use std::fmt;
 
+const RSA_DEF_SIZE: usize = 2048;
 const RSA_MIN_SIZE: usize = 1024;
+const RSA_MAX_SIZE: usize = 16384;
 pub(crate) const RSA_NAME: &'static str = "ssh-rsa";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -118,6 +120,19 @@ impl RsaKeyPair {
 
     pub(crate) fn ossl_rsa(&self) -> &RsaRef<Private> {
         &self.rsa
+    }
+
+    pub fn generate(mut bits: usize) -> OsshResult<Self> {
+        if bits == 0 {
+            bits = 2048;
+        }
+        if bits < RSA_MIN_SIZE || bits > RSA_MAX_SIZE {
+            return Err(Error::from_kind(ErrorKind::InvalidKeySize));
+        }
+        Ok(RsaKeyPair {
+            rsa: Rsa::generate(bits as u32)?,
+            signhash: RsaSignature::SHA1,
+        })
     }
 
     pub fn sign_type(&self) -> RsaSignature {

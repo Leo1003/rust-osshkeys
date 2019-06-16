@@ -1,8 +1,9 @@
 use super::{Key, PrivKey, PubKey};
-use crate::error::Error;
+use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use ed25519_dalek::{Keypair, PublicKey, Signature, PUBLIC_KEY_LENGTH};
 use std::fmt;
+use rand::rngs::OsRng;
 
 pub(crate) const ED25519_NAME: &'static str = "ssh-ed25519";
 
@@ -67,6 +68,17 @@ impl Key for Ed25519KeyPair {
 }
 
 impl Ed25519KeyPair {
+    pub fn generate(bits: usize) -> OsshResult<Self> {
+        if bits != 0 && bits != 256 {
+            return Err(Error::from_kind(ErrorKind::InvalidKeySize));
+        }
+
+        let mut rng = OsRng::new().map_err(|e| Error::with_failure(ErrorKind::Ed25519Error, e))?;
+        Ok(Ed25519KeyPair {
+            key: Keypair::generate(&mut rng),
+        })
+    }
+
     pub fn clone_public_key(&self) -> Result<Ed25519PublicKey, Error> {
         Ok(Ed25519PublicKey {
             key: self.key.public.clone(),

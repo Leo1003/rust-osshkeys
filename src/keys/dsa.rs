@@ -1,5 +1,5 @@
 use super::{Key, PrivKey, PubKey};
-use crate::error::Error;
+use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNum;
 use openssl::dsa::Dsa;
@@ -70,6 +70,18 @@ pub struct DsaKeyPair {
 }
 
 impl DsaKeyPair {
+    pub fn generate(mut bits: usize) -> OsshResult<Self> {
+        if bits == 0 {
+            bits = 1024;
+        }
+        if bits != 1024 {
+            return Err(Error::from_kind(ErrorKind::InvalidKeySize));
+        }
+        Ok(DsaKeyPair {
+            dsa: Dsa::generate(bits as u32)?,
+        })
+    }
+
     pub fn clone_public_key(&self) -> Result<DsaPublicKey, Error> {
         let p = self.dsa.p().to_owned()?;
         let q = self.dsa.q().to_owned()?;

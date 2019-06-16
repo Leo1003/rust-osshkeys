@@ -1,5 +1,5 @@
 use super::{Key, PrivKey, PubKey};
-use crate::error::{Error, ErrorKind};
+use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNumContext;
 use openssl::ec::{EcGroup, EcKey, EcPointRef};
@@ -153,6 +153,24 @@ pub struct EcDsaKeyPair {
 }
 
 impl EcDsaKeyPair {
+    pub fn generate(mut bits: usize) -> OsshResult<Self> {
+        if bits == 0 {
+            bits = 256;
+        }
+        let curve = match bits {
+            256 => EcCurve::Nistp256,
+            384 => EcCurve::Nistp384,
+            521 => EcCurve::Nistp521,
+            _ => return Err(Error::from_kind(ErrorKind::InvalidKeySize)),
+        };
+        let group: EcGroup = curve.try_into()?;
+
+        Ok(EcDsaKeyPair {
+            key: EcKey::generate(&group)?,
+            curve: curve,
+        })
+    }
+
     pub fn clone_public_key(&self) -> Result<EcDsaPublicKey, Error> {
         Ok(EcDsaPublicKey::new(self.curve, self.key.public_key())?)
     }
