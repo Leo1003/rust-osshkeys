@@ -2,8 +2,8 @@ use super::{Key, PrivKey, PubKey};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use ed25519_dalek::{Keypair, PublicKey, Signature, PUBLIC_KEY_LENGTH};
-use std::fmt;
 use rand::rngs::OsRng;
+use std::fmt;
 
 pub(crate) const ED25519_NAME: &'static str = "ssh-ed25519";
 
