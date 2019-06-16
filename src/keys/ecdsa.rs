@@ -11,6 +11,7 @@ use std::convert::TryInto;
 use std::fmt;
 use std::str::FromStr;
 
+const ECDSA_DEF_SIZE: usize = 256;
 pub(crate) const NIST_P256_NAME: &'static str = "ecdsa-sha2-nistp256";
 pub(crate) const NIST_P384_NAME: &'static str = "ecdsa-sha2-nistp384";
 pub(crate) const NIST_P521_NAME: &'static str = "ecdsa-sha2-nistp521";
@@ -155,7 +156,7 @@ pub struct EcDsaKeyPair {
 impl EcDsaKeyPair {
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
-            bits = 256;
+            bits = ECDSA_DEF_SIZE;
         }
         let curve = match bits {
             256 => EcCurve::Nistp256,

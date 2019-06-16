@@ -124,7 +124,7 @@ impl RsaKeyPair {
 
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
-            bits = 2048;
+            bits = RSA_DEF_SIZE;
         }
         if bits < RSA_MIN_SIZE || bits > RSA_MAX_SIZE {
             return Err(Error::from_kind(ErrorKind::InvalidKeySize));
