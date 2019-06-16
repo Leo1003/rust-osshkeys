@@ -1,6 +1,7 @@
 use crate::error::{Error, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::hash::{Hasher, MessageDigest};
+use std::fmt;
 
 pub mod dsa;
 pub mod ecdsa;
@@ -105,6 +106,17 @@ impl PubKey for PublicKey {
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
         self.inner_key().verify(data, sig)
+    }
+}
+
+impl fmt::Display for PublicKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self.key {
+            PublicKeyType::RSA(key) => write!(f, "{}", key),
+            PublicKeyType::DSA(key) => write!(f, "{}", key),
+            PublicKeyType::ECDSA(key) => write!(f, "{}", key),
+            PublicKeyType::ED25519(key) => write!(f, "{}", key),
+        }
     }
 }
 
