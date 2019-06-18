@@ -8,6 +8,7 @@ pub type KeyFormatResult<T> = Result<T, KeyFormatError>;
 pub enum KeyFormatError {
     InvalidKey,
     InvalidSize,
+    PassIncorrect,
     TypeNotMatch,
     UnsupportType,
     UnsupportCurve,
@@ -31,6 +32,7 @@ impl Fail for KeyFormatError {
         let err_name = match self {
             InvalidKey => "Invalid Key",
             InvalidSize => "Invalid Key Size",
+            PassIncorrect => "Passphrase Incorrect",
             TypeNotMatch => "Key Type Not Match",
             UnsupportType => "Unsupported Key Type",
             UnsupportCurve => "Unsupported Eclipse Curve",

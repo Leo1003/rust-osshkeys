@@ -2,7 +2,7 @@ use super::{Key, PrivKey, PubKey};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNumContext;
-use openssl::ec::{EcGroup, EcKey, EcPointRef};
+use openssl::ec::{EcGroup, EcKey, EcKeyRef, EcPointRef};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::{PKey, Private, Public};
@@ -154,6 +154,24 @@ pub struct EcDsaKeyPair {
 }
 
 impl EcDsaKeyPair {
+    pub(crate) fn from_ossl_ec(key: EcKey<Private>) -> Result<Self, crate::format::error::KeyFormatError> {
+        let curve = match key.group().curve_name().unwrap_or(Nid::UNDEF) {
+            Nid::X9_62_PRIME256V1 => EcCurve::Nistp256,
+            Nid::SECP384R1 => EcCurve::Nistp384,
+            Nid::SECP521R1 => EcCurve::Nistp521,
+            _ => return Err(crate::format::error::KeyFormatError::UnsupportCurve),
+        };
+
+        Ok(Self {
+            key: key,
+            curve: curve,
+        })
+    }
+
+    pub(crate) fn ossl_ec(&self) -> &EcKeyRef<Private> {
+        &self.key
+    }
+
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = ECDSA_DEF_SIZE;

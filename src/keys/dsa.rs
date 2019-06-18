@@ -2,7 +2,7 @@ use super::{Key, PrivKey, PubKey};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNum;
-use openssl::dsa::Dsa;
+use openssl::dsa::{Dsa, DsaRef};
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
@@ -70,6 +70,16 @@ pub struct DsaKeyPair {
 }
 
 impl DsaKeyPair {
+    pub(crate) fn from_ossl_dsa(key: Dsa<Private>) -> Self {
+        Self {
+            dsa: key,
+        }
+    }
+
+    pub(crate) fn ossl_dsa(&self) -> &DsaRef<Private> {
+        &self.dsa
+    }
+
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = 1024;

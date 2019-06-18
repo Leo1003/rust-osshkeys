@@ -1,6 +1,8 @@
 use crate::error::{Error, OsshResult};
+use crate::format::error::*;
 use crate::format::ossh_pubkey::*;
 use openssl::hash::{Hasher, MessageDigest};
+use openssl::pkey::{Id, PKeyRef, Private};
 use std::fmt;
 
 pub mod dsa;
@@ -162,6 +164,37 @@ pub struct KeyPair {
 }
 
 impl KeyPair {
+    pub(crate) fn from_ossl_pkey(pkey: &PKeyRef<Private>) -> KeyFormatResult<Self> {
+        let keypair = match pkey.id() {
+            Id::RSA => rsa::RsaKeyPair::from_ossl_rsa(pkey.rsa()?, rsa::RsaSignature::SHA1).into(),
+            Id::DSA => dsa::DsaKeyPair::from_ossl_dsa(pkey.dsa()?).into(),
+            Id::EC => ecdsa::EcDsaKeyPair::from_ossl_ec(pkey.ec_key()?)?.into(),
+            _ => return Err(KeyFormatError::UnsupportType),
+        };
+        Ok(keypair)
+    }
+
+    pub(crate) fn pem_stringify(&self, passphrase: Option<&[u8]>) -> KeyFormatResult<Vec<u8>> {
+        let pem = if let Some(passphrase) = passphrase {
+            let cipher = openssl::symm::Cipher::aes_128_cbc();
+            match &self.key {
+                KeyPairType::RSA(key) => key.ossl_rsa().private_key_to_pem_passphrase(cipher, passphrase)?,
+                KeyPairType::DSA(key) => unimplemented!(), //FIXME: openssl crate not implement it!!! //key.ossl_dsa().private_key_to_pem_passphrase(cipher, passphrase)?,
+                KeyPairType::ECDSA(key) => key.ossl_ec().private_key_to_pem_passphrase(cipher, passphrase)?,
+                _ => return Err(KeyFormatError::UnsupportType),
+            }
+        } else {
+            match &self.key {
+                KeyPairType::RSA(key) => key.ossl_rsa().private_key_to_pem()?,
+                KeyPairType::DSA(key) => unimplemented!(), //FIXME: openssl crate not implement it!!! //key.ossl_dsa().private_key_to_pem()?,
+                KeyPairType::ECDSA(key) => key.ossl_ec().private_key_to_pem()?,
+                _ => return Err(KeyFormatError::UnsupportType),
+            }
+        };
+
+        Ok(pem)
+    }
+
     pub fn generate(keytype: KeyType, bits: usize) -> OsshResult<Self> {
         Ok(match keytype {
             KeyType::RSA => rsa::RsaKeyPair::generate(bits)?.into(),
