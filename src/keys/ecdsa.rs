@@ -12,9 +12,9 @@ use std::fmt;
 use std::str::FromStr;
 
 const ECDSA_DEF_SIZE: usize = 256;
-pub(crate) const NIST_P256_NAME: &'static str = "ecdsa-sha2-nistp256";
-pub(crate) const NIST_P384_NAME: &'static str = "ecdsa-sha2-nistp384";
-pub(crate) const NIST_P521_NAME: &'static str = "ecdsa-sha2-nistp521";
+pub(crate) const NIST_P256_NAME: &str = "ecdsa-sha2-nistp256";
+pub(crate) const NIST_P384_NAME: &str = "ecdsa-sha2-nistp384";
+pub(crate) const NIST_P521_NAME: &str = "ecdsa-sha2-nistp521";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EcCurve {
@@ -24,7 +24,7 @@ pub enum EcCurve {
 }
 
 impl EcCurve {
-    pub fn size(&self) -> usize {
+    pub fn size(self) -> usize {
         match self {
             EcCurve::Nistp256 => 256,
             EcCurve::Nistp384 => 384,
@@ -32,7 +32,7 @@ impl EcCurve {
         }
     }
 
-    pub fn nid(&self) -> Nid {
+    pub fn nid(self) -> Nid {
         match self {
             EcCurve::Nistp256 => Nid::X9_62_PRIME256V1,
             EcCurve::Nistp384 => Nid::SECP384R1,
@@ -40,7 +40,7 @@ impl EcCurve {
         }
     }
 
-    pub fn name(&self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             EcCurve::Nistp256 => NIST_P256_NAME,
             EcCurve::Nistp384 => NIST_P384_NAME,
@@ -48,7 +48,7 @@ impl EcCurve {
         }
     }
 
-    pub fn ident(&self) -> &'static str {
+    pub fn ident(self) -> &'static str {
         match self {
             EcCurve::Nistp256 => "nistp256",
             EcCurve::Nistp384 => "nistp384",
@@ -101,7 +101,7 @@ impl EcDsaPublicKey {
 
         Ok(Self {
             key: EcKey::from_public_key(&group, public_key)?,
-            curve: curve,
+            curve,
         })
     }
 }
@@ -154,7 +154,9 @@ pub struct EcDsaKeyPair {
 }
 
 impl EcDsaKeyPair {
-    pub(crate) fn from_ossl_ec(key: EcKey<Private>) -> Result<Self, crate::format::error::KeyFormatError> {
+    pub(crate) fn from_ossl_ec(
+        key: EcKey<Private>,
+    ) -> Result<Self, crate::format::error::KeyFormatError> {
         let curve = match key.group().curve_name().unwrap_or(Nid::UNDEF) {
             Nid::X9_62_PRIME256V1 => EcCurve::Nistp256,
             Nid::SECP384R1 => EcCurve::Nistp384,
@@ -162,10 +164,7 @@ impl EcDsaKeyPair {
             _ => return Err(crate::format::error::KeyFormatError::UnsupportCurve),
         };
 
-        Ok(Self {
-            key: key,
-            curve: curve,
-        })
+        Ok(Self { key, curve })
     }
 
     pub(crate) fn ossl_ec(&self) -> &EcKeyRef<Private> {

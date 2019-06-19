@@ -1,6 +1,7 @@
 use crate::error::{Error, OsshResult};
 use crate::format::error::*;
 use crate::format::ossh_pubkey::*;
+use crate::format::pem::*;
 use openssl::hash::{Hasher, MessageDigest};
 use openssl::pkey::{Id, PKeyRef, Private};
 use std::fmt;
@@ -18,7 +19,7 @@ pub enum FingerprintHash {
 }
 
 impl FingerprintHash {
-    fn get_digest(&self) -> MessageDigest {
+    fn get_digest(self) -> MessageDigest {
         match self {
             FingerprintHash::MD5 => MessageDigest::md5(),
             FingerprintHash::SHA256 => MessageDigest::sha256(),
@@ -36,14 +37,14 @@ pub enum KeyType {
 }
 
 #[derive(Debug, PartialEq)]
-enum PublicKeyType {
+pub(crate) enum PublicKeyType {
     RSA(rsa::RsaPublicKey),
     DSA(dsa::DsaPublicKey),
     ECDSA(ecdsa::EcDsaPublicKey),
     ED25519(ed25519::Ed25519PublicKey),
 }
 
-enum KeyPairType {
+pub(crate) enum KeyPairType {
     RSA(rsa::RsaKeyPair),
     DSA(dsa::DsaKeyPair),
     ECDSA(ecdsa::EcDsaKeyPair),
@@ -51,8 +52,8 @@ enum KeyPairType {
 }
 
 pub struct PublicKey {
-    key: PublicKeyType,
-    comment: String,
+    pub(crate) key: PublicKeyType,
+    pub(crate) comment: String,
 }
 
 impl PublicKey {
@@ -159,8 +160,8 @@ impl From<ed25519::Ed25519PublicKey> for PublicKey {
 }
 
 pub struct KeyPair {
-    key: KeyPairType,
-    comment: String,
+    pub(crate) key: KeyPairType,
+    pub(crate) comment: String,
 }
 
 impl KeyPair {
@@ -174,25 +175,8 @@ impl KeyPair {
         Ok(keypair)
     }
 
-    pub(crate) fn pem_stringify(&self, passphrase: Option<&[u8]>) -> KeyFormatResult<Vec<u8>> {
-        let pem = if let Some(passphrase) = passphrase {
-            let cipher = openssl::symm::Cipher::aes_128_cbc();
-            match &self.key {
-                KeyPairType::RSA(key) => key.ossl_rsa().private_key_to_pem_passphrase(cipher, passphrase)?,
-                KeyPairType::DSA(key) => unimplemented!(), //FIXME: openssl crate not implement it!!! //key.ossl_dsa().private_key_to_pem_passphrase(cipher, passphrase)?,
-                KeyPairType::ECDSA(key) => key.ossl_ec().private_key_to_pem_passphrase(cipher, passphrase)?,
-                _ => return Err(KeyFormatError::UnsupportType),
-            }
-        } else {
-            match &self.key {
-                KeyPairType::RSA(key) => key.ossl_rsa().private_key_to_pem()?,
-                KeyPairType::DSA(key) => unimplemented!(), //FIXME: openssl crate not implement it!!! //key.ossl_dsa().private_key_to_pem()?,
-                KeyPairType::ECDSA(key) => key.ossl_ec().private_key_to_pem()?,
-                _ => return Err(KeyFormatError::UnsupportType),
-            }
-        };
-
-        Ok(pem)
+    pub fn from_pem(pem: &str, passphrase: Option<&[u8]>) -> OsshResult<Self> {
+        Ok(parse_pem_privkey(pem.as_bytes(), passphrase)?)
     }
 
     pub fn generate(keytype: KeyType, bits: usize) -> OsshResult<Self> {
@@ -211,6 +195,10 @@ impl KeyPair {
             KeyPairType::ECDSA(_) => KeyType::ECDSA,
             KeyPairType::ED25519(_) => KeyType::ED25519,
         }
+    }
+
+    pub fn serialize_pem(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
+        Ok(stringify_pem_privkey(&self, passphrase)?)
     }
 
     pub fn comment(&self) -> &str {

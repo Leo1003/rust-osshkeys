@@ -46,7 +46,7 @@ impl<R: io::Read> SshReadExt for R {
     fn read_mpint(&mut self) -> io::Result<BigNum> {
         let data = self.read_string()?;
 
-        if data.len() != 0 && data[0] & 0x80 != 0 {
+        if !data.is_empty() && data[0] & 0x80 != 0 {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 "Negative Big Number",
@@ -129,7 +129,7 @@ impl<W: io::Write> SshWriteExt for W {
         let mut list_str = String::new();
         for s in values {
             let s = s.as_ref();
-            if s.contains(",") {
+            if s.contains(',') {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "List elements can't contain ','",
@@ -141,7 +141,7 @@ impl<W: io::Write> SshWriteExt for W {
                     "List elements should only contain ascii characters",
                 ));
             }
-            if list_str.len() > 0 {
+            if !list_str.is_empty() {
                 list_str.push_str(",");
             }
             list_str.push_str(s);

@@ -5,7 +5,7 @@ use ed25519_dalek::{Keypair, PublicKey, Signature, PUBLIC_KEY_LENGTH};
 use rand::rngs::OsRng;
 use std::fmt;
 
-pub(crate) const ED25519_NAME: &'static str = "ssh-ed25519";
+pub(crate) const ED25519_NAME: &str = "ssh-ed25519";
 
 #[derive(Debug, Clone)]
 pub struct Ed25519PublicKey {

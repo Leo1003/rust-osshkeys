@@ -11,7 +11,7 @@ use std::fmt;
 const RSA_DEF_SIZE: usize = 2048;
 const RSA_MIN_SIZE: usize = 1024;
 const RSA_MAX_SIZE: usize = 16384;
-pub(crate) const RSA_NAME: &'static str = "ssh-rsa";
+pub(crate) const RSA_NAME: &str = "ssh-rsa";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RsaSignature {
@@ -21,7 +21,7 @@ pub enum RsaSignature {
 }
 
 impl RsaSignature {
-    fn get_digest(&self) -> MessageDigest {
+    fn get_digest(self) -> MessageDigest {
         use RsaSignature::*;
         match self {
             SHA1 => MessageDigest::md5(),
@@ -41,7 +41,7 @@ impl RsaPublicKey {
     pub fn new(n: BigNum, e: BigNum) -> Result<RsaPublicKey, openssl::error::ErrorStack> {
         let rsa = Rsa::from_public_components(n, e)?;
         Ok(RsaPublicKey {
-            rsa: rsa,
+            rsa,
             signhash: RsaSignature::SHA1,
         })
     }
@@ -53,7 +53,7 @@ impl RsaPublicKey {
     ) -> Result<RsaPublicKey, Error> {
         let rsa = Rsa::from_public_components(n, e)?;
         Ok(RsaPublicKey {
-            rsa: rsa,
+            rsa,
             signhash: sig_hash,
         })
     }
@@ -112,10 +112,7 @@ pub struct RsaKeyPair {
 
 impl RsaKeyPair {
     pub(crate) fn from_ossl_rsa(key: Rsa<Private>, signhash: RsaSignature) -> Self {
-        Self {
-            rsa: key,
-            signhash: signhash,
-        }
+        Self { rsa: key, signhash }
     }
 
     pub(crate) fn ossl_rsa(&self) -> &RsaRef<Private> {

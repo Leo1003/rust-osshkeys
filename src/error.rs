@@ -12,15 +12,12 @@ pub struct Error {
 
 impl Error {
     pub(crate) fn from_kind(kind: ErrorKind) -> Self {
-        Error {
-            kind: kind,
-            inner: None,
-        }
+        Error { kind, inner: None }
     }
 
     pub(crate) fn with_failure<F: Fail>(kind: ErrorKind, failure: F) -> Self {
         Error {
-            kind: kind,
+            kind,
             inner: Some(failure.into()),
         }
     }
@@ -107,7 +104,7 @@ pub enum ErrorKind {
 }
 
 impl ErrorKind {
-    pub fn name(&self) -> &'static str {
+    pub fn name(self) -> &'static str {
         use ErrorKind::*;
 
         match self {

@@ -8,7 +8,7 @@ use openssl::pkey::{PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
 use std::fmt;
 
-pub(crate) const DSA_NAME: &'static str = "ssh-dss";
+pub(crate) const DSA_NAME: &str = "ssh-dss";
 
 #[derive(Debug, Clone)]
 pub struct DsaPublicKey {
@@ -23,7 +23,7 @@ impl DsaPublicKey {
         pub_key: BigNum,
     ) -> Result<Self, openssl::error::ErrorStack> {
         let dsa = Dsa::from_public_components(p, q, g, pub_key)?;
-        Ok(Self { dsa: dsa })
+        Ok(Self { dsa })
     }
 }
 
@@ -71,9 +71,7 @@ pub struct DsaKeyPair {
 
 impl DsaKeyPair {
     pub(crate) fn from_ossl_dsa(key: Dsa<Private>) -> Self {
-        Self {
-            dsa: key,
-        }
+        Self { dsa: key }
     }
 
     pub(crate) fn ossl_dsa(&self) -> &DsaRef<Private> {
