@@ -16,6 +16,8 @@ pub enum KeyFormatError {
     OpensslError(openssl::error::ErrorStack),
     Ed25519Error(ed25519_dalek::SignatureError),
     Base64Error(base64::DecodeError),
+    PemFormatError(nom_pem::PemParsingError),
+    IVError(block_modes::InvalidKeyIvLength),
     IOError(std::io::Error),
     FormatError(std::fmt::Error),
 }
@@ -40,6 +42,8 @@ impl Fail for KeyFormatError {
             OpensslError(_) => "OpenSSL Error",
             Ed25519Error(_) => "Ed25519 Error",
             Base64Error(_) => "Base64 Error",
+            PemFormatError(_) => "PEM Format Error",
+            IVError(_) => "IV Error",
             IOError(_) => "I/O Error",
             FormatError(_) => "Formatter Error",
         };
@@ -81,5 +85,15 @@ impl From<ed25519_dalek::SignatureError> for KeyFormatError {
 impl From<base64::DecodeError> for KeyFormatError {
     fn from(err: base64::DecodeError) -> Self {
         KeyFormatError::Base64Error(err)
+    }
+}
+impl From<nom_pem::PemParsingError> for KeyFormatError {
+    fn from(err: nom_pem::PemParsingError) -> Self {
+        KeyFormatError::PemFormatError(err)
+    }
+}
+impl From<block_modes::InvalidKeyIvLength> for KeyFormatError {
+    fn from(err: block_modes::InvalidKeyIvLength) -> Self {
+        KeyFormatError::IVError(err)
     }
 }
