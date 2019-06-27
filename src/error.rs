@@ -1,4 +1,3 @@
-use crate::format::error::KeyFormatError;
 use failure::{Error as FailureError, Fail};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -21,10 +20,6 @@ impl Error {
             inner: Some(failure.into()),
         }
     }
-
-    pub(crate) fn into_format_error(self) -> Option<KeyFormatError> {
-        self.inner.and_then(|inner| inner.downcast().ok())
-    }
 }
 
 impl Display for Error {
@@ -39,7 +34,7 @@ impl Display for Error {
 
 impl Fail for Error {
     fn name(&self) -> Option<&str> {
-        if self.kind == ErrorKind::Custom {
+        if self.kind == ErrorKind::Unknown {
             None
         } else {
             Some(self.kind.name())
@@ -54,12 +49,6 @@ impl Fail for Error {
 impl From<ErrorKind> for Error {
     fn from(kind: ErrorKind) -> Self {
         Self::from_kind(kind)
-    }
-}
-
-impl From<KeyFormatError> for Error {
-    fn from(err: KeyFormatError) -> Self {
-        Self::with_failure(ErrorKind::InvalidKeyFormat, err)
     }
 }
 
@@ -88,6 +77,17 @@ impl From<base64::DecodeError> for Error {
         Self::with_failure(ErrorKind::Base64Error, err)
     }
 }
+impl From<block_modes::InvalidKeyIvLength> for Error {
+    fn from(err: block_modes::InvalidKeyIvLength) -> Self {
+        Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
+    }
+}
+impl From<nom_pem::PemParsingError> for Error {
+    fn from(_err: nom_pem::PemParsingError) -> Self {
+        // nom_pem::PemParsingError doesn't implement std::error::Error
+        Self::from_kind(ErrorKind::InvalidPemFormat)
+    }
+}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ErrorKind {
@@ -99,8 +99,13 @@ pub enum ErrorKind {
     InvalidKeyFormat,
     InvalidFormat,
     InvalidKeySize,
-    UnsupportedCurve,
-    Custom,
+    UnsupportCurve,
+    IncorrectPass,
+    TypeNotMatch,
+    UnsupportType,
+    InvalidPemFormat,
+    InvalidKeyIvLength,
+    Unknown,
 }
 
 impl ErrorKind {
@@ -116,8 +121,13 @@ impl ErrorKind {
             InvalidKeyFormat => "Invalid Key Format",
             InvalidFormat => "Invalid Format",
             InvalidKeySize => "Invalid Key Size",
-            UnsupportedCurve => "Unsupported Elliptic Curve",
-            Custom => "Custom Error",
+            UnsupportCurve => "Unsupported Elliptic Curve",
+            IncorrectPass => "Incorrect Passphrase",
+            TypeNotMatch => "Key Type Not Match",
+            UnsupportType => "Unsupported Key Type",
+            InvalidPemFormat => "Invalid PEM Format",
+            InvalidKeyIvLength => "Invalid Key/IV Length",
+            Unknown => "Unknown Error",
         }
     }
 }

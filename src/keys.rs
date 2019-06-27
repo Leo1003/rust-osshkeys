@@ -1,5 +1,4 @@
-use crate::error::{Error, OsshResult};
-use crate::format::error::*;
+use crate::error::*;
 use crate::format::ossh_pubkey::*;
 use crate::format::pem::*;
 use openssl::hash::{Hasher, MessageDigest};
@@ -165,12 +164,12 @@ pub struct KeyPair {
 }
 
 impl KeyPair {
-    pub(crate) fn from_ossl_pkey(pkey: &PKeyRef<Private>) -> KeyFormatResult<Self> {
+    pub(crate) fn from_ossl_pkey(pkey: &PKeyRef<Private>) -> OsshResult<Self> {
         let keypair = match pkey.id() {
             Id::RSA => rsa::RsaKeyPair::from_ossl_rsa(pkey.rsa()?, rsa::RsaSignature::SHA1).into(),
             Id::DSA => dsa::DsaKeyPair::from_ossl_dsa(pkey.dsa()?).into(),
             Id::EC => ecdsa::EcDsaKeyPair::from_ossl_ec(pkey.ec_key()?)?.into(),
-            _ => return Err(KeyFormatError::UnsupportType),
+            _ => return Err(ErrorKind::UnsupportType.into()),
         };
         Ok(keypair)
     }

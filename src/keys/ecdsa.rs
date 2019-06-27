@@ -64,7 +64,7 @@ impl FromStr for EcCurve {
             "nistp256" => Ok(EcCurve::Nistp256),
             "nistp384" => Ok(EcCurve::Nistp384),
             "nistp521" => Ok(EcCurve::Nistp521),
-            _ => Err(ErrorKind::UnsupportedCurve.into()),
+            _ => Err(ErrorKind::UnsupportCurve.into()),
         }
     }
 }
@@ -154,14 +154,12 @@ pub struct EcDsaKeyPair {
 }
 
 impl EcDsaKeyPair {
-    pub(crate) fn from_ossl_ec(
-        key: EcKey<Private>,
-    ) -> Result<Self, crate::format::error::KeyFormatError> {
+    pub(crate) fn from_ossl_ec(key: EcKey<Private>) -> OsshResult<Self> {
         let curve = match key.group().curve_name().unwrap_or(Nid::UNDEF) {
             Nid::X9_62_PRIME256V1 => EcCurve::Nistp256,
             Nid::SECP384R1 => EcCurve::Nistp384,
             Nid::SECP521R1 => EcCurve::Nistp521,
-            _ => return Err(crate::format::error::KeyFormatError::UnsupportCurve),
+            _ => return Err(ErrorKind::UnsupportCurve.into()),
         };
 
         Ok(Self { key, curve })
