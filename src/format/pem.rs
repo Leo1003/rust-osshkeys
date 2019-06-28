@@ -5,6 +5,17 @@ use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
 use des::{Des, TdesEde3};
 use nom_pem::{Block as PemBlock, HeaderEntry, ProcTypeType, RFC1423Algorithm};
 use openssl::pkey::PKey;
+use digest::{Digest, DynDigest};
+use zeroize::Zeroize;
+use std::convert::TryInto;
+
+const MAX_KEY_LEN: usize = 64;
+
+const AES128_KEY_LEN: usize = 16;
+const AES192_KEY_LEN: usize = 24;
+const AES256_KEY_LEN: usize = 32;
+const DES_KEY_LEN: usize = 8;
+const DES_EDE3_KEY_LEN: usize = 24;
 
 type Aes128Cbc = Cbc<Aes128, Pkcs7>;
 type Aes192Cbc = Cbc<Aes192, Pkcs7>;
@@ -83,8 +94,8 @@ pub fn parse_keyfile(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPai
 fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResult<Vec<u8>> {
     let mut encrypted = false;
     for entry in &pemblock.headers {
-        if let HeaderEntry::ProcType(_, proctype) = entry {
-            if *proctype == ProcTypeType::ENCRYPTED {
+        if let HeaderEntry::ProcType(ver, proctype) = entry {
+            if *proctype == ProcTypeType::ENCRYPTED && *ver == 4 {
                 encrypted = true;
             } else {
                 return Err(ErrorKind::UnsupportType.into());
@@ -96,23 +107,27 @@ fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResu
         for entry in &pemblock.headers {
             if let HeaderEntry::DEKInfo(algo, iv) = entry {
                 if let Some(pass) = passphrase {
-                    //TODO: key derived function not implemented yet!!!
                     decrypted = Some(
                         match algo {
                             RFC1423Algorithm::DES_CBC => {
-                                DesCbc::new_var(&pass, &iv)?.decrypt_vec(&pemblock.data)
+                                let key = openssl_kdf(pass, iv.as_slice().try_into()?, &mut md5::Md5::default(), DES_KEY_LEN, 1)?;
+                                DesCbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
                             }
                             RFC1423Algorithm::DES_EDE3_CBC => {
-                                DesEde3Cbc::new_var(&pass, &iv)?.decrypt_vec(&pemblock.data)
+                                let key = openssl_kdf(pass, iv.as_slice().try_into()?, &mut md5::Md5::default(), DES_EDE3_KEY_LEN, 1)?;
+                                DesEde3Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
                             }
                             RFC1423Algorithm::AES_128_CBC => {
-                                Aes128Cbc::new_var(&pass, &iv)?.decrypt_vec(&pemblock.data)
+                                let key = openssl_kdf(pass, iv.as_slice().try_into()?, &mut md5::Md5::default(), AES128_KEY_LEN, 1)?;
+                                Aes128Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
                             }
                             RFC1423Algorithm::AES_192_CBC => {
-                                Aes192Cbc::new_var(&pass, &iv)?.decrypt_vec(&pemblock.data)
+                                let key = openssl_kdf(pass, iv.as_slice().try_into()?, &mut md5::Md5::default(), AES192_KEY_LEN, 1)?;
+                                Aes192Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
                             }
                             RFC1423Algorithm::AES_256_CBC => {
-                                Aes256Cbc::new_var(&pass, &iv)?.decrypt_vec(&pemblock.data)
+                                let key = openssl_kdf(pass, iv.as_slice().try_into()?, &mut md5::Md5::default(), AES256_KEY_LEN, 1)?;
+                                Aes256Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
                             }
                         }
                         .map_err(|_| ErrorKind::IncorrectPass)?,
@@ -131,4 +146,40 @@ fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResu
     } else {
         Ok(pemblock.data.clone())
     }
+}
+
+fn openssl_kdf(data: &[u8], salt: &[u8; 8], digest: &mut dyn DynDigest, keylen: usize, iter: usize) -> OsshResult<Vec<u8>> {
+    if keylen > MAX_KEY_LEN {
+        return Err(ErrorKind::InvalidKeySize.into());
+    }
+
+    let mut key: Vec<u8> = Vec::with_capacity(keylen);
+    let mut dig: Box<[u8]> = Box::default();
+
+    let mut first = true;
+    digest.reset();
+    while key.len() < keylen {
+        if !first {
+            digest.input(&dig);
+        }
+        digest.input(data);
+        digest.input(salt);
+        dig = digest.result_reset();
+
+        for _ in 1..iter {
+            digest.input(&dig);
+            dig = digest.result_reset();
+        }
+
+        for byte in dig.as_ref() {
+            if key.len() < keylen {
+                key.push(*byte);
+            }
+        }
+
+        first = false;
+    }
+
+    dig.zeroize();
+    Ok(key)
 }

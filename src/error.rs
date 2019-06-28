@@ -88,6 +88,11 @@ impl From<nom_pem::PemParsingError> for Error {
         Self::from_kind(ErrorKind::InvalidPemFormat)
     }
 }
+impl From<std::array::TryFromSliceError> for Error {
+    fn from(err: std::array::TryFromSliceError) -> Self {
+        Self::with_failure(ErrorKind::InvalidLength, err)
+    }
+}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ErrorKind {
@@ -99,6 +104,7 @@ pub enum ErrorKind {
     InvalidKeyFormat,
     InvalidFormat,
     InvalidKeySize,
+    InvalidLength,
     UnsupportCurve,
     IncorrectPass,
     TypeNotMatch,
@@ -121,6 +127,7 @@ impl ErrorKind {
             InvalidKeyFormat => "Invalid Key Format",
             InvalidFormat => "Invalid Format",
             InvalidKeySize => "Invalid Key Size",
+            InvalidLength => "Invalid Length",
             UnsupportCurve => "Unsupported Elliptic Curve",
             IncorrectPass => "Incorrect Passphrase",
             TypeNotMatch => "Key Type Not Match",
