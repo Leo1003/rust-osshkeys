@@ -11,7 +11,9 @@ use std::fmt;
 const RSA_DEF_SIZE: usize = 2048;
 const RSA_MIN_SIZE: usize = 1024;
 const RSA_MAX_SIZE: usize = 16384;
-pub(crate) const RSA_NAME: &str = "ssh-rsa";
+pub const RSA_NAME: &str = "ssh-rsa";
+pub const RSA_SHA256_NAME: &str = "rsa-sha2-256";
+pub const RSA_SHA512_NAME: &str = "rsa-sha2-512";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RsaSignature {

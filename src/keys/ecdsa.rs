@@ -12,9 +12,9 @@ use std::fmt;
 use std::str::FromStr;
 
 const ECDSA_DEF_SIZE: usize = 256;
-pub(crate) const NIST_P256_NAME: &str = "ecdsa-sha2-nistp256";
-pub(crate) const NIST_P384_NAME: &str = "ecdsa-sha2-nistp384";
-pub(crate) const NIST_P521_NAME: &str = "ecdsa-sha2-nistp521";
+pub const NIST_P256_NAME: &str = "ecdsa-sha2-nistp256";
+pub const NIST_P384_NAME: &str = "ecdsa-sha2-nistp384";
+pub const NIST_P521_NAME: &str = "ecdsa-sha2-nistp521";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EcCurve {

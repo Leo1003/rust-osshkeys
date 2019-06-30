@@ -8,7 +8,7 @@ use openssl::pkey::{PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
 use std::fmt;
 
-pub(crate) const DSA_NAME: &str = "ssh-dss";
+pub const DSA_NAME: &str = "ssh-dss";
 
 #[derive(Debug, Clone)]
 pub struct DsaPublicKey {
