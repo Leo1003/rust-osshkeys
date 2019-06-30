@@ -174,8 +174,8 @@ impl KeyPair {
         Ok(keypair)
     }
 
-    pub fn from_pem(pem: &str, passphrase: Option<&[u8]>) -> OsshResult<Self> {
-        Ok(parse_pem_privkey(pem.as_bytes(), passphrase)?)
+    pub fn from_keystr(pem: &str, passphrase: Option<&[u8]>) -> OsshResult<Self> {
+        Ok(parse_keystr(pem.as_bytes(), passphrase)?)
     }
 
     pub fn generate(keytype: KeyType, bits: usize) -> OsshResult<Self> {

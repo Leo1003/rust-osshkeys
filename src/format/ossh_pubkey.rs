@@ -1,10 +1,5 @@
 use crate::error::*;
-use crate::keys::dsa::{DsaPublicKey, DSA_NAME};
-use crate::keys::ecdsa::{EcCurve, EcDsaPublicKey, NIST_P256_NAME, NIST_P384_NAME, NIST_P521_NAME};
-use crate::keys::ed25519::{Ed25519PublicKey, ED25519_NAME};
-use crate::keys::rsa::{RsaPublicKey, RSA_NAME};
-use crate::keys::PubKey;
-use crate::keys::PublicKey;
+use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, PubKey, PublicKey};
 use crate::sshbuf::{SshReadExt, SshWriteExt};
 use ed25519_dalek::PublicKey as Ed25519PubKey;
 use ed25519_dalek::PUBLIC_KEY_LENGTH;

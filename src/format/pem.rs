@@ -61,7 +61,7 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> Os
     Ok(String::from_utf8(pem).map_err(|e| Error::with_failure(ErrorKind::InvalidPemFormat, e))?)
 }
 
-pub fn parse_keyfile(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
+pub fn parse_keystr(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
     let pemdata = nom_pem::decode_block(pem)?;
 
     match pemdata.block_type {
@@ -71,24 +71,26 @@ pub fn parse_keyfile(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPai
         }
         "PRIVATE KEY" => {
             // PKCS#8 format
-            unimplemented!()
+            parse_pem_privkey(pem, passphrase)
+            //unimplemented!()
         }
         "DSA PRIVATE KEY" => {
             // Openssl DSA Key
-            unimplemented!()
+            parse_pem_privkey(pem, passphrase)
+            //unimplemented!()
         }
         "RSA PRIVATE KEY" => {
             // Openssl RSA Key
-            unimplemented!()
+            parse_pem_privkey(pem, passphrase)
+            //unimplemented!()
         }
         "EC PRIVATE KEY" => {
             // Openssl EC Key
-            unimplemented!()
+            parse_pem_privkey(pem, passphrase)
+            //unimplemented!()
         }
         _ => return Err(ErrorKind::UnsupportType.into()),
     }
-
-    unimplemented!()
 }
 
 fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResult<Vec<u8>> {
