@@ -1,6 +1,7 @@
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PubKey, PublicKey};
 use crate::sshbuf::{SshReadExt, SshWriteExt};
+use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use ed25519_dalek::PublicKey as Ed25519PubKey;
 use ed25519_dalek::PUBLIC_KEY_LENGTH;
 use std::io::Cursor;
@@ -91,26 +92,37 @@ pub fn decrypt_ossh_priv(
     }
 
     if let Some(cipher) = cipher {
-        let keyder: &[u8] = match kdfname {
+        let keyder = match kdfname {
             "bcrypt" => {
-                let mut kdfreader = Cursor::new(kdf);
-                let salt = Zeroizing::new(kdfreader.read_string()?);
-                let round = Zeroizing::new(kdfreader.read_uint32()?);
-                // TODO: implement bcrypt_pbkdf
-                unimplemented!()
+                if let Some(pass) = passphrase {
+                    let mut kdfreader = Cursor::new(kdf);
+                    let salt = Zeroizing::new(kdfreader.read_string()?);
+                    let round = Zeroizing::new(kdfreader.read_uint32()?);
+                    let mut output = Zeroizing::new(vec![0u8; cipher.key_len() + cipher.iv_len().unwrap_or(0)]);
+                    bcrypt_pbkdf(pass, &salt, *round, &mut output)?;
+                    output
+                } else {
+                    // Should have already checked passphrase
+                    return Err(ErrorKind::Unknown.into());
+                }
             },
             _ => {
                 return Err(ErrorKind::UnsupportCipher.into());
             }
         };
-        let key = &keyder[..32];
-        let iv = &keyder[32..];
-        let crypter = Crypter::new(cipher, Mode::Decrypt, key, Some(&iv))?;
+
+        // Splitting key & iv
+        let key = &keyder[..cipher.key_len()];
+        let iv = &keyder[cipher.key_len()..];
+        let mut crypter = Crypter::new(cipher, Mode::Decrypt, key, Some(&iv))?;
         crypter.pad(false);
+
+        // Decrypt
         let mut decrypted = vec![0; privkey_data.len() + blocksize];
         let mut n = crypter.update(privkey_data, &mut decrypted)?;
         n += crypter.finalize(&mut decrypted[n..])?;
         decrypted.truncate(n);
+
         Ok(decrypted)
     } else {
         Ok(privkey_data.to_vec())

@@ -1,5 +1,6 @@
 use crate::error::*;
 use crate::keys::*;
+use super::ossh_privkey::decode_ossh_priv;
 use aes::{Aes128, Aes192, Aes256};
 use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
 use des::{Des, TdesEde3};
@@ -67,7 +68,7 @@ pub fn parse_keystr(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair
     match pemdata.block_type {
         "OPENSSH PRIVATE KEY" => {
             // Openssh format
-            unimplemented!()
+            decode_ossh_priv(&pemdata.data, passphrase)
         }
         "PRIVATE KEY" => {
             // PKCS#8 format

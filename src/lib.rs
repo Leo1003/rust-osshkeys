@@ -2,6 +2,7 @@ extern crate ed25519_dalek;
 extern crate failure;
 extern crate rand;
 
+mod bcrypt_pbkdf;
 pub mod error;
 mod format;
 pub mod keys;
