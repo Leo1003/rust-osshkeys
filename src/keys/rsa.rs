@@ -113,8 +113,13 @@ pub struct RsaKeyPair {
 }
 
 impl RsaKeyPair {
-    pub(crate) fn from_ossl_rsa(key: Rsa<Private>, signhash: RsaSignature) -> Self {
-        Self { rsa: key, signhash }
+    pub(crate) fn from_ossl_rsa(key: Rsa<Private>, signhash: RsaSignature) -> OsshResult<Self> {
+        let rsa = Self { rsa: key, signhash };
+        if rsa.size() >= RSA_MIN_SIZE && rsa.size() <= RSA_MAX_SIZE {
+            Ok(rsa)
+        } else {
+            Err(ErrorKind::InvalidKeySize.into())
+        }
     }
 
     pub(crate) fn ossl_rsa(&self) -> &RsaRef<Private> {

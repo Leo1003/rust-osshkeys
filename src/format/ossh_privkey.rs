@@ -1,13 +1,15 @@
+use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PubKey, PublicKey};
 use crate::sshbuf::{SshReadExt, SshWriteExt};
-use crate::bcrypt_pbkdf::bcrypt_pbkdf;
-use ed25519_dalek::PublicKey as Ed25519PubKey;
-use ed25519_dalek::PUBLIC_KEY_LENGTH;
-use std::io::Cursor;
-use zeroize::{Zeroize, Zeroizing};
+use openssl::dsa::Dsa;
+use openssl::rsa::RsaPrivateKeyBuilder;
 use openssl::symm::{Cipher, Crypter, Mode};
+use std::io::Cursor;
+use std::str::FromStr;
+use zeroize::{Zeroize, Zeroizing};
 
+#[allow(clippy::many_single_char_names)]
 pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
     if keydata.len() >= 16 && &keydata[0..15] == b"openssh-key-v1\0" {
         let mut reader = Cursor::new(keydata);
@@ -40,17 +42,49 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
         // TODO: Decode private key
         match keyname.as_str() {
             RSA_NAME | RSA_SHA256_NAME | RSA_SHA512_NAME => {
-                unimplemented!()
-            },
+                let n = secret_reader.read_mpint()?;
+                let e = secret_reader.read_mpint()?;
+                let d = secret_reader.read_mpint()?;
+                let _iqmp = secret_reader.read_mpint()?;
+                let p = secret_reader.read_mpint()?;
+                let q = secret_reader.read_mpint()?;
+                let rsa = RsaPrivateKeyBuilder::new(n, e, d)?
+                    .set_factors(p, q)?
+                    .build();
+                match keyname.as_str() {
+                    RSA_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA1),
+                    RSA_SHA256_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA2_256),
+                    RSA_SHA512_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA2_512),
+                    _ => unreachable!(),
+                }
+                .map(|rsa| rsa.into())
+            }
             DSA_NAME => {
-                unimplemented!()
-            },
+                let p = secret_reader.read_mpint()?;
+                let q = secret_reader.read_mpint()?;
+                let g = secret_reader.read_mpint()?;
+                let pubkey = secret_reader.read_mpint()?;
+                let privkey = secret_reader.read_mpint()?;
+                let dsa = Dsa::from_private_components(p, q, g, privkey, pubkey)?;
+                Ok(DsaKeyPair::from_ossl_dsa(dsa).into())
+            }
             NIST_P256_NAME | NIST_P384_NAME | NIST_P521_NAME => {
-                unimplemented!()
-            },
+                let curvename = secret_reader.read_utf8()?;
+                let curvehint = EcCurve::from_name(keyname.as_str())?;
+                let curve = EcCurve::from_str(&curvename)?;
+                if curve != curvehint {
+                    return Err(ErrorKind::TypeNotMatch.into());
+                }
+                let pubkey = secret_reader.read_string()?;
+                let privkey = secret_reader.read_mpint()?;
+
+                EcDsaKeyPair::from_bytes(curve, &pubkey, &privkey).map(|ecdsa| ecdsa.into())
+            }
             ED25519_NAME => {
-                unimplemented!()
-            },
+                let pk = Zeroizing::new(secret_reader.read_string()?);
+                let sk = Zeroizing::new(secret_reader.read_string()?);
+                Ed25519KeyPair::from_bytes(&pk, &sk).map(|ed25519| ed25519.into())
+            }
             _ => Err(ErrorKind::UnsupportType.into()),
         }
     } else {
@@ -98,14 +132,15 @@ pub fn decrypt_ossh_priv(
                     let mut kdfreader = Cursor::new(kdf);
                     let salt = Zeroizing::new(kdfreader.read_string()?);
                     let round = Zeroizing::new(kdfreader.read_uint32()?);
-                    let mut output = Zeroizing::new(vec![0u8; cipher.key_len() + cipher.iv_len().unwrap_or(0)]);
+                    let mut output =
+                        Zeroizing::new(vec![0u8; cipher.key_len() + cipher.iv_len().unwrap_or(0)]);
                     bcrypt_pbkdf(pass, &salt, *round, &mut output)?;
                     output
                 } else {
                     // Should have already checked passphrase
                     return Err(ErrorKind::Unknown.into());
                 }
-            },
+            }
             _ => {
                 return Err(ErrorKind::UnsupportCipher.into());
             }
@@ -128,6 +163,3 @@ pub fn decrypt_ossh_priv(
         Ok(privkey_data.to_vec())
     }
 }
-
-
-

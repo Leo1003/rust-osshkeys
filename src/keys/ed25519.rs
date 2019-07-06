@@ -1,7 +1,14 @@
 use super::{Key, PrivKey, PubKey};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
-use ed25519_dalek::{Keypair, PublicKey, Signature, PUBLIC_KEY_LENGTH};
+#[rustfmt::skip]
+use ed25519_dalek::{
+    Keypair as DalekKeypair,
+    PublicKey as DalekPublicKey,
+    SecretKey as DalekSecretKey,
+    Signature,
+    PUBLIC_KEY_LENGTH,
+};
 use rand::rngs::OsRng;
 use std::fmt;
 
@@ -9,13 +16,13 @@ pub const ED25519_NAME: &str = "ssh-ed25519";
 
 #[derive(Debug, Clone)]
 pub struct Ed25519PublicKey {
-    key: PublicKey,
+    key: DalekPublicKey,
 }
 
 impl Ed25519PublicKey {
     pub fn new(key: &[u8; PUBLIC_KEY_LENGTH]) -> Result<Self, ed25519_dalek::SignatureError> {
         Ok(Self {
-            key: PublicKey::from_bytes(key)?,
+            key: DalekPublicKey::from_bytes(key)?,
         })
     }
 }
@@ -54,7 +61,7 @@ impl fmt::Display for Ed25519PublicKey {
 }
 
 pub struct Ed25519KeyPair {
-    key: Keypair,
+    key: DalekKeypair,
 }
 
 impl Key for Ed25519KeyPair {
@@ -75,7 +82,16 @@ impl Ed25519KeyPair {
 
         let mut rng = OsRng::new().map_err(|e| Error::with_failure(ErrorKind::Ed25519Error, e))?;
         Ok(Ed25519KeyPair {
-            key: Keypair::generate(&mut rng),
+            key: DalekKeypair::generate(&mut rng),
+        })
+    }
+
+    pub(crate) fn from_bytes(pk: &[u8], sk: &[u8]) -> OsshResult<Self> {
+        Ok(Ed25519KeyPair {
+            key: DalekKeypair {
+                public: DalekPublicKey::from_bytes(pk)?,
+                secret: DalekSecretKey::from_bytes(sk)?,
+            },
         })
     }
 

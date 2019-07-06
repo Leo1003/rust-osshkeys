@@ -1,8 +1,8 @@
 use super::{Key, PrivKey, PubKey};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
-use openssl::bn::BigNumContext;
-use openssl::ec::{EcGroup, EcKey, EcKeyRef, EcPointRef};
+use openssl::bn::{BigNumContext, BigNumRef};
+use openssl::ec::{EcGroup, EcKey, EcKeyRef, EcPoint, EcPointRef};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::{PKey, Private, Public};
@@ -24,6 +24,15 @@ pub enum EcCurve {
 }
 
 impl EcCurve {
+    pub fn from_name(s: &str) -> OsshResult<Self> {
+        match s {
+            NIST_P256_NAME => Ok(EcCurve::Nistp256),
+            NIST_P384_NAME => Ok(EcCurve::Nistp384),
+            NIST_P521_NAME => Ok(EcCurve::Nistp521),
+            _ => Err(ErrorKind::UnsupportCurve.into()),
+        }
+    }
+
     pub fn size(self) -> usize {
         match self {
             EcCurve::Nistp256 => 256,
@@ -93,7 +102,7 @@ impl fmt::Debug for EcDsaPublicKey {
 }
 
 impl EcDsaPublicKey {
-    pub fn new(
+    pub(crate) fn new(
         curve: EcCurve,
         public_key: &EcPointRef,
     ) -> Result<Self, openssl::error::ErrorStack> {
@@ -103,6 +112,13 @@ impl EcDsaPublicKey {
             key: EcKey::from_public_key(&group, public_key)?,
             curve,
         })
+    }
+
+    pub(crate) fn from_bytes(curve: EcCurve, public_key: &[u8]) -> OsshResult<Self> {
+        Ok(Self::new(
+            curve,
+            into_ec_point(curve, public_key)?.as_ref(),
+        )?)
     }
 }
 
@@ -169,6 +185,31 @@ impl EcDsaKeyPair {
         &self.key
     }
 
+    pub(crate) fn new(
+        curve: EcCurve,
+        public_key: &EcPointRef,
+        private_number: &BigNumRef,
+    ) -> OsshResult<Self> {
+        let group: EcGroup = curve.try_into()?;
+
+        Ok(Self {
+            key: EcKey::from_private_components(&group, private_number, public_key)?,
+            curve,
+        })
+    }
+
+    pub(crate) fn from_bytes(
+        curve: EcCurve,
+        public_key: &[u8],
+        private_number: &BigNumRef,
+    ) -> OsshResult<Self> {
+        Self::new(
+            curve,
+            into_ec_point(curve, public_key)?.as_ref(),
+            private_number,
+        )
+    }
+
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = ECDSA_DEF_SIZE;
@@ -183,7 +224,7 @@ impl EcDsaKeyPair {
 
         Ok(EcDsaKeyPair {
             key: EcKey::generate(&group)?,
-            curve: curve,
+            curve,
         })
     }
 
@@ -219,6 +260,12 @@ impl PrivKey for EcDsaKeyPair {
         sign.update(data)?;
         Ok(sign.sign_to_vec()?)
     }
+}
+
+fn into_ec_point(curve: EcCurve, public_key: &[u8]) -> Result<EcPoint, openssl::error::ErrorStack> {
+    let mut bn_ctx = BigNumContext::new()?;
+    let group: EcGroup = curve.try_into()?;
+    EcPoint::from_bytes(&group, &public_key, &mut bn_ctx)
 }
 
 #[allow(non_upper_case_globals)]

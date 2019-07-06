@@ -5,7 +5,7 @@ use ed25519_dalek::PublicKey as Ed25519PubKey;
 use ed25519_dalek::PUBLIC_KEY_LENGTH;
 use openssl::bn::BigNumContext;
 use openssl::dsa::DsaRef;
-use openssl::ec::{EcGroup, EcKeyRef, EcPoint, PointConversionForm};
+use openssl::ec::{EcKeyRef, PointConversionForm};
 use openssl::pkey::{HasParams, HasPublic};
 use openssl::rsa::RsaRef;
 use std::convert::TryInto;
@@ -77,11 +77,7 @@ pub(crate) fn decode_ecdsa_pubkey(
         }
     }
     let pub_key = reader.read_string()?;
-
-    let mut bn_ctx = BigNumContext::new()?;
-    let group: EcGroup = curve.try_into()?;
-    let point = EcPoint::from_bytes(&group, &pub_key, &mut bn_ctx)?;
-    Ok(EcDsaPublicKey::new(curve, &point)?)
+    Ok(EcDsaPublicKey::from_bytes(curve, &pub_key)?)
 }
 
 pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> OsshResult<Ed25519PublicKey> {

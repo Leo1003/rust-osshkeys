@@ -166,7 +166,7 @@ pub struct KeyPair {
 impl KeyPair {
     pub(crate) fn from_ossl_pkey(pkey: &PKeyRef<Private>) -> OsshResult<Self> {
         let keypair = match pkey.id() {
-            Id::RSA => rsa::RsaKeyPair::from_ossl_rsa(pkey.rsa()?, rsa::RsaSignature::SHA1).into(),
+            Id::RSA => rsa::RsaKeyPair::from_ossl_rsa(pkey.rsa()?, rsa::RsaSignature::SHA1)?.into(),
             Id::DSA => dsa::DsaKeyPair::from_ossl_dsa(pkey.dsa()?).into(),
             Id::EC => ecdsa::EcDsaKeyPair::from_ossl_ec(pkey.ec_key()?)?.into(),
             _ => return Err(ErrorKind::UnsupportType.into()),
@@ -216,7 +216,7 @@ impl KeyPair {
             KeyPairType::ED25519(key) => PublicKeyType::ED25519(key.clone_public_key()?),
         };
         Ok(PublicKey {
-            key: key,
+            key,
             comment: self.comment.clone(),
         })
     }
