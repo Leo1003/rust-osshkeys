@@ -23,6 +23,23 @@ pub enum RsaSignature {
 }
 
 impl RsaSignature {
+    pub fn from_name(s: &str) -> Option<Self> {
+        match s {
+            RSA_NAME => Some(RsaSignature::SHA1),
+            RSA_SHA256_NAME => Some(RsaSignature::SHA2_256),
+            RSA_SHA512_NAME => Some(RsaSignature::SHA2_512),
+            _ => None
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            RsaSignature::SHA1 => RSA_NAME,
+            RsaSignature::SHA2_256 => RSA_SHA256_NAME,
+            RsaSignature::SHA2_512 => RSA_SHA512_NAME,
+        }
+    }
+
     fn get_digest(self) -> MessageDigest {
         use RsaSignature::*;
         match self {
@@ -75,7 +92,7 @@ impl Key for RsaPublicKey {
     }
 
     fn keyname(&self) -> &'static str {
-        RSA_NAME
+        self.signhash.name()
     }
 }
 
@@ -160,7 +177,7 @@ impl Key for RsaKeyPair {
     }
 
     fn keyname(&self) -> &'static str {
-        RSA_NAME
+        self.signhash.name()
     }
 }
 

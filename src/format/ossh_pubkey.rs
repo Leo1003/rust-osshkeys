@@ -20,7 +20,11 @@ pub fn parse_ossh_pubkey(keystr: &str) -> OsshResult<PublicKey> {
     }
     let blob = base64::decode(key_split[1])?;
     let mut pubkey: PublicKey = match key_split[0] {
-        RSA_NAME => decode_rsa_pubkey(&blob)?.into(),
+        RSA_NAME | RSA_SHA256_NAME | RSA_SHA512_NAME => {
+            let mut rsa = decode_rsa_pubkey(&blob)?;
+            rsa.set_sign_type(RsaSignature::from_name(key_split[0]).unwrap());
+            rsa.into()
+        },
         DSA_NAME => decode_dsa_pubkey(&blob)?.into(),
         NIST_P256_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp256))?.into(),
         NIST_P384_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp384))?.into(),
@@ -37,7 +41,8 @@ pub fn parse_ossh_pubkey(keystr: &str) -> OsshResult<PublicKey> {
 
 pub(crate) fn decode_rsa_pubkey(keyblob: &[u8]) -> OsshResult<RsaPublicKey> {
     let mut reader = io::Cursor::new(keyblob);
-    if reader.read_utf8()? != RSA_NAME {
+    let keyname = reader.read_utf8()?;
+    if keyname != RSA_NAME && keyname != RSA_SHA256_NAME && keyname != RSA_SHA512_NAME {
         return Err(ErrorKind::TypeNotMatch.into());
     }
     let e = reader.read_mpint()?;
@@ -165,6 +170,7 @@ mod test {
 
     const DSA_PUBKEY: &'static str = "ssh-dss AAAAB3NzaC1kc3MAAACBAORLYnYacOdGmSJ99aZ+j2UqtQldYNHvAVVAI42wt/T/GTkg8cXdwwQ8HSJyD6T1e9ebnCXZd/YItX8DCPIP5GLUHVZy5zzKSzwga7zEjKP2j3JZGLAzFIUpStwQ8gur3zmh5DYi7JOdc/kWNpjT86n4fnrP+s8ZxuVDO5bbSasHAAAAFQD62yfFzJxz313aoIVgoMFoz8cF/wAAAIEAj7rvQz2hmuRyFUZIGWpwVHoR3y3SoQjEryX4ZtzwL04ROIXHSKJeOY9cdu2l5fMVYiMBtfWTQTlltFl1H//0hG/g5KBLhhwQ3Y7ul4Q8wsCWZJZeP3jtcO7+p3BLyMa6vvv5ptnMH+jRMgX5wwdszqogk4jCT+7fM2p6brMGccoAAACAD9qfPNxRo+npg+troNZ/FoYJezECqxg0jUyHWClACt7gS0W+r3dJIn9te6Xi7UFGPrLWJtlC++8i27m2FTS0sQUljM2NmRaf6jrCAhwPaJ0ievPJm5kBQmprTqBbdzCNRpI1+hceAnoHbajRwLueFwpoVOy2QjTkvBzd84Oobtw= osshkeys_dsa-test";
     const RSA_PUBKEY: &'static str = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9NCtKoC/4Gk+zS8XGtA5aGC9BeFfcOCg/9C14ph4oHVXzWlR5t3HdHJK6EJGLlC6fj5vI+6cviX7NUbXJXQ/hJe4m4c5AGzubX/jfzNTjBa+hB+5CEqSztA20aHgEWzBwoakhkOd0knT6IvHV/vqTzHVbtfWIiof2SenyHv7yD9RbS9SCmkjISi4wQWzJ1Yu0O1CbH/U1c18WnP46/HBiaJcmV9hk/L3vjSoI7kpjXfSq4d3KLnwsUdrFdhh3eN7K4/ZdnrZC8n1liDXyMAWiaAL8cu8K5wmBmnHTcqIwxYu7g+k46OzcaZxVy0i9hFBM2bzvGvsCJOF3Hh6zF15p osshkeys_rsa-test";
+    const RSA256_PUBKEY: &'static str = "rsa-sha2-256 AAAAB3NzaC1yc2EAAAADAQABAAABAQC9NCtKoC/4Gk+zS8XGtA5aGC9BeFfcOCg/9C14ph4oHVXzWlR5t3HdHJK6EJGLlC6fj5vI+6cviX7NUbXJXQ/hJe4m4c5AGzubX/jfzNTjBa+hB+5CEqSztA20aHgEWzBwoakhkOd0knT6IvHV/vqTzHVbtfWIiof2SenyHv7yD9RbS9SCmkjISi4wQWzJ1Yu0O1CbH/U1c18WnP46/HBiaJcmV9hk/L3vjSoI7kpjXfSq4d3KLnwsUdrFdhh3eN7K4/ZdnrZC8n1liDXyMAWiaAL8cu8K5wmBmnHTcqIwxYu7g+k46OzcaZxVy0i9hFBM2bzvGvsCJOF3Hh6zF15p osshkeys_rsa-test";
     const ECDSA_PUBKEY: &'static str = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKtcK82cEoqjiXyqPpyQAlkOQYs8LL5dDahPah5dqoaJfVHcKS5CJYBX0Ow+Dlj9xKtSQRCyJXOCEtJx+k4LUV0= osshkeys_ecdsa-test";
     const ED25519_PUBKEY: &'static str = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMoWBluPErgKhNja3lHEf7ie6AVzR24mPRd742xEYodC osshkeys_ed25519-test";
 
@@ -182,6 +188,14 @@ mod test {
         assert_eq!(rsa.comment(), "osshkeys_rsa-test");
         let rsa_string = stringify_ossh_pubkey(&rsa, Some(rsa.comment())).unwrap();
         assert_eq!(&rsa_string, RSA_PUBKEY);
+    }
+
+    #[test]
+    fn rsa256_publickey_parse_serialize() {
+        let rsa = parse_ossh_pubkey(RSA256_PUBKEY).unwrap();
+        assert_eq!(rsa.comment(), "osshkeys_rsa-test");
+        let rsa_string = stringify_ossh_pubkey(&rsa, Some(rsa.comment())).unwrap();
+        assert_eq!(&rsa_string, RSA256_PUBKEY);
     }
 
     #[test]
