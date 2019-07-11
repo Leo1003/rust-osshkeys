@@ -208,6 +208,10 @@ impl KeyPair {
         &mut self.comment
     }
 
+    pub(crate) fn set_comment(&mut self, comment: String) {
+        self.comment = comment;
+    }
+
     pub fn clone_public_key(&self) -> Result<PublicKey, Error> {
         let key = match &self.key {
             KeyPairType::RSA(key) => PublicKeyType::RSA(key.clone_public_key()?),

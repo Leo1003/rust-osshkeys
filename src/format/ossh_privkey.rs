@@ -5,7 +5,7 @@ use crate::sshbuf::{SshReadExt, SshWriteExt};
 use openssl::dsa::Dsa;
 use openssl::rsa::RsaPrivateKeyBuilder;
 use openssl::symm::{Cipher, Crypter, Mode};
-use std::io::Cursor;
+use std::io::{Cursor, Read as _};
 use std::str::FromStr;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -39,8 +39,9 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
             return Err(ErrorKind::IncorrectPass.into());
         }
         let keyname = secret_reader.read_utf8()?;
-        // TODO: Decode private key
-        match keyname.as_str() {
+
+        // Decode private key
+        let mut keypair: KeyPair = match keyname.as_str() {
             RSA_NAME | RSA_SHA256_NAME | RSA_SHA512_NAME => {
                 let n = secret_reader.read_mpint()?;
                 let e = secret_reader.read_mpint()?;
@@ -56,8 +57,8 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
                     RSA_SHA256_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA2_256),
                     RSA_SHA512_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA2_512),
                     _ => unreachable!(),
-                }
-                .map(|rsa| rsa.into())
+                }?
+                .into()
             }
             DSA_NAME => {
                 let p = secret_reader.read_mpint()?;
@@ -66,7 +67,7 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
                 let pubkey = secret_reader.read_mpint()?;
                 let privkey = secret_reader.read_mpint()?;
                 let dsa = Dsa::from_private_components(p, q, g, privkey, pubkey)?;
-                Ok(DsaKeyPair::from_ossl_dsa(dsa).into())
+                DsaKeyPair::from_ossl_dsa(dsa).into()
             }
             NIST_P256_NAME | NIST_P384_NAME | NIST_P521_NAME => {
                 let curvename = secret_reader.read_utf8()?;
@@ -78,15 +79,28 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
                 let pubkey = secret_reader.read_string()?;
                 let privkey = secret_reader.read_mpint()?;
 
-                EcDsaKeyPair::from_bytes(curve, &pubkey, &privkey).map(|ecdsa| ecdsa.into())
+                EcDsaKeyPair::from_bytes(curve, &pubkey, &privkey)?.into()
             }
             ED25519_NAME => {
                 let pk = Zeroizing::new(secret_reader.read_string()?);
-                let sk = Zeroizing::new(secret_reader.read_string()?);
-                Ed25519KeyPair::from_bytes(&pk, &sk).map(|ed25519| ed25519.into())
+                let sk = Zeroizing::new(secret_reader.read_string()?); // Actually is an ed25519 keypair
+                Ed25519KeyPair::from_bytes(&pk, &sk)?.into()
             }
-            _ => Err(ErrorKind::UnsupportType.into()),
+            _ => return Err(ErrorKind::UnsupportType.into()),
+        };
+
+        keypair.set_comment(secret_reader.read_utf8()?);
+
+        // Check padding
+        let mut i = 0;
+        for pad in secret_reader.bytes() {
+            i += 1;
+            if i != pad? {
+                return Err(ErrorKind::InvalidKeyFormat.into());
+            }
         }
+
+        Ok(keypair)
     } else {
         Err(ErrorKind::InvalidKeyFormat.into())
     }
@@ -102,20 +116,24 @@ pub fn decrypt_ossh_priv(
     let cipher = match ciphername {
         "3des-cbc" => Some(Cipher::des_ede3_cbc()),
         "aes128-cbc" => Some(Cipher::aes_128_cbc()),
-        //"aes192-cbc", // Openssl doesn't implement aes192
+        //"aes192-cbc", // Openssl crate doesn't expose aes192
         "aes256-cbc" | "rijndael-cbc@lysator.liu.se" => Some(Cipher::aes_256_cbc()),
         "aes128-ctr" => Some(Cipher::aes_128_ctr()),
-        //"aes192-ctr", // Openssl doesn't implement aes192
+        //"aes192-ctr", // Openssl crate doesn't expose aes192
         "aes256-ctr" => Some(Cipher::aes_256_ctr()),
         "none" => None,
         _ => return Err(ErrorKind::UnsupportCipher.into()),
     };
+
+    // Check if empty passphrase but encrypted
     if (!passphrase.map_or(false, |pass| !pass.is_empty())) && cipher.is_some() {
         return Err(ErrorKind::IncorrectPass.into());
     }
+    // Check kdf type
     if kdfname != "none" && kdfname != "bcrypt" {
         return Err(ErrorKind::UnsupportCipher.into());
     }
+    // Check if no kdf providing but encrypted
     if kdfname == "none" && cipher.is_some() {
         return Err(ErrorKind::InvalidKeyFormat.into());
     }
