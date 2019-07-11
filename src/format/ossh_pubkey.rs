@@ -24,7 +24,7 @@ pub fn parse_ossh_pubkey(keystr: &str) -> OsshResult<PublicKey> {
             let mut rsa = decode_rsa_pubkey(&blob)?;
             rsa.set_sign_type(RsaSignature::from_name(key_split[0]).unwrap());
             rsa.into()
-        },
+        }
         DSA_NAME => decode_dsa_pubkey(&blob)?.into(),
         NIST_P256_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp256))?.into(),
         NIST_P384_NAME => decode_ecdsa_pubkey(&blob, Some(EcCurve::Nistp384))?.into(),

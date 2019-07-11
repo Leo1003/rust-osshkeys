@@ -18,7 +18,8 @@ fn verify_key<P: AsRef<Path>>(keyfile: P, passphrase: Option<&[u8]>) {
     let pubkeypath = keypath.with_extension("pub");
 
     let privdata = fs::read(keypath).unwrap();
-    let privkey = KeyPair::from_keystr(from_utf8(privdata.as_slice()).unwrap(), passphrase).unwrap();
+    let privkey =
+        KeyPair::from_keystr(from_utf8(privdata.as_slice()).unwrap(), passphrase).unwrap();
 
     let pubdata = fs::read(pubkeypath).unwrap();
     let pubkey = PublicKey::from_keystring(from_utf8(pubdata.as_slice()).unwrap()).unwrap();

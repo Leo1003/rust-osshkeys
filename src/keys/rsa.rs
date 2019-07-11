@@ -28,7 +28,7 @@ impl RsaSignature {
             RSA_NAME => Some(RsaSignature::SHA1),
             RSA_SHA256_NAME => Some(RsaSignature::SHA2_256),
             RSA_SHA512_NAME => Some(RsaSignature::SHA2_512),
-            _ => None
+            _ => None,
         }
     }
 

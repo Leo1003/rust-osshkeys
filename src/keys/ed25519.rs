@@ -8,6 +8,8 @@ use ed25519_dalek::{
     SecretKey as DalekSecretKey,
     Signature,
     PUBLIC_KEY_LENGTH,
+    SECRET_KEY_LENGTH,
+    KEYPAIR_LENGTH,
 };
 use rand::rngs::OsRng;
 use std::fmt;
@@ -87,10 +89,19 @@ impl Ed25519KeyPair {
     }
 
     pub(crate) fn from_bytes(pk: &[u8], sk: &[u8]) -> OsshResult<Self> {
+        if pk.len() != PUBLIC_KEY_LENGTH {
+            return Err(ErrorKind::InvalidKeySize.into());
+        }
+        if sk.len() != KEYPAIR_LENGTH {
+            return Err(ErrorKind::InvalidKeySize.into());
+        }
+        if pk != &sk[SECRET_KEY_LENGTH..] {
+            return Err(ErrorKind::InvalidKey.into());
+        }
         Ok(Ed25519KeyPair {
             key: DalekKeypair {
                 public: DalekPublicKey::from_bytes(pk)?,
-                secret: DalekSecretKey::from_bytes(sk)?,
+                secret: DalekSecretKey::from_bytes(&sk[..SECRET_KEY_LENGTH])?,
             },
         })
     }

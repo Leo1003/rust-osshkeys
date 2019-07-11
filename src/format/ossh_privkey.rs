@@ -110,7 +110,7 @@ pub fn decrypt_ossh_priv(
         "none" => None,
         _ => return Err(ErrorKind::UnsupportCipher.into()),
     };
-    if (passphrase.map_or(false, |pass| !pass.is_empty())) && cipher.is_some() {
+    if (!passphrase.map_or(false, |pass| !pass.is_empty())) && cipher.is_some() {
         return Err(ErrorKind::IncorrectPass.into());
     }
     if kdfname != "none" && kdfname != "bcrypt" {
