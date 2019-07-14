@@ -92,7 +92,7 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
             _ => return Err(ErrorKind::UnsupportType.into()),
         };
 
-        keypair.set_comment(secret_reader.read_utf8()?);
+        keypair.comment = secret_reader.read_utf8()?;
 
         // Check padding
         let mut i = 0;

@@ -5,11 +5,25 @@ use openssl::hash::{Hasher, MessageDigest};
 use openssl::pkey::{Id, PKeyRef, Private};
 use std::fmt;
 
+/// DSA key
 pub mod dsa;
+/// EcDSA key
 pub mod ecdsa;
+/// Ed25519 key
 pub mod ed25519;
+/// RSA key
 pub mod rsa;
 
+/// An enum representing the hash function used to generate fingerprint
+///
+/// Used with [`PubKey::fingerprint()`](trait.PubKey.html#method.fingerprint) to generate different types fingerprint.
+///
+/// # Supporting
+/// MD5: This is the default fingerprint type in older versions of openssh.
+///
+/// SHA2-256: Since OpenSSH 6.8, this became the default option of fingerprint.
+///
+/// SHA2-512: Although not being documented, it can also be used.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FingerprintHash {
     MD5,
@@ -27,6 +41,7 @@ impl FingerprintHash {
     }
 }
 
+/// An enum representing the type of key being stored
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyType {
     RSA,
@@ -50,16 +65,19 @@ pub(crate) enum KeyPairType {
     ED25519(ed25519::Ed25519KeyPair),
 }
 
+/// A general public key type
 pub struct PublicKey {
     pub(crate) key: PublicKeyType,
     pub(crate) comment: String,
 }
 
 impl PublicKey {
+    /// Parse the openssh public key file
     pub fn from_keystring(keystr: &str) -> OsshResult<Self> {
         Ok(parse_ossh_pubkey(keystr)?)
     }
 
+    /// Indicate the key type being stored
     pub fn keytype(&self) -> KeyType {
         match &self.key {
             PublicKeyType::RSA(_) => KeyType::RSA,
@@ -69,15 +87,17 @@ impl PublicKey {
         }
     }
 
+    /// Get the comment of the key
     pub fn comment(&self) -> &str {
         &self.comment
     }
 
+    /// Get the mutable comment of the key
     pub fn comment_mut(&mut self) -> &mut String {
         &mut self.comment
     }
 
-    fn inner_key(&self) -> &PubKey {
+    fn inner_key(&self) -> &dyn PubKey {
         match &self.key {
             PublicKeyType::RSA(key) => key,
             PublicKeyType::DSA(key) => key,
@@ -158,6 +178,7 @@ impl From<ed25519::Ed25519PublicKey> for PublicKey {
     }
 }
 
+/// A general key pair type
 pub struct KeyPair {
     pub(crate) key: KeyPairType,
     pub(crate) comment: String,
@@ -178,6 +199,18 @@ impl KeyPair {
         Ok(parse_keystr(pem.as_bytes(), passphrase)?)
     }
 
+    /// Generate a key of the specified type and size
+    ///
+    /// # Key Size
+    /// If the key size parameter is zero, then it will use the default size to generate the key
+    ///
+    /// For RSA, the size should `>= 1024` and `<= 16384` bits.
+    ///
+    /// For DSA, the size should be `1024` bits.
+    ///
+    /// For EcDSA, the size should be `256`, `384`, or `521` bits.
+    ///
+    /// For Ed25519, the size should be `256` bits.
     pub fn generate(keytype: KeyType, bits: usize) -> OsshResult<Self> {
         Ok(match keytype {
             KeyType::RSA => rsa::RsaKeyPair::generate(bits)?.into(),
@@ -187,6 +220,7 @@ impl KeyPair {
         })
     }
 
+    /// Indicate the key type being stored
     pub fn keytype(&self) -> KeyType {
         match &self.key {
             KeyPairType::RSA(_) => KeyType::RSA,
@@ -200,18 +234,17 @@ impl KeyPair {
         Ok(stringify_pem_privkey(&self, passphrase)?)
     }
 
+    /// Get the comment of the key
     pub fn comment(&self) -> &str {
         &self.comment
     }
 
+    /// Get the mutable comment of the key
     pub fn comment_mut(&mut self) -> &mut String {
         &mut self.comment
     }
 
-    pub(crate) fn set_comment(&mut self, comment: String) {
-        self.comment = comment;
-    }
-
+    /// Clone the public parts of the key pair
     pub fn clone_public_key(&self) -> Result<PublicKey, Error> {
         let key = match &self.key {
             KeyPairType::RSA(key) => PublicKeyType::RSA(key.clone_public_key()?),
@@ -225,7 +258,7 @@ impl KeyPair {
         })
     }
 
-    fn inner_key(&self) -> &PrivKey {
+    fn inner_key(&self) -> &dyn PrivKey {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
@@ -234,7 +267,7 @@ impl KeyPair {
         }
     }
 
-    fn inner_key_pub(&self) -> &PubKey {
+    fn inner_key_pub(&self) -> &dyn PubKey {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
@@ -304,15 +337,22 @@ impl From<ed25519::Ed25519KeyPair> for KeyPair {
     }
 }
 
+/// The basic trait of a key
 pub trait Key {
+    /// The size in bits of the key
     fn size(&self) -> usize;
+    /// The key name of the key
     fn keyname(&self) -> &'static str;
 }
 
+/// A trait for operations of a public key
 pub trait PubKey: Key {
-    fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error>;
-    fn blob(&self) -> Result<Vec<u8>, Error>;
-    fn fingerprint(&self, hash: FingerprintHash) -> Result<Vec<u8>, Error> {
+    /// Verify the data with a detached signature, returning true if the signature is not malformed
+    fn verify(&self, data: &[u8], sig: &[u8]) -> OsshResult<bool>;
+    /// Return the binary representation of the public key
+    fn blob(&self) -> OsshResult<Vec<u8>>;
+    /// Hash the blob of the public key to generate the fingerprint
+    fn fingerprint(&self, hash: FingerprintHash) -> OsshResult<Vec<u8>> {
         let b = self.blob()?;
         let mut hasher = Hasher::new(hash.get_digest())?;
         hasher.update(&b)?;
@@ -321,6 +361,8 @@ pub trait PubKey: Key {
     }
 }
 
+/// A trait for operations of a private key
 pub trait PrivKey: Key {
-    fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error>;
+    /// Sign the data with the key, returning the "detached" signature
+    fn sign(&self, data: &[u8]) -> OsshResult<Vec<u8>>;
 }
