@@ -1,7 +1,7 @@
 use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PubKey, PublicKey};
-use crate::sshbuf::{SshReadExt, SshWriteExt};
+use crate::sshbuf::{SshReadExt, SshWriteExt, ZeroizeReadExt};
 use openssl::dsa::Dsa;
 use openssl::rsa::RsaPrivateKeyBuilder;
 use openssl::symm::{Cipher, Crypter, Mode};
@@ -33,25 +33,26 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
             &kdf,
         )?);
         let mut secret_reader = Cursor::new(decrypted.as_slice());
-        let checksum0 = Zeroizing::new(secret_reader.read_uint32()?);
-        let checksum1 = Zeroizing::new(secret_reader.read_uint32()?);
+        let checksum0 = secret_reader.read_uint32_zeroize()?;
+        let checksum1 = secret_reader.read_uint32_zeroize()?;
         if *checksum0 != *checksum1 {
             return Err(ErrorKind::IncorrectPass.into());
         }
-        let keyname = secret_reader.read_utf8()?;
+        let keyname = secret_reader.read_utf8_zeroize()?;
 
         // Decode private key
         let mut keypair: KeyPair = match keyname.as_str() {
             RSA_NAME | RSA_SHA256_NAME | RSA_SHA512_NAME => {
-                let n = secret_reader.read_mpint()?;
-                let e = secret_reader.read_mpint()?;
-                let d = secret_reader.read_mpint()?;
-                let _iqmp = secret_reader.read_mpint()?;
-                let p = secret_reader.read_mpint()?;
-                let q = secret_reader.read_mpint()?;
+                let n = secret_reader.read_mpint_zeroize()?;
+                let e = secret_reader.read_mpint_zeroize()?;
+                let d = secret_reader.read_mpint_zeroize()?;
+                let mut _iqmp = secret_reader.read_mpint_zeroize()?;
+                let p = secret_reader.read_mpint_zeroize()?;
+                let q = secret_reader.read_mpint_zeroize()?;
                 let rsa = RsaPrivateKeyBuilder::new(n, e, d)?
                     .set_factors(p, q)?
                     .build();
+                _iqmp.clear(); // Explicity clear the sensitive data
                 match keyname.as_str() {
                     RSA_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA1),
                     RSA_SHA256_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA2_256),
@@ -61,29 +62,31 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
                 .into()
             }
             DSA_NAME => {
-                let p = secret_reader.read_mpint()?;
-                let q = secret_reader.read_mpint()?;
-                let g = secret_reader.read_mpint()?;
-                let pubkey = secret_reader.read_mpint()?;
-                let privkey = secret_reader.read_mpint()?;
+                let p = secret_reader.read_mpint_zeroize()?;
+                let q = secret_reader.read_mpint_zeroize()?;
+                let g = secret_reader.read_mpint_zeroize()?;
+                let pubkey = secret_reader.read_mpint_zeroize()?;
+                let privkey = secret_reader.read_mpint_zeroize()?;
                 let dsa = Dsa::from_private_components(p, q, g, privkey, pubkey)?;
                 DsaKeyPair::from_ossl_dsa(dsa).into()
             }
             NIST_P256_NAME | NIST_P384_NAME | NIST_P521_NAME => {
-                let curvename = secret_reader.read_utf8()?;
+                let curvename = secret_reader.read_utf8_zeroize()?;
                 let curvehint = EcCurve::from_name(keyname.as_str())?;
                 let curve = EcCurve::from_str(&curvename)?;
                 if curve != curvehint {
                     return Err(ErrorKind::TypeNotMatch.into());
                 }
-                let pubkey = secret_reader.read_string()?;
-                let privkey = secret_reader.read_mpint()?;
+                let pubkey = secret_reader.read_string_zeroize()?;
+                let mut privkey = secret_reader.read_mpint_zeroize()?;
 
-                EcDsaKeyPair::from_bytes(curve, &pubkey, &privkey)?.into()
+                let keypair = EcDsaKeyPair::from_bytes(curve, &pubkey, &privkey)?.into();
+                privkey.clear(); // Explicity clear the sensitive data
+                keypair
             }
             ED25519_NAME => {
-                let pk = Zeroizing::new(secret_reader.read_string()?);
-                let sk = Zeroizing::new(secret_reader.read_string()?); // Actually is an ed25519 keypair
+                let pk = Zeroizing::new(secret_reader.read_string_zeroize()?);
+                let sk = Zeroizing::new(secret_reader.read_string_zeroize()?); // Actually is an ed25519 keypair
                 Ed25519KeyPair::from_bytes(&pk, &sk)?.into()
             }
             _ => return Err(ErrorKind::UnsupportType.into()),
@@ -148,8 +151,8 @@ pub fn decrypt_ossh_priv(
             "bcrypt" => {
                 if let Some(pass) = passphrase {
                     let mut kdfreader = Cursor::new(kdf);
-                    let salt = Zeroizing::new(kdfreader.read_string()?);
-                    let round = Zeroizing::new(kdfreader.read_uint32()?);
+                    let salt = kdfreader.read_string_zeroize()?;
+                    let round = kdfreader.read_uint32_zeroize()?;
                     let mut output =
                         Zeroizing::new(vec![0u8; cipher.key_len() + cipher.iv_len().unwrap_or(0)]);
                     bcrypt_pbkdf(pass, &salt, *round, &mut output)?;
