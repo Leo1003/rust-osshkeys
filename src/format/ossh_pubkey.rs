@@ -1,5 +1,5 @@
 use crate::error::*;
-use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, PubKey, PublicKey};
+use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, PublicPart, PublicKey};
 use crate::sshbuf::{SshReadExt, SshWriteExt};
 use ed25519_dalek::PublicKey as Ed25519PubKey;
 use ed25519_dalek::PUBLIC_KEY_LENGTH;
@@ -101,7 +101,7 @@ pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> OsshResult<Ed25519PublicK
     )?)
 }
 
-pub(crate) fn stringify_ossh_pubkey(key: &PubKey, comment: Option<&str>) -> OsshResult<String> {
+pub(crate) fn stringify_ossh_pubkey(key: &PublicPart, comment: Option<&str>) -> OsshResult<String> {
     let mut keystr = String::new();
     write!(
         &mut keystr,

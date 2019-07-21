@@ -16,7 +16,7 @@ pub mod rsa;
 
 /// An enum representing the hash function used to generate fingerprint
 ///
-/// Used with [`PubKey::fingerprint()`](trait.PubKey.html#method.fingerprint) to generate different types fingerprint.
+/// Used with [`PublicPart::fingerprint()`](trait.PublicPart.html#method.fingerprint) to generate different types fingerprint.
 ///
 /// # Hash Algorithm
 /// MD5: This is the default fingerprint type in older versions of openssh.
@@ -102,7 +102,7 @@ impl PublicKey {
         &mut self.comment
     }
 
-    fn inner_key(&self) -> &dyn PubKey {
+    fn inner_key(&self) -> &dyn PublicPart {
         match &self.key {
             PublicKeyType::RSA(key) => key,
             PublicKeyType::DSA(key) => key,
@@ -122,7 +122,7 @@ impl Key for PublicKey {
     }
 }
 
-impl PubKey for PublicKey {
+impl PublicPart for PublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         self.inner_key().blob()
     }
@@ -289,7 +289,7 @@ impl KeyPair {
         })
     }
 
-    fn inner_key(&self) -> &dyn PrivKey {
+    fn inner_key(&self) -> &dyn PrivatePart {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
@@ -298,7 +298,7 @@ impl KeyPair {
         }
     }
 
-    fn inner_key_pub(&self) -> &dyn PubKey {
+    fn inner_key_pub(&self) -> &dyn PublicPart {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
@@ -317,7 +317,7 @@ impl Key for KeyPair {
     }
 }
 
-impl PubKey for KeyPair {
+impl PublicPart for KeyPair {
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
         self.inner_key_pub().verify(data, sig)
     }
@@ -326,7 +326,7 @@ impl PubKey for KeyPair {
     }
 }
 
-impl PrivKey for KeyPair {
+impl PrivatePart for KeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         self.inner_key().sign(data)
     }
@@ -377,7 +377,7 @@ pub trait Key {
 }
 
 /// A trait for operations of a public key
-pub trait PubKey: Key {
+pub trait PublicPart: Key {
     /// Verify the data with a detached signature, returning true if the signature is not malformed
     fn verify(&self, data: &[u8], sig: &[u8]) -> OsshResult<bool>;
     /// Return the binary representation of the public key
@@ -393,7 +393,7 @@ pub trait PubKey: Key {
 }
 
 /// A trait for operations of a private key
-pub trait PrivKey: Key {
+pub trait PrivatePart: Key {
     /// Sign the data with the key, returning the "detached" signature
     fn sign(&self, data: &[u8]) -> OsshResult<Vec<u8>>;
 }
