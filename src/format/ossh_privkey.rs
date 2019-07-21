@@ -1,6 +1,6 @@
 use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use crate::error::*;
-use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicPart, PublicKey};
+use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicKey, PublicPart};
 use crate::sshbuf::{SshReadExt, SshWriteExt, ZeroizeReadExt};
 use openssl::dsa::Dsa;
 use openssl::rsa::RsaPrivateKeyBuilder;
@@ -119,10 +119,10 @@ pub fn decrypt_ossh_priv(
     let cipher = match ciphername {
         "3des-cbc" => Some(Cipher::des_ede3_cbc()),
         "aes128-cbc" => Some(Cipher::aes_128_cbc()),
-        //"aes192-cbc", // Openssl crate doesn't expose aes192
+        "aes192-cbc" => Some(Cipher::aes_192_cbc()),
         "aes256-cbc" | "rijndael-cbc@lysator.liu.se" => Some(Cipher::aes_256_cbc()),
         "aes128-ctr" => Some(Cipher::aes_128_ctr()),
-        //"aes192-ctr", // Openssl crate doesn't expose aes192
+        "aes192-ctr" => Some(Cipher::aes_192_ctr()),
         "aes256-ctr" => Some(Cipher::aes_256_ctr()),
         "none" => None,
         _ => return Err(ErrorKind::UnsupportCipher.into()),

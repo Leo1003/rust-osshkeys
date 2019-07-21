@@ -1,5 +1,5 @@
 use crate::error::*;
-use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, PublicPart, PublicKey};
+use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, PublicKey, PublicPart};
 use crate::sshbuf::{SshReadExt, SshWriteExt};
 use ed25519_dalek::PublicKey as Ed25519PubKey;
 use ed25519_dalek::PUBLIC_KEY_LENGTH;

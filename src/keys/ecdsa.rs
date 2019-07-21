@@ -94,20 +94,10 @@ impl TryInto<EcGroup> for EcCurve {
 }
 
 /// Represent the EcDSA public key
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EcDsaPublicKey {
     key: EcKey<Public>,
     curve: EcCurve,
-}
-
-//TODO: No Debug Implement for EcKey<Public>
-impl fmt::Debug for EcDsaPublicKey {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut dbg = f.debug_struct("EcDsaPublicKey");
-        dbg.field("key", &"ECKEY".to_string());
-        dbg.field("curve", &self.curve);
-        dbg.finish()
-    }
 }
 
 impl EcDsaPublicKey {

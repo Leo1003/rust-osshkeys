@@ -44,7 +44,9 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> Os
             KeyPairType::RSA(key) => key
                 .ossl_rsa()
                 .private_key_to_pem_passphrase(cipher, passphrase)?,
-            KeyPairType::DSA(key) => unimplemented!(), //FIXME: openssl crate not implement it!!! //key.ossl_dsa().private_key_to_pem_passphrase(cipher, passphrase)?,
+            KeyPairType::DSA(key) => key
+                .ossl_dsa()
+                .private_key_to_pem_passphrase(cipher, passphrase)?,
             KeyPairType::ECDSA(key) => key
                 .ossl_ec()
                 .private_key_to_pem_passphrase(cipher, passphrase)?,
@@ -53,7 +55,7 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> Os
     } else {
         match &keypair.key {
             KeyPairType::RSA(key) => key.ossl_rsa().private_key_to_pem()?,
-            KeyPairType::DSA(key) => unimplemented!(), //FIXME: openssl crate not implement it!!! //key.ossl_dsa().private_key_to_pem()?,
+            KeyPairType::DSA(key) => key.ossl_dsa().private_key_to_pem()?,
             KeyPairType::ECDSA(key) => key.ossl_ec().private_key_to_pem()?,
             _ => return Err(ErrorKind::UnsupportType.into()),
         }
