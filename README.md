@@ -3,7 +3,7 @@
 A Rust library to read/write OpenSSH public/private keys and sign/verify data
 
 ## Current Status
-This project is under alpha stage. It may contain many bugs for now.
+This project is under alpha stage. It may contain many bugs for now, and also, the API would change frequently.
 
 ## Planning Features
 - Core Features
@@ -13,17 +13,15 @@ This project is under alpha stage. It may contain many bugs for now.
         - EcDSA
         - Ed25519
     - [ ] Documentation
+        - [ ] Descriptions
+        - [ ] Examples
     - [x] Key generation
     - [x] Public key formats
         - [x] Openssh
         - [ ] PEM
     - [x] Private keys
         - [x] PEM (Using OpenSSL)
-            - [x] Read
-            - [ ] Write (without DSA)
         - [x] PEM (Encrypted) (Using OpenSSL)
-            - [x] Read
-            - [ ] Write (without DSA)
         - [x] PKCS#8 (Using OpenSSL)
             - [x] Read
             - [ ] Write
