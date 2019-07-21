@@ -157,7 +157,7 @@ impl RsaKeyPair {
 
     /// Generate RSA key pair
     ///
-    /// The bits parameter should be within 1024~16384 bits or 0 to use default length (2048 bits).
+    /// The bits parameter should be within 1024 ~ 16384 bits or `0` to use default length (2048 bits).
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = RSA_DEF_SIZE;

@@ -84,7 +84,7 @@ impl DsaKeyPair {
 
     /// Generate DSA key pair
     ///
-    /// The bits parameter should be 1024 bits or 0 to use default length (1024 bits).
+    /// The bits parameter should be 1024 bits or `0` to use default length (1024 bits).
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = 1024;

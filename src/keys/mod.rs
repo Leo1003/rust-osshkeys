@@ -73,7 +73,7 @@ pub(crate) enum KeyPairType {
 /// Public key is usually stored in the `.pub` file when generating the key.
 pub struct PublicKey {
     pub(crate) key: PublicKeyType,
-    pub(crate) comment: String,
+    comment: String,
 }
 
 impl PublicKey {
@@ -191,7 +191,7 @@ impl From<ed25519::Ed25519PublicKey> for PublicKey {
 /// Key pair is the so-called "private key" which contains both public and private parts of an asymmetry key.
 pub struct KeyPair {
     pub(crate) key: KeyPairType,
-    pub(crate) comment: String,
+    comment: String,
 }
 
 impl KeyPair {
@@ -222,7 +222,7 @@ impl KeyPair {
     /// - Begin with `-----BEGIN OPENSSH PRIVATE KEY-----`
     ///
     /// This is the new format which is supported since OpenSSH 6.5, and it became the default format in OpenSSH 7.8.
-    /// The Ed25519 key type can only be stored in this type.
+    /// The Ed25519 key can only be stored in this type.
     pub fn from_keystr(pem: &str, passphrase: Option<&[u8]>) -> OsshResult<Self> {
         Ok(parse_keystr(pem.as_bytes(), passphrase)?)
     }
@@ -230,15 +230,17 @@ impl KeyPair {
     /// Generate a key of the specified type and size
     ///
     /// # Key Size
+    /// There are some limitations to the key size:
+    /// - RSA: the size should `>= 1024` and `<= 16384` bits.
+    /// - DSA: the size should be `1024` bits.
+    /// - EcDSA: the size should be `256`, `384`, or `521` bits.
+    /// - Ed25519: the size should be `256` bits.
+    ///
     /// If the key size parameter is zero, then it will use the default size to generate the key
-    ///
-    /// For RSA, the size should `>= 1024` and `<= 16384` bits.
-    ///
-    /// For DSA, the size should be `1024` bits.
-    ///
-    /// For EcDSA, the size should be `256`, `384`, or `521` bits.
-    ///
-    /// For Ed25519, the size should be `256` bits.
+    /// - RSA: `2048` bits
+    /// - DSA: `1024` bits
+    /// - EcDSA: `256` bits
+    /// - Ed25519: `256` bits
     pub fn generate(keytype: KeyType, bits: usize) -> OsshResult<Self> {
         Ok(match keytype {
             KeyType::RSA => rsa::RsaKeyPair::generate(bits)?.into(),
@@ -260,7 +262,7 @@ impl KeyPair {
 
     /// Serialize the keypair to the OpenSSL PEM format
     ///
-    /// If the passphrase is given (set to Some(...)), then the generated PEM key will be encrypted.
+    /// If the passphrase is given (set to `Some(...)`), then the generated PEM key will be encrypted.
     pub fn serialize_pem(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
         Ok(stringify_pem_privkey(&self, passphrase)?)
     }

@@ -33,8 +33,7 @@ pub fn parse_ossh_pubkey(keystr: &str) -> OsshResult<PublicKey> {
         _ => return Err(ErrorKind::UnsupportType.into()),
     };
     if key_split.len() == 3 {
-        pubkey.comment_mut().clone_from(&key_split[2].into());
-        //Unstable: key_split[2].clone_into(pubkey.comment_mut());
+        *pubkey.comment_mut() = key_split[2].to_owned();
     }
     Ok(pubkey)
 }

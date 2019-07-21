@@ -10,5 +10,5 @@ pub mod error;
 mod format;
 /// Representing different types of public/private keys
 pub mod keys;
-/// Extension to read/write ssh data type representations defined in RFC 4251
+/// Extension to read/write ssh data type representations defined in [RFC 4251](https://tools.ietf.org/html/rfc4251#section-5)
 pub mod sshbuf;

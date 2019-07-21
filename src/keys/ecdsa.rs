@@ -47,14 +47,6 @@ impl EcCurve {
         }
     }
 
-    fn nid(self) -> Nid {
-        match self {
-            EcCurve::Nistp256 => Nid::X9_62_PRIME256V1,
-            EcCurve::Nistp384 => Nid::SECP384R1,
-            EcCurve::Nistp521 => Nid::SECP521R1,
-        }
-    }
-
     /// The key name of this curve
     pub fn name(self) -> &'static str {
         match self {
@@ -70,6 +62,14 @@ impl EcCurve {
             EcCurve::Nistp256 => "nistp256",
             EcCurve::Nistp384 => "nistp384",
             EcCurve::Nistp521 => "nistp521",
+        }
+    }
+
+    fn nid(self) -> Nid {
+        match self {
+            EcCurve::Nistp256 => Nid::X9_62_PRIME256V1,
+            EcCurve::Nistp384 => Nid::SECP384R1,
+            EcCurve::Nistp521 => Nid::SECP521R1,
         }
     }
 }
@@ -223,7 +223,7 @@ impl EcDsaKeyPair {
 
     /// Generate EcDSA key pair
     ///
-    /// The bits parameter should be 256, 284, 521 bits or 0 to use default length (256 bits).
+    /// The bits parameter should be 256, 284, 521 bits or `0` to use default length (256 bits).
     /// Different key length is corresponding to different curve.
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {

@@ -83,7 +83,7 @@ impl Key for Ed25519KeyPair {
 impl Ed25519KeyPair {
     /// Generate Ed25519 key pair
     ///
-    /// The bits parameter should be 256 bits or 0 to use default length (256 bits).
+    /// The bits parameter should be 256 bits or `0` to use default length (256 bits).
     pub fn generate(bits: usize) -> OsshResult<Self> {
         if bits != 0 && bits != 256 {
             return Err(Error::from_kind(ErrorKind::InvalidKeySize));
