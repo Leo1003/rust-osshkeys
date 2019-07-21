@@ -95,10 +95,8 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
         *keypair.comment_mut() = secret_reader.read_utf8()?;
 
         // Check padding
-        let mut i = 0;
-        for pad in secret_reader.bytes() {
-            i += 1;
-            if (i & 0xff) != pad? {
+        for (i, pad) in secret_reader.bytes().enumerate() {
+            if ((i + 1) & 0xff) as u8 != pad? {
                 return Err(ErrorKind::InvalidKeyFormat.into());
             }
         }

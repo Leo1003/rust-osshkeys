@@ -63,7 +63,7 @@ pub fn bcrypt_pbkdf(
     h.input(password);
     let hpass = h.result_reset();
 
-    for block in 1..(nblocks + 1) {
+    for block in 1..=nblocks {
         let mut count = [0u8; 4];
         let mut out = [0u8; 32];
         BigEndian::write_u32(&mut count, block as u32);
@@ -80,11 +80,11 @@ pub fn bcrypt_pbkdf(
             hsalt = h.result_reset();
 
             bcrypt_hash(&hpass, &hsalt, &mut tmp);
-            for i in 0..out.len() {
-                out[i] ^= tmp[i];
+            for (i, data) in out.iter_mut().enumerate() {
+                *data ^= tmp[i];
             }
 
-            for i in 0..out.len() {
+            for (i, _) in out.iter().enumerate() {
                 let idx = i * nblocks + (block - 1);
                 if idx < output.len() {
                     output[idx] = out[i];
