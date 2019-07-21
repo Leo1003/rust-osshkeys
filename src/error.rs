@@ -1,24 +1,41 @@
-use failure::{Error as FailureError, Fail};
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use failure::{Backtrace, Error as FailureError, Fail};
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 pub type OsshResult<T> = Result<T, Error>;
 
-#[derive(Debug)]
 pub struct Error {
     kind: ErrorKind,
     inner: Option<FailureError>,
+    bt: Backtrace,
 }
 
 impl Error {
     pub(crate) fn from_kind(kind: ErrorKind) -> Self {
-        Error { kind, inner: None }
+        Error {
+            kind,
+            inner: None,
+            bt: Backtrace::new(),
+        }
     }
 
     pub(crate) fn with_failure<F: Fail>(kind: ErrorKind, failure: F) -> Self {
         Error {
             kind,
             inner: Some(failure.into()),
+            bt: Backtrace::new(),
         }
+    }
+}
+
+impl Debug for Error {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "OsshError {{\n")?;
+        write!(f, "Kind: {:?} => \"{}\"", self.kind, self.kind)?;
+        if let Some(cause) = &self.inner {
+            write!(f, "\nCaused: {:?}", cause)?;
+        }
+        write!(f, "\nBackTrace: \n{:?}", self.bt)?;
+        write!(f, "\n}}")
     }
 }
 
@@ -26,7 +43,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "{}", self.kind)?;
         if let Some(cause) = &self.inner {
-            write!(f, ": {}", cause)?;
+            write!(f, "; Caused by: {}", cause)?;
         }
         Ok(())
     }
@@ -34,15 +51,15 @@ impl Display for Error {
 
 impl Fail for Error {
     fn name(&self) -> Option<&str> {
-        if self.kind == ErrorKind::Unknown {
-            None
-        } else {
-            Some(self.kind.name())
-        }
+        Some("Osshkeys Error")
     }
 
     fn cause(&self) -> Option<&dyn Fail> {
         self.inner.as_ref().map(|f| f.as_fail())
+    }
+
+    fn backtrace(&self) -> Option<&Backtrace> {
+        Some(&self.bt)
     }
 }
 
