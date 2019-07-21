@@ -5,20 +5,20 @@ use openssl::hash::{Hasher, MessageDigest};
 use openssl::pkey::{Id, PKeyRef, Private};
 use std::fmt;
 
-/// DSA key
+/// DSA key type
 pub mod dsa;
-/// EcDSA key
+/// EcDSA key type
 pub mod ecdsa;
-/// Ed25519 key
+/// Ed25519 key type
 pub mod ed25519;
-/// RSA key
+/// RSA key type
 pub mod rsa;
 
 /// An enum representing the hash function used to generate fingerprint
 ///
 /// Used with [`PubKey::fingerprint()`](trait.PubKey.html#method.fingerprint) to generate different types fingerprint.
 ///
-/// # Supporting
+/// # Hash Algorithm
 /// MD5: This is the default fingerprint type in older versions of openssh.
 ///
 /// SHA2-256: Since OpenSSH 6.8, this became the default option of fingerprint.
@@ -65,7 +65,12 @@ pub(crate) enum KeyPairType {
     ED25519(ed25519::Ed25519KeyPair),
 }
 
-/// A general public key type
+/// General public key type
+///
+/// This is a type to make it easy to store different types of public key in the container.
+/// Each can contain one of the types supported in this crate.
+///
+/// Public key is usually stored in the `.pub` file when generating the key.
 pub struct PublicKey {
     pub(crate) key: PublicKeyType,
     pub(crate) comment: String,
@@ -178,7 +183,12 @@ impl From<ed25519::Ed25519PublicKey> for PublicKey {
     }
 }
 
-/// A general key pair type
+/// General key pair type
+///
+/// This is a type to make it easy to store different types of key pair in the container.
+/// Each can contain one of the types supported in this crate.
+///
+/// Key pair is the so-called "private key" which contains both public and private parts of an asymmetry key.
 pub struct KeyPair {
     pub(crate) key: KeyPairType,
     pub(crate) comment: String,
@@ -195,6 +205,24 @@ impl KeyPair {
         Ok(keypair)
     }
 
+    /// Parse a keypair from supporting file types
+    ///
+    /// The passphrase is required if the keypair is encrypted.
+    ///
+    /// # OpenSSL PEM
+    /// - Begin with `-----BEGIN DSA PRIVATE KEY-----` for dsa key.
+    /// - Begin with `-----BEGIN RSA PRIVATE KEY-----` for rsa key.
+    /// - Begin with `-----BEGIN EC PRIVATE KEY-----` for ecdsa key.
+    /// - This file type doesn't support Ed25519
+    ///
+    /// # PKCS#8 Format
+    /// - Begin with `-----BEGIN PRIVATE KEY-----`
+    ///
+    /// # Openssh
+    /// - Begin with `-----BEGIN OPENSSH PRIVATE KEY-----`
+    ///
+    /// This is the new format which is supported since OpenSSH 6.5, and it became the default format in OpenSSH 7.8.
+    /// The Ed25519 key type can only be stored in this type.
     pub fn from_keystr(pem: &str, passphrase: Option<&[u8]>) -> OsshResult<Self> {
         Ok(parse_keystr(pem.as_bytes(), passphrase)?)
     }
@@ -230,6 +258,9 @@ impl KeyPair {
         }
     }
 
+    /// Serialize the keypair to the OpenSSL PEM format
+    ///
+    /// If the passphrase is given (set to Some(...)), then the generated PEM key will be encrypted.
     pub fn serialize_pem(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
         Ok(stringify_pem_privkey(&self, passphrase)?)
     }

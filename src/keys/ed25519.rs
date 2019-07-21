@@ -14,14 +14,17 @@ use ed25519_dalek::{
 use rand::rngs::OsRng;
 use std::fmt;
 
+/// The key name returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const ED25519_NAME: &str = "ssh-ed25519";
 
+/// Represent the Ed25519 public key
 #[derive(Debug, Clone)]
 pub struct Ed25519PublicKey {
     key: DalekPublicKey,
 }
 
 impl Ed25519PublicKey {
+    /// Create the Ed25519 public key from public components
     pub fn new(key: &[u8; PUBLIC_KEY_LENGTH]) -> Result<Self, ed25519_dalek::SignatureError> {
         Ok(Self {
             key: DalekPublicKey::from_bytes(key)?,
@@ -62,6 +65,7 @@ impl fmt::Display for Ed25519PublicKey {
     }
 }
 
+/// Represent the Ed25519 key pair
 pub struct Ed25519KeyPair {
     key: DalekKeypair,
 }
@@ -77,6 +81,9 @@ impl Key for Ed25519KeyPair {
 }
 
 impl Ed25519KeyPair {
+    /// Generate Ed25519 key pair
+    ///
+    /// The bits parameter should be 256 bits or 0 to use default length (256 bits).
     pub fn generate(bits: usize) -> OsshResult<Self> {
         if bits != 0 && bits != 256 {
             return Err(Error::from_kind(ErrorKind::InvalidKeySize));
@@ -106,6 +113,7 @@ impl Ed25519KeyPair {
         })
     }
 
+    /// Clone the public parts to generate public key
     pub fn clone_public_key(&self) -> Result<Ed25519PublicKey, Error> {
         Ok(Ed25519PublicKey {
             key: self.key.public.clone(),

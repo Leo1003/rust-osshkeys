@@ -11,10 +11,14 @@ use std::fmt;
 const RSA_DEF_SIZE: usize = 2048;
 const RSA_MIN_SIZE: usize = 1024;
 const RSA_MAX_SIZE: usize = 16384;
+/// The default name of RSA key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const RSA_NAME: &str = "ssh-rsa";
+/// The sha2-256 algorithm name of RSA key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const RSA_SHA256_NAME: &str = "rsa-sha2-256";
+/// The sha2-512 algorithm name of RSA key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const RSA_SHA512_NAME: &str = "rsa-sha2-512";
 
+/// An enum determining the hash function which used to sign or verify
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RsaSignature {
     SHA1,
@@ -23,6 +27,7 @@ pub enum RsaSignature {
 }
 
 impl RsaSignature {
+    /// Parse from key name
     pub fn from_name(s: &str) -> Option<Self> {
         match s {
             RSA_NAME => Some(RsaSignature::SHA1),
@@ -32,6 +37,7 @@ impl RsaSignature {
         }
     }
 
+    /// The name of the algorithm
     pub fn name(self) -> &'static str {
         match self {
             RsaSignature::SHA1 => RSA_NAME,
@@ -50,6 +56,7 @@ impl RsaSignature {
     }
 }
 
+/// Represent the RSA public key
 #[derive(Debug, Clone)]
 pub struct RsaPublicKey {
     rsa: Rsa<Public>,
@@ -57,6 +64,7 @@ pub struct RsaPublicKey {
 }
 
 impl RsaPublicKey {
+    /// Create the RSA public key from public components
     pub fn new(n: BigNum, e: BigNum) -> Result<RsaPublicKey, openssl::error::ErrorStack> {
         let rsa = Rsa::from_public_components(n, e)?;
         Ok(RsaPublicKey {
@@ -65,6 +73,7 @@ impl RsaPublicKey {
         })
     }
 
+    /// Create the RSA public key from public components and set the signature hash
     pub fn new_with_signhash(
         n: BigNum,
         e: BigNum,
@@ -77,10 +86,12 @@ impl RsaPublicKey {
         })
     }
 
+    /// Get the signature hash type
     pub fn sign_type(&self) -> RsaSignature {
         self.signhash
     }
 
+    /// Set the signature hash type
     pub fn set_sign_type(&mut self, sig: RsaSignature) {
         self.signhash = sig;
     }
@@ -124,6 +135,7 @@ impl fmt::Display for RsaPublicKey {
     }
 }
 
+/// Represent the RSA key pair
 pub struct RsaKeyPair {
     rsa: Rsa<Private>,
     signhash: RsaSignature,
@@ -143,6 +155,9 @@ impl RsaKeyPair {
         &self.rsa
     }
 
+    /// Generate RSA key pair
+    ///
+    /// The bits parameter should be within 1024~16384 bits or 0 to use default length (2048 bits).
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = RSA_DEF_SIZE;
@@ -156,14 +171,17 @@ impl RsaKeyPair {
         })
     }
 
+    /// Get the signature hash type
     pub fn sign_type(&self) -> RsaSignature {
         self.signhash
     }
 
+    /// Set the signature hash type
     pub fn set_sign_type(&mut self, sig: RsaSignature) {
         self.signhash = sig;
     }
 
+    /// Clone the public parts to generate public key
     pub fn clone_public_key(&self) -> Result<RsaPublicKey, Error> {
         let n = self.rsa.n().to_owned()?;
         let e = self.rsa.e().to_owned()?;

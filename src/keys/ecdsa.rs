@@ -12,10 +12,14 @@ use std::fmt;
 use std::str::FromStr;
 
 const ECDSA_DEF_SIZE: usize = 256;
+/// The name of 256 bits curve key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const NIST_P256_NAME: &str = "ecdsa-sha2-nistp256";
+/// The name of 384 bits curve key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const NIST_P384_NAME: &str = "ecdsa-sha2-nistp384";
+/// The name of 521 bits curve key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const NIST_P521_NAME: &str = "ecdsa-sha2-nistp521";
 
+/// An enum of the supported elliptic curves
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EcCurve {
     Nistp256,
@@ -24,6 +28,7 @@ pub enum EcCurve {
 }
 
 impl EcCurve {
+    /// Parse from the ecdsa key name
     pub fn from_name(s: &str) -> OsshResult<Self> {
         match s {
             NIST_P256_NAME => Ok(EcCurve::Nistp256),
@@ -33,6 +38,7 @@ impl EcCurve {
         }
     }
 
+    /// The key size of this curve
     pub fn size(self) -> usize {
         match self {
             EcCurve::Nistp256 => 256,
@@ -41,7 +47,7 @@ impl EcCurve {
         }
     }
 
-    pub fn nid(self) -> Nid {
+    fn nid(self) -> Nid {
         match self {
             EcCurve::Nistp256 => Nid::X9_62_PRIME256V1,
             EcCurve::Nistp384 => Nid::SECP384R1,
@@ -49,6 +55,7 @@ impl EcCurve {
         }
     }
 
+    /// The key name of this curve
     pub fn name(self) -> &'static str {
         match self {
             EcCurve::Nistp256 => NIST_P256_NAME,
@@ -57,6 +64,7 @@ impl EcCurve {
         }
     }
 
+    /// The identifier part in the key name
     pub fn ident(self) -> &'static str {
         match self {
             EcCurve::Nistp256 => "nistp256",
@@ -85,6 +93,7 @@ impl TryInto<EcGroup> for EcCurve {
     }
 }
 
+/// Represent the EcDSA public key
 #[derive(Clone)]
 pub struct EcDsaPublicKey {
     key: EcKey<Public>,
@@ -102,6 +111,7 @@ impl fmt::Debug for EcDsaPublicKey {
 }
 
 impl EcDsaPublicKey {
+    /// Create the EcDSA public key from the elliptic curve and the public point
     pub(crate) fn new(
         curve: EcCurve,
         public_key: &EcPointRef,
@@ -164,6 +174,7 @@ impl fmt::Display for EcDsaPublicKey {
     }
 }
 
+/// Represent the EcDSA key pair
 pub struct EcDsaKeyPair {
     key: EcKey<Private>,
     curve: EcCurve,
@@ -210,6 +221,10 @@ impl EcDsaKeyPair {
         )
     }
 
+    /// Generate EcDSA key pair
+    ///
+    /// The bits parameter should be 256, 284, 521 bits or 0 to use default length (256 bits).
+    /// Different key length is corresponding to different curve.
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = ECDSA_DEF_SIZE;
@@ -228,6 +243,7 @@ impl EcDsaKeyPair {
         })
     }
 
+    /// Clone the public parts to generate public key
     pub fn clone_public_key(&self) -> Result<EcDsaPublicKey, Error> {
         Ok(EcDsaPublicKey::new(self.curve, self.key.public_key())?)
     }

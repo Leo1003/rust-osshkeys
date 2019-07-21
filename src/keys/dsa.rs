@@ -8,14 +8,17 @@ use openssl::pkey::{PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
 use std::fmt;
 
+/// The key name returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const DSA_NAME: &str = "ssh-dss";
 
+/// Represent the DSA public key
 #[derive(Debug, Clone)]
 pub struct DsaPublicKey {
     dsa: Dsa<Public>,
 }
 
 impl DsaPublicKey {
+    /// Create the DSA public key from public components
     pub fn new(
         p: BigNum,
         q: BigNum,
@@ -65,6 +68,7 @@ impl fmt::Display for DsaPublicKey {
     }
 }
 
+/// Represent the DSA key pair
 pub struct DsaKeyPair {
     dsa: Dsa<Private>,
 }
@@ -78,6 +82,9 @@ impl DsaKeyPair {
         &self.dsa
     }
 
+    /// Generate DSA key pair
+    ///
+    /// The bits parameter should be 1024 bits or 0 to use default length (1024 bits).
     pub fn generate(mut bits: usize) -> OsshResult<Self> {
         if bits == 0 {
             bits = 1024;
@@ -90,6 +97,7 @@ impl DsaKeyPair {
         })
     }
 
+    /// Clone the public parts to generate public key
     pub fn clone_public_key(&self) -> Result<DsaPublicKey, Error> {
         let p = self.dsa.p().to_owned()?;
         let q = self.dsa.q().to_owned()?;
