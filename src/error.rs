@@ -1,8 +1,10 @@
 use failure::{Backtrace, Error as FailureError, Fail};
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
+/// The [Result](https://doc.rust-lang.org/std/result/enum.Result.html) alias of this crate
 pub type OsshResult<T> = Result<T, Error>;
 
+/// The error type of this crate
 pub struct Error {
     kind: ErrorKind,
     inner: Option<FailureError>,
@@ -24,6 +26,11 @@ impl Error {
             inner: Some(failure.into()),
             bt: Backtrace::new(),
         }
+    }
+
+    /// Get the kind of the error
+    pub fn kind(&self) -> ErrorKind {
+        self.kind
     }
 }
 
@@ -111,31 +118,52 @@ impl From<std::array::TryFromSliceError> for Error {
     }
 }
 
+/// Indicate the reason of the error
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ErrorKind {
+    /// The error is caused by OpenSSL, to get the underlying error, use [failure::Fail::cause()](https://docs.rs/failure/^0.1.5/failure/trait.Fail.html#method.cause)
     OpenSslError,
+    /// The error is caused by ed25519-dalek, to get the underlying error, use [failure::Fail::cause()](https://docs.rs/failure/^0.1.5/failure/trait.Fail.html#method.cause)
     Ed25519Error,
+    /// The error is caused by I/O error or reader error
     IOError,
+    /// Can't format some data
     FmtError,
+    /// The base64 string is invalid
     Base64Error,
+    /// The argument passed into the function is invalid
     InvalidArgument,
+    /// The key file has some invalid data in it
     InvalidKeyFormat,
+    /// Currently not used...
     InvalidFormat,
+    /// Some parts of the key are invalid
     InvalidKey,
+    /// The key size is invalid
     InvalidKeySize,
+    /// The slice length is invalid
     InvalidLength,
+    /// The elliptic curve is not supported
     UnsupportCurve,
+    /// The encrypt cipher is not supported
     UnsupportCipher,
+    /// The passphrase is incorrect, can't decrypt the key
     IncorrectPass,
+    /// The key type is not the desired one
     TypeNotMatch,
+    /// The key type is not supported
     UnsupportType,
+    /// The key file's PEM part is invalid
     InvalidPemFormat,
+    /// The key or IV length can't meet the cipher's requirement
     InvalidKeyIvLength,
+    /// Something shouldn't happen but it DID happen...
     Unknown,
 }
 
 impl ErrorKind {
-    pub fn name(self) -> &'static str {
+    /// Get the description of the kind
+    pub fn description(self) -> &'static str {
         use ErrorKind::*;
 
         match self {
@@ -164,6 +192,6 @@ impl ErrorKind {
 
 impl Display for ErrorKind {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "{}", self.name())
+        write!(f, "{}", self.description())
     }
 }
