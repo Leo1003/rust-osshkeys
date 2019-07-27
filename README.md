@@ -1,9 +1,17 @@
 # osshkeys
+
+[![Crates](https://img.shields.io/crates/v/osshkeys.svg)](https://crates.io/crates/osshkeys)
+[![Docs](https://docs.rs/osshkeys/badge.svg)](https://docs.rs/osshkeys)
+
 ## Description
-A Rust library to read/write OpenSSH public/private keys and sign/verify data
+A Rust library to handle OpenSSH key and other common SSH key
+
+The main function of this library is to read, write different formats of SSH keys.
+Also, it provide the ability to generate a key, sign and verify data.
 
 ## Current Status
-This project is under alpha stage. It may contain many bugs for now, and also, the API would change frequently.
+The library is still under development, so there are some functions that haven't implemented.
+Some api may also change in the future.
 
 ## Planning Features
 - Core Features
@@ -12,9 +20,10 @@ This project is under alpha stage. It may contain many bugs for now, and also, t
         - DSA
         - EcDSA
         - Ed25519
-    - [ ] Documentation
-        - [ ] Descriptions
-        - [ ] Examples
+    - [x] Documentation
+        - [x] Descriptions
+        - [x] Examples
+        - [ ] More Examples
     - [x] Key generation
     - [x] Public key formats
         - [x] Openssh
