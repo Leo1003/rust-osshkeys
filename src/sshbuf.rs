@@ -8,13 +8,40 @@ use zeroize::{Zeroize, Zeroizing};
 
 const MAX_BIGNUM: usize = 16384 / 8;
 
+/// [io::Read](https://doc.rust-lang.org/std/io/trait.Read.html) extension to read ssh data
 pub trait SshReadExt {
+    /// Read a byte and convert it to boolean
+    ///
+    /// By definition, all non-zero value would be interpreted as true.
     fn read_bool(&mut self) -> Result<bool>;
+
+    /// Read 32 bits unsigned integer in big endian
     fn read_uint32(&mut self) -> io::Result<u32>;
+
+    /// Read 64 bits unsigned integer in big endian
     fn read_uint64(&mut self) -> io::Result<u64>;
+
+    /// Read bytes array or string
+    ///
+    /// Before the binary string, there is a 32 bits unsigned integer to indicate the length of the data,
+    /// and the binary string is **NOT** null-terminating.
     fn read_string(&mut self) -> io::Result<Vec<u8>>;
+
+    /// Read UTF-8 string
+    ///
+    /// This actually does the same thing as [read_string()](trait.SshReadExt.html#tymethod.read_string) does.
+    /// But it also convert the binary data to [String](https://doc.rust-lang.org/std/string/struct.String.html).
     fn read_utf8(&mut self) -> io::Result<String>;
+
+    /// Read multiple precision integer
+    ///
+    /// Although it can contain negative number, but we don't support it currently.
+    /// Integers which is longer than 16384 bits are also not supporting.
     fn read_mpint(&mut self) -> io::Result<BigNum>;
+
+    /// Read name-list
+    ///
+    /// It is a list representing in an ASCII string separated by the `,` charactor.
     fn read_list<B: FromIterator<String>>(&mut self) -> io::Result<B>;
 }
 
@@ -55,6 +82,11 @@ impl<R: io::Read + ?Sized> SshReadExt for R {
     }
 }
 
+/// [io::Read](https://doc.rust-lang.org/std/io/trait.Read.html) extension to securely read ssh data
+///
+/// This trait should behave as same as [SshReadExt](trait.SshReadExt.html), but it should not left any data in memory.
+///
+/// For details, please view [SshReadExt](trait.SshReadExt.html) page.
 pub trait ZeroizeReadExt {
     fn read_bool_zeroize(&mut self) -> Result<Zeroizing<bool>>;
     fn read_uint8_zeroize(&mut self) -> io::Result<Zeroizing<u8>>;
@@ -146,13 +178,42 @@ fn to_bignum(data: &[u8]) -> io::Result<BigNum> {
     }
 }
 
+/// [io::Write](https://doc.rust-lang.org/std/io/trait.Write.html) extension to read ssh data
 pub trait SshWriteExt {
+    /// Convert boolean to one byte and write it
+    ///
+    /// By definition, **false** should be **0** and **true** should be **1**. Any other value is not allowed.
     fn write_bool(&mut self, value: bool) -> io::Result<()>;
+
+    /// Write 32 bits unsigned integer in big endian
     fn write_uint32(&mut self, value: u32) -> io::Result<()>;
+
+    /// Write 64 bits unsigned integer in big endian
     fn write_uint64(&mut self, value: u64) -> io::Result<()>;
+
+    /// Write binary string data
+    ///
+    /// Before the binary string, there is a 32 bits unsigned integer to indicate the length of the data,
+    /// and the binary string is **NOT** null-terminating.
     fn write_string(&mut self, buf: &[u8]) -> io::Result<()>;
+
+    /// Write UTF-8 string
+    ///
+    /// Convert the string into bytes array and write it using [write_string()](trait.SshWriteExt.html#tymethod.write_string).
     fn write_utf8(&mut self, value: &str) -> io::Result<()>;
+
+    /// Write multiple precision integer
+    ///
+    /// Convert the integer into bytes array and write it.
     fn write_mpint(&mut self, value: &BigNumRef) -> io::Result<()>;
+
+    /// Write name-list
+    ///
+    /// Each entry must meets the following rules:
+    /// - not empty string
+    /// - not containing the `,` (comma) charactor
+    /// - not containing the `\0` (null) charactor
+    /// - being a valid ASCII string
     fn write_list<S: AsRef<str>, I: IntoIterator<Item = S>>(&mut self, values: I)
         -> io::Result<()>;
 }
@@ -197,15 +258,21 @@ impl<W: io::Write + ?Sized> SshWriteExt for W {
         let mut list_str = String::new();
         for s in values {
             let s = s.as_ref();
-            if s.contains(',') {
+            if s.is_empty() {
                 return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "List elements can't contain ','",
+                    io::ErrorKind::InvalidInput,
+                    "List elements shouldn't be empty",
+                ));
+            }
+            if s.contains(',') || s.contains('\0') {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "List elements can't contain ',' or '\\0'",
                 ));
             }
             if !s.is_ascii() {
                 return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
+                    io::ErrorKind::InvalidInput,
                     "List elements should only contain ascii characters",
                 ));
             }
