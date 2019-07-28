@@ -2,6 +2,9 @@
 
 [![Crates](https://img.shields.io/crates/v/osshkeys.svg)](https://crates.io/crates/osshkeys)
 [![Docs](https://docs.rs/osshkeys/badge.svg)](https://docs.rs/osshkeys)
+[![dependency status](https://deps.rs/repo/github/Leo1003/rust-osshkeys/status.svg)](https://deps.rs/repo/github/Leo1003/rust-osshkeys)
+[![GitHub license](https://img.shields.io/github/license/Leo1003/rust-osshkeys)](https://github.com/Leo1003/rust-osshkeys/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/Leo1003/rust-osshkeys?logo=github)](https://github.com/Leo1003/rust-osshkeys/issues)
 
 ## Description
 A Rust library to handle OpenSSH key and other common SSH key
