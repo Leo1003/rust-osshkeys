@@ -36,7 +36,7 @@ impl Error {
 
 impl Debug for Error {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "OsshError {{\n")?;
+        writeln!(f, "OsshError {{")?;
         write!(f, "Kind: {:?} => \"{}\"", self.kind, self.kind)?;
         if let Some(cause) = &self.inner {
             write!(f, "\nCaused: {:?}", cause)?;

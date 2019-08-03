@@ -1,3 +1,6 @@
+// Temporary disable unused codes warnings in this file
+#![allow(dead_code)]
+
 use super::ossh_privkey::decode_ossh_priv;
 use crate::error::*;
 use crate::keys::*;

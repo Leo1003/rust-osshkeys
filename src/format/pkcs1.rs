@@ -1,3 +1,6 @@
+// Temporary disable unused codes warnings in this file
+#![allow(dead_code)]
+
 use crate::error::Error;
 use crate::keys::rsa::{RsaKeyPair, RsaSignature};
 use openssl::rsa::Rsa;
