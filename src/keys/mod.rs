@@ -1,8 +1,10 @@
 use crate::error::*;
 use crate::format::ossh_pubkey::*;
 use crate::format::pem::*;
-use openssl::hash::{Hasher, MessageDigest};
 use openssl::pkey::{Id, PKeyRef, Private};
+use digest::Digest;
+use md5::Md5;
+use sha2::{Sha256, Sha512};
 use std::fmt;
 
 /// DSA key type
@@ -32,11 +34,15 @@ pub enum FingerprintHash {
 }
 
 impl FingerprintHash {
-    fn get_digest(self) -> MessageDigest {
+    fn hash(self, data: &[u8]) -> Vec<u8> {
+        fn digest_hash<D: Digest>(hasher: &mut D, data: &[u8]) -> Vec<u8> {
+            hasher.input(data);
+            hasher.result_reset().to_vec()
+        }
         match self {
-            FingerprintHash::MD5 => MessageDigest::md5(),
-            FingerprintHash::SHA256 => MessageDigest::sha256(),
-            FingerprintHash::SHA512 => MessageDigest::sha512(),
+            FingerprintHash::MD5 => digest_hash(&mut Md5::default(), data),
+            FingerprintHash::SHA256 => digest_hash(&mut Sha256::default(), data),
+            FingerprintHash::SHA512 => digest_hash(&mut Sha512::default(), data),
         }
     }
 }
@@ -387,10 +393,7 @@ pub trait PublicPart: Key {
     /// Hash the blob of the public key to generate the fingerprint
     fn fingerprint(&self, hash: FingerprintHash) -> OsshResult<Vec<u8>> {
         let b = self.blob()?;
-        let mut hasher = Hasher::new(hash.get_digest())?;
-        hasher.update(&b)?;
-        let dig = hasher.finish()?;
-        Ok(dig.to_vec())
+        Ok(hash.hash(&b))
     }
 }
 
