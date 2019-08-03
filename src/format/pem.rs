@@ -77,6 +77,11 @@ pub fn parse_keystr(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair
             parse_pem_privkey(pem, passphrase)
             //unimplemented!()
         }
+        "ENCRYPTED PRIVATE KEY" => {
+            // PKCS#8 format
+            parse_pem_privkey(pem, passphrase)
+            //unimplemented!()
+        }
         "DSA PRIVATE KEY" => {
             // Openssl DSA Key
             parse_pem_privkey(pem, passphrase)

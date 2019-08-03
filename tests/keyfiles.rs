@@ -102,3 +102,13 @@ fn keyfile_openssh_ed25519() {
 fn keyfile_openssh_ed25519_enc() {
     verify_key("assets/openssh_ed25519_enc", Some(TEST_FILE_PASS));
 }
+
+#[test]
+fn keyfile_pkcs8_rsa() {
+    verify_key("assets/pkcs8_rsa", None);
+}
+
+#[test]
+fn keyfile_pkcs8_rsa_enc() {
+    verify_key("assets/pkcs8_rsa_enc", Some(TEST_FILE_PASS));
+}
