@@ -1,9 +1,10 @@
 use crate::error::*;
 use crate::format::ossh_pubkey::*;
 use crate::format::pem::*;
-use openssl::pkey::{Id, PKeyRef, Private};
+use crate::format::pkcs8::*;
 use digest::Digest;
 use md5::Md5;
+use openssl::pkey::{Id, PKey, PKeyRef, Private};
 use sha2::{Sha256, Sha512};
 use std::fmt;
 
@@ -211,6 +212,15 @@ impl KeyPair {
         Ok(keypair)
     }
 
+    pub(crate) fn ossl_pkey(&self) -> OsshResult<PKey<Private>> {
+        match &self.key {
+            KeyPairType::RSA(key) => Ok(PKey::from_rsa(key.ossl_rsa().to_owned())?),
+            KeyPairType::DSA(key) => Ok(PKey::from_dsa(key.ossl_dsa().to_owned())?),
+            KeyPairType::ECDSA(key) => Ok(PKey::from_ec_key(key.ossl_ec().to_owned())?),
+            _ => return Err(ErrorKind::UnsupportType.into()),
+        }
+    }
+
     /// Parse a keypair from supporting file types
     ///
     /// The passphrase is required if the keypair is encrypted.
@@ -271,6 +281,13 @@ impl KeyPair {
     /// If the passphrase is given (set to `Some(...)`), then the generated PEM key will be encrypted.
     pub fn serialize_pem(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
         Ok(stringify_pem_privkey(&self, passphrase)?)
+    }
+
+    /// Serialize the keypair to the OpenSSL PKCS#8 PEM format
+    ///
+    /// If the passphrase is given (set to `Some(...)`), then the generated PKCS#8 key will be encrypted.
+    pub fn serialize_pkcs8(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
+        Ok(stringify_pkcs8_privkey(&self, passphrase)?)
     }
 
     /// Get the comment of the key
