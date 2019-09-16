@@ -5,7 +5,9 @@ use crate::keys::*;
 pub fn stringify_pkcs8_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> OsshResult<String> {
     let pem = if let Some(passphrase) = passphrase {
         let cipher = openssl::symm::Cipher::aes_128_cbc();
-        keypair.ossl_pkey()?.private_key_to_pem_pkcs8_passphrase(cipher, passphrase)?
+        keypair
+            .ossl_pkey()?
+            .private_key_to_pem_pkcs8_passphrase(cipher, passphrase)?
     } else {
         keypair.ossl_pkey()?.private_key_to_pem_pkcs8()?
     };

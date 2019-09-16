@@ -5,6 +5,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::from_utf8;
 
+mod utils;
+
 const TEST_FILE_PASS: &[u8] = b"12345678";
 
 fn locate_crate_files<P: AsRef<Path>>(path: P) -> PathBuf {
@@ -23,14 +25,8 @@ fn verify_key<P: AsRef<Path>>(keyfile: P, passphrase: Option<&[u8]>) {
 
     let pubdata = fs::read(pubkeypath).unwrap();
     let pubkey = PublicKey::from_keystring(from_utf8(pubdata.as_slice()).unwrap()).unwrap();
-    assert_eq!(
-        privkey.fingerprint(FingerprintHash::MD5).unwrap(),
-        pubkey.fingerprint(FingerprintHash::MD5).unwrap()
-    );
-    assert_eq!(
-        privkey.fingerprint(FingerprintHash::SHA256).unwrap(),
-        pubkey.fingerprint(FingerprintHash::SHA256).unwrap()
-    );
+
+    utils::fingerprint_assert(&privkey, &pubkey);
 }
 
 #[test]

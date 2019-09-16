@@ -1,20 +1,16 @@
 extern crate osshkeys;
 extern crate rand;
 
+use self::utils::fill_random;
 use osshkeys::keys::*;
-use rand::rngs::ThreadRng;
-use rand::RngCore as _;
 
-fn random_data(data: &mut [u8]) {
-    let mut rng = ThreadRng::default();
-    rng.fill_bytes(data);
-}
+mod utils;
 
 #[test]
 fn rsa_sign_verify() {
     let mut data: [u8; 64] = [0; 64];
     let key = KeyPair::generate(KeyType::RSA, 0).unwrap();
-    random_data(&mut data);
+    fill_random(&mut data);
 
     let sign = key.sign(&data).unwrap();
     assert_eq!(sign.len(), 256);
@@ -28,7 +24,7 @@ fn rsa_sign_sha256_verify() {
     let mut data: [u8; 64] = [0; 64];
     let mut key = rsa::RsaKeyPair::generate(0).unwrap();
     key.set_sign_type(RsaSignature::SHA2_256);
-    random_data(&mut data);
+    fill_random(&mut data);
 
     let sign = key.sign(&data).unwrap();
     assert_eq!(sign.len(), 256);
@@ -42,7 +38,7 @@ fn rsa_sign_sha512_verify() {
     let mut data: [u8; 64] = [0; 64];
     let mut key = rsa::RsaKeyPair::generate(4096).unwrap();
     key.set_sign_type(RsaSignature::SHA2_512);
-    random_data(&mut data);
+    fill_random(&mut data);
 
     let sign = key.sign(&data).unwrap();
     assert_eq!(sign.len(), 512);
@@ -53,7 +49,7 @@ fn rsa_sign_sha512_verify() {
 fn dsa_sign_verify() {
     let mut data: [u8; 64] = [0; 64];
     let key = KeyPair::generate(KeyType::DSA, 0).unwrap();
-    random_data(&mut data);
+    fill_random(&mut data);
 
     let sign = key.sign(&data).unwrap();
     assert!(sign.len() >= 40);
@@ -64,7 +60,7 @@ fn dsa_sign_verify() {
 fn ecdsa_sign_verify() {
     let mut data: [u8; 64] = [0; 64];
     let key = KeyPair::generate(KeyType::ECDSA, 0).unwrap();
-    random_data(&mut data);
+    fill_random(&mut data);
 
     let sign = key.sign(&data).unwrap();
     assert!(sign.len() <= 72);
@@ -75,7 +71,7 @@ fn ecdsa_sign_verify() {
 fn ed25519_sign_verify() {
     let mut data: [u8; 64] = [0; 64];
     let key = KeyPair::generate(KeyType::ED25519, 0).unwrap();
-    random_data(&mut data);
+    fill_random(&mut data);
 
     let sign = key.sign(&data).unwrap();
     assert_eq!(sign.len(), 64);
