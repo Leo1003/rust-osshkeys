@@ -203,13 +203,14 @@ pub struct KeyPair {
 
 impl KeyPair {
     pub(crate) fn from_ossl_pkey(pkey: &PKeyRef<Private>) -> OsshResult<Self> {
-        let keypair = match pkey.id() {
-            Id::RSA => rsa::RsaKeyPair::from_ossl_rsa(pkey.rsa()?, rsa::RsaSignature::SHA1)?.into(),
-            Id::DSA => dsa::DsaKeyPair::from_ossl_dsa(pkey.dsa()?).into(),
-            Id::EC => ecdsa::EcDsaKeyPair::from_ossl_ec(pkey.ec_key()?)?.into(),
-            _ => return Err(ErrorKind::UnsupportType.into()),
-        };
-        Ok(keypair)
+        match pkey.id() {
+            Id::RSA => {
+                Ok(rsa::RsaKeyPair::from_ossl_rsa(pkey.rsa()?, rsa::RsaSignature::SHA1)?.into())
+            }
+            Id::DSA => Ok(dsa::DsaKeyPair::from_ossl_dsa(pkey.dsa()?).into()),
+            Id::EC => Ok(ecdsa::EcDsaKeyPair::from_ossl_ec(pkey.ec_key()?)?.into()),
+            _ => Err(ErrorKind::UnsupportType.into()),
+        }
     }
 
     pub(crate) fn ossl_pkey(&self) -> OsshResult<PKey<Private>> {
@@ -217,7 +218,7 @@ impl KeyPair {
             KeyPairType::RSA(key) => Ok(PKey::from_rsa(key.ossl_rsa().to_owned())?),
             KeyPairType::DSA(key) => Ok(PKey::from_dsa(key.ossl_dsa().to_owned())?),
             KeyPairType::ECDSA(key) => Ok(PKey::from_ec_key(key.ossl_ec().to_owned())?),
-            _ => return Err(ErrorKind::UnsupportType.into()),
+            _ => Err(ErrorKind::UnsupportType.into()),
         }
     }
 

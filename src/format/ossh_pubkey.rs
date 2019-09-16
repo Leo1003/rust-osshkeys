@@ -100,7 +100,10 @@ pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> OsshResult<Ed25519PublicK
     )?)
 }
 
-pub(crate) fn stringify_ossh_pubkey(key: &PublicPart, comment: Option<&str>) -> OsshResult<String> {
+pub(crate) fn stringify_ossh_pubkey(
+    key: &dyn PublicPart,
+    comment: Option<&str>,
+) -> OsshResult<String> {
     let mut keystr = String::new();
     write!(
         &mut keystr,

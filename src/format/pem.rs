@@ -184,7 +184,7 @@ fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResu
         if let Some(data) = decrypted {
             Ok(data)
         } else {
-            return Err(ErrorKind::InvalidPemFormat.into());
+            Err(ErrorKind::InvalidPemFormat.into())
         }
     } else {
         Ok(pemblock.data.clone())
