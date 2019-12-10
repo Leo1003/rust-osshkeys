@@ -89,9 +89,8 @@ impl Ed25519KeyPair {
             return Err(Error::from_kind(ErrorKind::InvalidKeySize));
         }
 
-        let mut rng = OsRng::new().map_err(|e| Error::with_failure(ErrorKind::Ed25519Error, e))?;
         Ok(Ed25519KeyPair {
-            key: DalekKeypair::generate(&mut rng),
+            key: DalekKeypair::generate(&mut OsRng),
         })
     }
 

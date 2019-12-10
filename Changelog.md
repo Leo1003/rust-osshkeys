@@ -3,6 +3,8 @@
 ## Unreleased
 - **Add**
     - Support for writing PKCS#8 private keys
+- **Upgrade**
+    - Upgrade rand to 0.7
 ---
 ## 0.2.1 (2019/08/03)
 - **Fix**
