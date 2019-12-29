@@ -106,6 +106,11 @@ impl From<block_modes::InvalidKeyIvLength> for Error {
         Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
     }
 }
+impl From<block_modes::BlockModeError> for Error {
+    fn from(err: block_modes::BlockModeError) -> Self {
+        Self::with_failure(ErrorKind::IncorrectPass, err)
+    }
+}
 impl From<nom_pem::PemParsingError> for Error {
     fn from(_err: nom_pem::PemParsingError) -> Self {
         // nom_pem::PemParsingError doesn't implement std::error::Error

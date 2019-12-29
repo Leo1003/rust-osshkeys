@@ -2,11 +2,9 @@
 #![allow(dead_code)]
 
 use super::ossh_privkey::decode_ossh_priv;
+use crate::cipher::*;
 use crate::error::*;
 use crate::keys::*;
-use aes::{Aes128, Aes192, Aes256};
-use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
-use des::{Des, TdesEde3};
 use digest::{Digest, DynDigest};
 use nom_pem::{Block as PemBlock, HeaderEntry, ProcTypeType, RFC1423Algorithm};
 use openssl::pkey::PKey;
@@ -14,18 +12,6 @@ use std::convert::TryInto;
 use zeroize::Zeroize;
 
 const MAX_KEY_LEN: usize = 64;
-
-const AES128_KEY_LEN: usize = 16;
-const AES192_KEY_LEN: usize = 24;
-const AES256_KEY_LEN: usize = 32;
-const DES_KEY_LEN: usize = 8;
-const DES_EDE3_KEY_LEN: usize = 24;
-
-type Aes128Cbc = Cbc<Aes128, Pkcs7>;
-type Aes192Cbc = Cbc<Aes192, Pkcs7>;
-type Aes256Cbc = Cbc<Aes256, Pkcs7>;
-type DesCbc = Cbc<Des, Pkcs7>;
-type DesEde3Cbc = Cbc<TdesEde3, Pkcs7>;
 
 //TODO: Not to depend on openssl to parse pem file in the future
 pub fn parse_pem_privkey(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
@@ -78,27 +64,22 @@ pub fn parse_keystr(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair
         "PRIVATE KEY" => {
             // PKCS#8 format
             parse_pem_privkey(pem, passphrase)
-            //unimplemented!()
         }
         "ENCRYPTED PRIVATE KEY" => {
             // PKCS#8 format
             parse_pem_privkey(pem, passphrase)
-            //unimplemented!()
         }
         "DSA PRIVATE KEY" => {
             // Openssl DSA Key
             parse_pem_privkey(pem, passphrase)
-            //unimplemented!()
         }
         "RSA PRIVATE KEY" => {
             // Openssl RSA Key
             parse_pem_privkey(pem, passphrase)
-            //unimplemented!()
         }
         "EC PRIVATE KEY" => {
             // Openssl EC Key
             parse_pem_privkey(pem, passphrase)
-            //unimplemented!()
         }
         _ => Err(ErrorKind::UnsupportType.into()),
     }
@@ -120,61 +101,21 @@ fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResu
         for entry in &pemblock.headers {
             if let HeaderEntry::DEKInfo(algo, iv) = entry {
                 if let Some(pass) = passphrase {
-                    decrypted = Some(
-                        match algo {
-                            RFC1423Algorithm::DES_CBC => {
-                                let key = openssl_kdf(
-                                    pass,
-                                    iv.as_slice().try_into()?,
-                                    &mut md5::Md5::default(),
-                                    DES_KEY_LEN,
-                                    1,
-                                )?;
-                                DesCbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
-                            }
-                            RFC1423Algorithm::DES_EDE3_CBC => {
-                                let key = openssl_kdf(
-                                    pass,
-                                    iv.as_slice().try_into()?,
-                                    &mut md5::Md5::default(),
-                                    DES_EDE3_KEY_LEN,
-                                    1,
-                                )?;
-                                DesEde3Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
-                            }
-                            RFC1423Algorithm::AES_128_CBC => {
-                                let key = openssl_kdf(
-                                    pass,
-                                    iv.as_slice().try_into()?,
-                                    &mut md5::Md5::default(),
-                                    AES128_KEY_LEN,
-                                    1,
-                                )?;
-                                Aes128Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
-                            }
-                            RFC1423Algorithm::AES_192_CBC => {
-                                let key = openssl_kdf(
-                                    pass,
-                                    iv.as_slice().try_into()?,
-                                    &mut md5::Md5::default(),
-                                    AES192_KEY_LEN,
-                                    1,
-                                )?;
-                                Aes192Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
-                            }
-                            RFC1423Algorithm::AES_256_CBC => {
-                                let key = openssl_kdf(
-                                    pass,
-                                    iv.as_slice().try_into()?,
-                                    &mut md5::Md5::default(),
-                                    AES256_KEY_LEN,
-                                    1,
-                                )?;
-                                Aes256Cbc::new_var(&key, &iv)?.decrypt_vec(&pemblock.data)
-                            }
-                        }
-                        .map_err(|_| ErrorKind::IncorrectPass)?,
-                    );
+                    let ciph = match algo {
+                        RFC1423Algorithm::DES_EDE3_CBC => Cipher::TDesCbc,
+                        RFC1423Algorithm::AES_128_CBC => Cipher::Aes128Cbc,
+                        RFC1423Algorithm::AES_192_CBC => Cipher::Aes192Cbc,
+                        RFC1423Algorithm::AES_256_CBC => Cipher::Aes256Cbc,
+                        _ => return Err(ErrorKind::UnsupportCipher.into()),
+                    };
+                    let key = openssl_kdf(
+                        pass,
+                        iv.as_slice().try_into()?,
+                        &mut md5::Md5::default(),
+                        ciph.keylen(),
+                        1,
+                    )?;
+                    decrypted = Some(ciph.decrypt(&pemblock.data, &key, iv)?);
                 } else {
                     return Err(ErrorKind::IncorrectPass.into());
                 }
