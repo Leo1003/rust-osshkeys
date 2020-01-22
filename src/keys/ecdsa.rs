@@ -1,4 +1,4 @@
-use super::{Key, PrivatePart, PublicPart};
+use super::{Key, PrivateParts, PublicParts};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::{BigNumContext, BigNumRef};
@@ -132,7 +132,7 @@ impl Key for EcDsaPublicKey {
     }
 }
 
-impl PublicPart for EcDsaPublicKey {
+impl PublicParts for EcDsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         Ok(encode_ecdsa_pubkey(self.curve, &self.key)?)
     }
@@ -249,7 +249,7 @@ impl Key for EcDsaKeyPair {
     }
 }
 
-impl PublicPart for EcDsaKeyPair {
+impl PublicParts for EcDsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         Ok(encode_ecdsa_pubkey(self.curve, &self.key)?)
     }
@@ -259,7 +259,7 @@ impl PublicPart for EcDsaKeyPair {
     }
 }
 
-impl PrivatePart for EcDsaKeyPair {
+impl PrivateParts for EcDsaKeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         let pkey = PKey::from_ec_key(self.key.clone())?;
         let mut sign = Signer::new(MessageDigest::sha1(), &pkey)?;

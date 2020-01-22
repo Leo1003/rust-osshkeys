@@ -3,6 +3,9 @@
 ---
 
 ## Unreleased
+- **Fix**
+    - Rename `PublicPart` to `PublicParts`
+    - Rename `PrivatePart` to `PrivateParts`
 
 ---
 

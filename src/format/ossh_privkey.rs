@@ -1,6 +1,6 @@
 use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use crate::error::*;
-use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicKey, PublicPart};
+use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicKey, PublicParts};
 use crate::sshbuf::{SshReadExt, SshWriteExt, ZeroizeReadExt};
 use openssl::dsa::Dsa;
 use openssl::rsa::RsaPrivateKeyBuilder;

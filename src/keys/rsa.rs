@@ -1,4 +1,4 @@
-use super::{Key, PrivatePart, PublicPart};
+use super::{Key, PrivateParts, PublicParts};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 use openssl::bn::BigNum;
@@ -107,7 +107,7 @@ impl Key for RsaPublicKey {
     }
 }
 
-impl PublicPart for RsaPublicKey {
+impl PublicParts for RsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         Ok(encode_rsa_pubkey(&self.rsa)?)
     }
@@ -199,7 +199,7 @@ impl Key for RsaKeyPair {
     }
 }
 
-impl PublicPart for RsaKeyPair {
+impl PublicParts for RsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         Ok(encode_rsa_pubkey(&self.rsa)?)
     }
@@ -209,7 +209,7 @@ impl PublicPart for RsaKeyPair {
     }
 }
 
-impl PrivatePart for RsaKeyPair {
+impl PrivateParts for RsaKeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         if self.size() < RSA_MIN_SIZE {
             return Err(ErrorKind::InvalidKeySize.into());

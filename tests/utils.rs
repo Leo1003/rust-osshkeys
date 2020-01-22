@@ -10,7 +10,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 #[inline]
-pub fn fingerprint_assert(key1: &dyn PublicPart, key2: &dyn PublicPart) {
+pub fn fingerprint_assert(key1: &dyn PublicParts, key2: &dyn PublicParts) {
     assert_eq!(
         key1.fingerprint(FingerprintHash::MD5).unwrap(),
         key2.fingerprint(FingerprintHash::MD5).unwrap()

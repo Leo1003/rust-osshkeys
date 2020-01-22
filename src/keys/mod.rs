@@ -109,7 +109,7 @@ impl PublicKey {
         &mut self.comment
     }
 
-    fn inner_key(&self) -> &dyn PublicPart {
+    fn inner_key(&self) -> &dyn PublicParts {
         match &self.key {
             PublicKeyType::RSA(key) => key,
             PublicKeyType::DSA(key) => key,
@@ -129,7 +129,7 @@ impl Key for PublicKey {
     }
 }
 
-impl PublicPart for PublicKey {
+impl PublicParts for PublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         self.inner_key().blob()
     }
@@ -315,7 +315,7 @@ impl KeyPair {
         })
     }
 
-    fn inner_key(&self) -> &dyn PrivatePart {
+    fn inner_key(&self) -> &dyn PrivateParts {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
@@ -324,7 +324,7 @@ impl KeyPair {
         }
     }
 
-    fn inner_key_pub(&self) -> &dyn PublicPart {
+    fn inner_key_pub(&self) -> &dyn PublicParts {
         match &self.key {
             KeyPairType::RSA(key) => key,
             KeyPairType::DSA(key) => key,
@@ -343,7 +343,7 @@ impl Key for KeyPair {
     }
 }
 
-impl PublicPart for KeyPair {
+impl PublicParts for KeyPair {
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
         self.inner_key_pub().verify(data, sig)
     }
@@ -352,7 +352,7 @@ impl PublicPart for KeyPair {
     }
 }
 
-impl PrivatePart for KeyPair {
+impl PrivateParts for KeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         self.inner_key().sign(data)
     }
@@ -403,7 +403,7 @@ pub trait Key {
 }
 
 /// A trait for operations of a public key
-pub trait PublicPart: Key {
+pub trait PublicParts: Key {
     /// Verify the data with a detached signature, returning true if the signature is not malformed
     fn verify(&self, data: &[u8], sig: &[u8]) -> OsshResult<bool>;
     /// Return the binary representation of the public key
@@ -416,7 +416,7 @@ pub trait PublicPart: Key {
 }
 
 /// A trait for operations of a private key
-pub trait PrivatePart: Key {
+pub trait PrivateParts: Key {
     /// Sign the data with the key, returning the "detached" signature
     fn sign(&self, data: &[u8]) -> OsshResult<Vec<u8>>;
 }

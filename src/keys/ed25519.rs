@@ -1,4 +1,4 @@
-use super::{Key, PrivatePart, PublicPart};
+use super::{Key, PrivateParts, PublicParts};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
 #[rustfmt::skip]
@@ -42,7 +42,7 @@ impl Key for Ed25519PublicKey {
     }
 }
 
-impl PublicPart for Ed25519PublicKey {
+impl PublicParts for Ed25519PublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         Ok(encode_ed25519_pubkey(&self.key)?)
     }
@@ -120,7 +120,7 @@ impl Ed25519KeyPair {
     }
 }
 
-impl PublicPart for Ed25519KeyPair {
+impl PublicParts for Ed25519KeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
         Ok(encode_ed25519_pubkey(&self.key.public)?)
     }
@@ -131,7 +131,7 @@ impl PublicPart for Ed25519KeyPair {
     }
 }
 
-impl PrivatePart for Ed25519KeyPair {
+impl PrivateParts for Ed25519KeyPair {
     fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
         Ok(self.key.sign(data).to_bytes().to_vec())
     }

@@ -24,7 +24,7 @@
 //! # Example
 //! ```rust
 //! # #[macro_use] extern crate hex_literal;
-//! use osshkeys::{KeyPair, KeyType, Key as _, PublicPart as _, PrivatePart as _};
+//! use osshkeys::{KeyPair, KeyType, Key as _, PublicParts as _, PrivateParts as _};
 //! use osshkeys::keys::FingerprintHash;
 //!
 //! let keyfile = std::fs::read_to_string("assets/openssh_ed25519_enc").unwrap();
@@ -66,6 +66,6 @@ pub mod sshbuf;
 pub use keys::Key;
 pub use keys::KeyPair;
 pub use keys::KeyType;
-pub use keys::PrivatePart;
+pub use keys::PrivateParts;
 pub use keys::PublicKey;
-pub use keys::PublicPart;
+pub use keys::PublicParts;
