@@ -102,10 +102,10 @@ fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResu
             if let HeaderEntry::DEKInfo(algo, iv) = entry {
                 if let Some(pass) = passphrase {
                     let ciph = match algo {
-                        RFC1423Algorithm::DES_EDE3_CBC => Cipher::TDesCbc,
-                        RFC1423Algorithm::AES_128_CBC => Cipher::Aes128Cbc,
-                        RFC1423Algorithm::AES_192_CBC => Cipher::Aes192Cbc,
-                        RFC1423Algorithm::AES_256_CBC => Cipher::Aes256Cbc,
+                        RFC1423Algorithm::DES_EDE3_CBC => Cipher::TDes_Cbc,
+                        RFC1423Algorithm::AES_128_CBC => Cipher::Aes128_Cbc,
+                        RFC1423Algorithm::AES_192_CBC => Cipher::Aes192_Cbc,
+                        RFC1423Algorithm::AES_256_CBC => Cipher::Aes256_Cbc,
                         _ => return Err(ErrorKind::UnsupportCipher.into()),
                     };
                     let key = openssl_kdf(

@@ -106,6 +106,11 @@ impl From<block_modes::InvalidKeyIvLength> for Error {
         Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
     }
 }
+impl From<stream_cipher::InvalidKeyNonceLength> for Error {
+    fn from(err: stream_cipher::InvalidKeyNonceLength) -> Self {
+        Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
+    }
+}
 impl From<block_modes::BlockModeError> for Error {
     fn from(err: block_modes::BlockModeError) -> Self {
         Self::with_failure(ErrorKind::IncorrectPass, err)
