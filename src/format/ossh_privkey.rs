@@ -1,17 +1,19 @@
 use crate::bcrypt_pbkdf::bcrypt_pbkdf;
+use crate::cipher::Cipher;
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicKey, PublicParts};
 use crate::sshbuf::{SshReadExt, SshWriteExt, ZeroizeReadExt};
 use openssl::dsa::Dsa;
 use openssl::rsa::RsaPrivateKeyBuilder;
-use openssl::symm::{Cipher, Crypter, Mode};
+
 use std::io::{Cursor, Read as _};
 use std::str::FromStr;
 use zeroize::{Zeroize, Zeroizing};
 
+const KEY_MAGIC: &[u8] = b"openssh-key-v1\0";
 #[allow(clippy::many_single_char_names)]
 pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
-    if keydata.len() >= 16 && &keydata[0..15] == b"openssh-key-v1\0" {
+    if keydata.len() >= 16 && &keydata[0..15] == KEY_MAGIC {
         let mut reader = Cursor::new(keydata);
         reader.set_position(15);
 
@@ -114,20 +116,10 @@ pub fn decrypt_ossh_priv(
     kdfname: &str,
     kdf: &[u8],
 ) -> OsshResult<Vec<u8>> {
-    let cipher = match ciphername {
-        "3des-cbc" => Some(Cipher::des_ede3_cbc()),
-        "aes128-cbc" => Some(Cipher::aes_128_cbc()),
-        "aes192-cbc" => Some(Cipher::aes_192_cbc()),
-        "aes256-cbc" | "rijndael-cbc@lysator.liu.se" => Some(Cipher::aes_256_cbc()),
-        "aes128-ctr" => Some(Cipher::aes_128_ctr()),
-        "aes192-ctr" => Some(Cipher::aes_192_ctr()),
-        "aes256-ctr" => Some(Cipher::aes_256_ctr()),
-        "none" => None,
-        _ => return Err(ErrorKind::UnsupportCipher.into()),
-    };
+    let cipher = Cipher::from_str(ciphername)?;
 
     // Check if empty passphrase but encrypted
-    if (!passphrase.map_or(false, |pass| !pass.is_empty())) && cipher.is_some() {
+    if (!passphrase.map_or(false, |pass| !pass.is_empty())) && !cipher.is_null() {
         return Err(ErrorKind::IncorrectPass.into());
     }
     // Check kdf type
@@ -135,16 +127,16 @@ pub fn decrypt_ossh_priv(
         return Err(ErrorKind::UnsupportCipher.into());
     }
     // Check if no kdf providing but encrypted
-    if kdfname == "none" && cipher.is_some() {
+    if kdfname == "none" && !cipher.is_null() {
         return Err(ErrorKind::InvalidKeyFormat.into());
     }
 
-    let blocksize = cipher.map_or(8, |c| c.block_size());
+    let blocksize = cipher.block_size();
     if privkey_data.len() < blocksize || privkey_data.len() % blocksize != 0 {
         return Err(ErrorKind::InvalidKeyFormat.into());
     }
 
-    if let Some(cipher) = cipher {
+    if !cipher.is_null() {
         let keyder = match kdfname {
             "bcrypt" => {
                 if let Some(pass) = passphrase {
@@ -152,7 +144,7 @@ pub fn decrypt_ossh_priv(
                     let salt = kdfreader.read_string_zeroize()?;
                     let round = kdfreader.read_uint32_zeroize()?;
                     let mut output =
-                        Zeroizing::new(vec![0u8; cipher.key_len() + cipher.iv_len().unwrap_or(0)]);
+                        Zeroizing::new(vec![0u8; cipher.key_len() + cipher.iv_len()]);
                     bcrypt_pbkdf(pass, &salt, *round, &mut output)?;
                     output
                 } else {
@@ -168,14 +160,9 @@ pub fn decrypt_ossh_priv(
         // Splitting key & iv
         let key = &keyder[..cipher.key_len()];
         let iv = &keyder[cipher.key_len()..];
-        let mut crypter = Crypter::new(cipher, Mode::Decrypt, key, Some(&iv))?;
-        crypter.pad(false);
 
         // Decrypt
-        let mut decrypted = vec![0; privkey_data.len() + blocksize];
-        let mut n = crypter.update(privkey_data, &mut decrypted)?;
-        n += crypter.finalize(&mut decrypted[n..])?;
-        decrypted.truncate(n);
+        let decrypted = cipher.decrypt(privkey_data, key, iv)?;
 
         Ok(decrypted)
     } else {

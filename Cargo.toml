@@ -10,6 +10,14 @@ readme = "README.md"
 exclude = [".gitignore"]
 edition = "2018"
 
+[features]
+default = ["openssl-cipher"]
+
+# Encrypt/Decrypt by OpenSSL
+# For now, there are other parts still depends on OpenSSL,
+# therefore, unset this feature won't remove the OpenSSL dependency.
+openssl-cipher = []
+
 [dependencies]
 base64 = "0.11.0"
 byteorder = "1.3.2"

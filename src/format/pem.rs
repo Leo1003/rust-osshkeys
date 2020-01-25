@@ -112,7 +112,7 @@ fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResu
                         pass,
                         iv.as_slice().try_into()?,
                         &mut md5::Md5::default(),
-                        ciph.keylen(),
+                        ciph.key_len(),
                         1,
                     )?;
                     decrypted = Some(ciph.decrypt(&pemblock.data, &key, iv)?);

@@ -108,3 +108,27 @@ fn keyfile_pkcs8_rsa() {
 fn keyfile_pkcs8_rsa_enc() {
     verify_key("assets/pkcs8_rsa_enc", Some(TEST_FILE_PASS));
 }
+
+#[test]
+#[should_panic]
+fn keyfile_pem_rsa_wrong() {
+    verify_key("assets/pem_rsa_enc", Some(b"deadbeef"));
+}
+
+#[test]
+#[should_panic]
+fn keyfile_pem_dsa_wrong() {
+    verify_key("assets/pem_dsa_enc", Some(b"hashdjf"));
+}
+
+#[test]
+#[should_panic]
+fn keyfile_pem_ecdsa_wrong() {
+    verify_key("assets/pem_ecdsa_enc", Some(b"1234567"));
+}
+
+#[test]
+#[should_panic]
+fn keyfile_pem_ed25519_wrong() {
+    verify_key("assets/pem_ed25519_enc", Some(b"^&@#Y&G*"));
+}
