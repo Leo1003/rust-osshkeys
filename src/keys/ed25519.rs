@@ -67,7 +67,7 @@ impl fmt::Display for Ed25519PublicKey {
 
 /// Represent the Ed25519 key pair
 pub struct Ed25519KeyPair {
-    key: DalekKeypair,
+    pub(crate) key: DalekKeypair,
 }
 
 impl Key for Ed25519KeyPair {

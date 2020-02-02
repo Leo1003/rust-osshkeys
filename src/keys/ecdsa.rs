@@ -120,6 +120,11 @@ impl EcDsaPublicKey {
             into_ec_point(curve, public_key)?.as_ref(),
         )?)
     }
+
+    /// Get the key's elliptic curve type
+    pub fn curve(&self) -> EcCurve {
+        self.curve
+    }
 }
 
 impl Key for EcDsaPublicKey {
@@ -231,6 +236,11 @@ impl EcDsaKeyPair {
             key: EcKey::generate(&group)?,
             curve,
         })
+    }
+
+    /// Get the key's elliptic curve type
+    pub fn curve(&self) -> EcCurve {
+        self.curve
     }
 
     /// Clone the public parts to generate public key

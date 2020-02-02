@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
-use crate::error::{Error as OsshError, ErrorKind, OsshResult};
 use self::internal_impl::*;
+use crate::error::{Error as OsshError, ErrorKind, OsshResult};
 
 /// Provide an unified interface to encrypt/decrypt data
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -106,6 +106,10 @@ impl Cipher {
     pub fn is_null(self) -> bool {
         self == Cipher::Null
     }
+
+    pub fn is_some(self) -> bool {
+        self != Cipher::Null
+    }
 }
 
 impl FromStr for Cipher {
@@ -130,16 +134,16 @@ impl FromStr for Cipher {
 mod internal_impl {
     use aes::{Aes128, Aes192, Aes256};
     use aes_ctr::{Aes128Ctr, Aes192Ctr, Aes256Ctr};
-    use stream_cipher::{NewStreamCipher, SyncStreamCipher};
     use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
     use des::TdesEde3;
+    use stream_cipher::{NewStreamCipher, SyncStreamCipher};
 
     use crate::error::OsshResult;
 
-    type Aes128Cbc = Cbc::<Aes128, Pkcs7>;
-    type Aes192Cbc = Cbc::<Aes192, Pkcs7>;
-    type Aes256Cbc = Cbc::<Aes256, Pkcs7>;
-    type TdesCbc = Cbc::<TdesEde3, Pkcs7>;
+    type Aes128Cbc = Cbc<Aes128, Pkcs7>;
+    type Aes192Cbc = Cbc<Aes192, Pkcs7>;
+    type Aes256Cbc = Cbc<Aes256, Pkcs7>;
+    type TdesCbc = Cbc<TdesEde3, Pkcs7>;
 
     pub fn aes128cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
         Ok(Aes128Cbc::new_var(key, iv)?.encrypt_vec(src))
