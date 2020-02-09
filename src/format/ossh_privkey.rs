@@ -49,7 +49,7 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
         if *checksum0 != *checksum1 {
             return Err(ErrorKind::IncorrectPass.into());
         }
-        let mut keypair: KeyPair = deserialize_key(&mut secret_reader)?;
+        let mut keypair: KeyPair = decode_key(&mut secret_reader)?;
 
         *keypair.comment_mut() = secret_reader.read_utf8()?;
 
@@ -127,7 +127,7 @@ pub fn decrypt_ossh_priv(
 }
 
 #[allow(clippy::many_single_char_names)]
-fn deserialize_key<R: Read + ?Sized>(reader: &mut R) -> OsshResult<KeyPair> {
+fn decode_key<R: Read + ?Sized>(reader: &mut R) -> OsshResult<KeyPair> {
     let keystring = reader.read_utf8_zeroize()?;
     let keyname: &str = keystring.as_str();
     let key = match keyname {
@@ -185,6 +185,32 @@ fn deserialize_key<R: Read + ?Sized>(reader: &mut R) -> OsshResult<KeyPair> {
 
 // --------------------------------
 
+pub fn serialize_ossh_priv(
+    key: &KeyPair,
+    passphrase: &[u8],
+    cipher: Cipher,
+    kdf_rounds: u32,
+) -> OsshResult<String> {
+    let buf = encode_ossh_priv(key, passphrase, cipher, kdf_rounds)?;
+    let mut keystr = String::new();
+    keystr.push_str("-----BEGIN OPENSSH PRIVATE KEY-----");
+    let b64str = base64::encode(&buf);
+
+    // Wrap the base64 data
+    keystr.extend(b64str.chars().enumerate().flat_map(|(i, c)| {
+        if i > 0 && i % 70 == 0 {
+            Some('\n')
+        } else {
+            None
+        }
+        .into_iter()
+        .chain(std::iter::once(c))
+    }));
+
+    keystr.push_str("-----END OPENSSH PRIVATE KEY-----");
+    Ok(keystr)
+}
+
 pub fn encode_ossh_priv(
     key: &KeyPair,
     passphrase: &[u8],
@@ -232,7 +258,7 @@ pub fn encode_ossh_priv(
     privbuf.write_uint32(checksum)?;
     privbuf.write_uint32(checksum)?;
 
-    serialize_key(key, &mut *privbuf)?;
+    encode_key(key, &mut *privbuf)?;
 
     privbuf.write_utf8(key.comment())?;
 
@@ -280,7 +306,7 @@ pub fn encrypt_ossh_priv(
 }
 
 #[allow(clippy::many_single_char_names)]
-fn serialize_key<W: Write + ?Sized>(key: &KeyPair, buf: &mut W) -> OsshResult<()> {
+fn encode_key<W: Write + ?Sized>(key: &KeyPair, buf: &mut W) -> OsshResult<()> {
     use crate::keys::Key;
     use crate::keys::KeyPairType;
     use openssl::bn::BigNumContext;

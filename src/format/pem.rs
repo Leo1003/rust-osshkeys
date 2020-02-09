@@ -1,11 +1,10 @@
 // Temporary disable unused codes warnings in this file
 #![allow(dead_code)]
 
-use super::ossh_privkey::decode_ossh_priv;
 use crate::cipher::*;
 use crate::error::*;
 use crate::keys::*;
-use digest::{Digest, DynDigest};
+use digest::DynDigest;
 use nom_pem::{Block as PemBlock, HeaderEntry, ProcTypeType, RFC1423Algorithm};
 use openssl::pkey::PKey;
 use std::convert::TryInto;
@@ -28,6 +27,7 @@ pub fn parse_pem_privkey(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<Ke
 //TODO: Not to depend on openssl to parse pem file in the future
 pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> OsshResult<String> {
     let pem = if let Some(passphrase) = passphrase {
+        // TODO: Allow for cipher selection
         let cipher = openssl::symm::Cipher::aes_128_cbc();
         match &keypair.key {
             KeyPairType::RSA(key) => key
@@ -53,39 +53,8 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> Os
     Ok(String::from_utf8(pem).map_err(|e| Error::with_failure(ErrorKind::InvalidPemFormat, e))?)
 }
 
-pub fn parse_keystr(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
-    let pemdata = nom_pem::decode_block(pem)?;
-
-    match pemdata.block_type {
-        "OPENSSH PRIVATE KEY" => {
-            // Openssh format
-            decode_ossh_priv(&pemdata.data, passphrase)
-        }
-        "PRIVATE KEY" => {
-            // PKCS#8 format
-            parse_pem_privkey(pem, passphrase)
-        }
-        "ENCRYPTED PRIVATE KEY" => {
-            // PKCS#8 format
-            parse_pem_privkey(pem, passphrase)
-        }
-        "DSA PRIVATE KEY" => {
-            // Openssl DSA Key
-            parse_pem_privkey(pem, passphrase)
-        }
-        "RSA PRIVATE KEY" => {
-            // Openssl RSA Key
-            parse_pem_privkey(pem, passphrase)
-        }
-        "EC PRIVATE KEY" => {
-            // Openssl EC Key
-            parse_pem_privkey(pem, passphrase)
-        }
-        _ => Err(ErrorKind::UnsupportType.into()),
-    }
-}
-
-fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResult<Vec<u8>> {
+/// Self experimental implementation for decrypting OpenSSL PEM format
+fn pem_decrypt(pemblock: &PemBlock, passphrase: Option<&[u8]>) -> OsshResult<Vec<u8>> {
     let mut encrypted = false;
     for entry in &pemblock.headers {
         if let HeaderEntry::ProcType(ver, proctype) = entry {
@@ -132,6 +101,7 @@ fn pem_decrypt(pemblock: &nom_pem::Block, passphrase: Option<&[u8]>) -> OsshResu
     }
 }
 
+/// Self experimental implementation for OpenSSL kdf
 fn openssl_kdf(
     data: &[u8],
     salt: &[u8; 8],

@@ -1,5 +1,6 @@
 use crate::error::*;
 use crate::format::ossh_pubkey::*;
+use crate::format::parse_keystr;
 use crate::format::pem::*;
 use crate::format::pkcs8::*;
 use digest::Digest;
@@ -288,7 +289,7 @@ impl KeyPair {
     ///
     /// If the passphrase is given (set to `Some(...)`), then the generated PKCS#8 key will be encrypted.
     pub fn serialize_pkcs8(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
-        Ok(stringify_pkcs8_privkey(&self, passphrase)?)
+        Ok(serialize_pkcs8_privkey(&self, passphrase)?)
     }
 
     /// Get the comment of the key

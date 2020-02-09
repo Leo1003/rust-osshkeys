@@ -100,10 +100,7 @@ pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> OsshResult<Ed25519PublicK
     )?)
 }
 
-pub(crate) fn stringify_ossh_pubkey(
-    key: &dyn PublicParts,
-    comment: Option<&str>,
-) -> OsshResult<String> {
+pub fn serialize_ossh_pubkey(key: &dyn PublicParts, comment: Option<&str>) -> OsshResult<String> {
     let mut keystr = String::new();
     write!(
         &mut keystr,
@@ -180,7 +177,7 @@ mod test {
     fn dsa_publickey_parse_serialize() {
         let dsa = parse_ossh_pubkey(DSA_PUBKEY).unwrap();
         assert_eq!(dsa.comment(), "osshkeys_dsa-test");
-        let dsa_string = stringify_ossh_pubkey(&dsa, Some(dsa.comment())).unwrap();
+        let dsa_string = serialize_ossh_pubkey(&dsa, Some(dsa.comment())).unwrap();
         assert_eq!(&dsa_string, DSA_PUBKEY);
     }
 
@@ -188,7 +185,7 @@ mod test {
     fn rsa_publickey_parse_serialize() {
         let rsa = parse_ossh_pubkey(RSA_PUBKEY).unwrap();
         assert_eq!(rsa.comment(), "osshkeys_rsa-test");
-        let rsa_string = stringify_ossh_pubkey(&rsa, Some(rsa.comment())).unwrap();
+        let rsa_string = serialize_ossh_pubkey(&rsa, Some(rsa.comment())).unwrap();
         assert_eq!(&rsa_string, RSA_PUBKEY);
     }
 
@@ -196,7 +193,7 @@ mod test {
     fn rsa256_publickey_parse_serialize() {
         let rsa = parse_ossh_pubkey(RSA256_PUBKEY).unwrap();
         assert_eq!(rsa.comment(), "osshkeys_rsa-test");
-        let rsa_string = stringify_ossh_pubkey(&rsa, Some(rsa.comment())).unwrap();
+        let rsa_string = serialize_ossh_pubkey(&rsa, Some(rsa.comment())).unwrap();
         assert_eq!(&rsa_string, RSA256_PUBKEY);
     }
 
@@ -204,7 +201,7 @@ mod test {
     fn ecdsa_publickey_parse_serialize() {
         let ecdsa = parse_ossh_pubkey(ECDSA_PUBKEY).unwrap();
         assert_eq!(ecdsa.comment(), "osshkeys_ecdsa-test");
-        let ecdsa_string = stringify_ossh_pubkey(&ecdsa, Some(ecdsa.comment())).unwrap();
+        let ecdsa_string = serialize_ossh_pubkey(&ecdsa, Some(ecdsa.comment())).unwrap();
         assert_eq!(&ecdsa_string, ECDSA_PUBKEY);
     }
 
@@ -212,7 +209,7 @@ mod test {
     fn ed25519_publickey_parse_serialize() {
         let ed25519 = parse_ossh_pubkey(ED25519_PUBKEY).unwrap();
         assert_eq!(ed25519.comment(), "osshkeys_ed25519-test");
-        let ed25519_string = stringify_ossh_pubkey(&ed25519, Some(ed25519.comment())).unwrap();
+        let ed25519_string = serialize_ossh_pubkey(&ed25519, Some(ed25519.comment())).unwrap();
         assert_eq!(&ed25519_string, ED25519_PUBKEY);
     }
 }
