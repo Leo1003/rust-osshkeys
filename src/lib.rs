@@ -53,7 +53,8 @@ extern crate rand;
 
 /// Processing bcrypt_pbkdf key derive
 mod bcrypt_pbkdf;
-mod cipher;
+/// Containing the encrypt/decrypt algorithm
+pub mod cipher;
 /// Containing the error type of this crate
 pub mod error;
 /// Serialize/Deserialize key files

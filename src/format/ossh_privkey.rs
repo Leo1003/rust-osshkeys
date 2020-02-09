@@ -1,7 +1,7 @@
 use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use crate::cipher::Cipher;
 use crate::error::*;
-use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicKey, PublicParts};
+use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicParts};
 use crate::sshbuf::{SshReadExt, SshWriteExt, ZeroizeReadExt};
 use byteorder::WriteBytesExt;
 use openssl::dsa::Dsa;
@@ -11,9 +11,9 @@ use std::io::Write;
 
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use std::io::{Cursor, Read as _, Write as _};
+use std::io::Cursor;
 use std::str::FromStr;
-use zeroize::{Zeroize, Zeroizing};
+use zeroize::Zeroizing;
 
 const KEY_MAGIC: &[u8] = b"openssh-key-v1\0";
 const KDF_BCRYPT: &str = "bcrypt";
@@ -185,7 +185,7 @@ fn decode_key<R: Read + ?Sized>(reader: &mut R) -> OsshResult<KeyPair> {
 
 // --------------------------------
 
-pub fn serialize_ossh_priv(
+pub fn serialize_ossh_privkey(
     key: &KeyPair,
     passphrase: &[u8],
     cipher: Cipher,

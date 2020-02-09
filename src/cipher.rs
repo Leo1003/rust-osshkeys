@@ -3,7 +3,7 @@ use std::str::FromStr;
 use self::internal_impl::*;
 use crate::error::{Error as OsshError, ErrorKind, OsshResult};
 
-/// Provide an unified interface to encrypt/decrypt data
+/// Indicate the algorithm used by encryption/decryption
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 #[non_exhaustive]
@@ -19,6 +19,10 @@ pub enum Cipher {
 }
 
 impl Cipher {
+    /// Encrypt the data
+    ///
+    /// Mostly used by the internal codes.
+    /// Usually you don't need to call it directly.
     pub fn encrypt(self, src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
         use Cipher::*;
         match self {
@@ -33,6 +37,10 @@ impl Cipher {
         }
     }
 
+    /// Decrypt the data
+    ///
+    /// Mostly used by the internal codes.
+    /// Usually you don't need to call it directly.
     pub fn decrypt(self, src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
         use Cipher::*;
         match self {
@@ -47,6 +55,7 @@ impl Cipher {
         }
     }
 
+    /// Return the required key length in bytes
     pub fn key_len(self) -> usize {
         use Cipher::*;
         match self {
@@ -61,6 +70,7 @@ impl Cipher {
         }
     }
 
+    /// Return the required IV length in bytes
     pub fn iv_len(self) -> usize {
         use Cipher::*;
         match self {
@@ -75,6 +85,7 @@ impl Cipher {
         }
     }
 
+    /// Return the block size of the algorithm
     pub fn block_size(self) -> usize {
         use Cipher::*;
         match self {
@@ -89,6 +100,7 @@ impl Cipher {
         }
     }
 
+    /// Return the name using in OpenSSH
     pub fn name(self) -> &'static str {
         use Cipher::*;
         match self {
@@ -103,10 +115,18 @@ impl Cipher {
         }
     }
 
+    /// Return `true` if `Cipher::Null`
+    ///
+    /// This is a method for check the null cipher easily
+    #[inline]
     pub fn is_null(self) -> bool {
         self == Cipher::Null
     }
 
+    /// Return `true` if not `Cipher::Null`
+    ///
+    /// This is a method to check the null cipher easily
+    #[inline]
     pub fn is_some(self) -> bool {
         self != Cipher::Null
     }

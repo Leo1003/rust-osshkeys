@@ -1,4 +1,6 @@
+use crate::cipher::Cipher;
 use crate::error::*;
+use crate::format::ossh_privkey::*;
 use crate::format::ossh_pubkey::*;
 use crate::format::parse_keystr;
 use crate::format::pem::*;
@@ -290,6 +292,22 @@ impl KeyPair {
     /// If the passphrase is given (set to `Some(...)`), then the generated PKCS#8 key will be encrypted.
     pub fn serialize_pkcs8(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
         Ok(serialize_pkcs8_privkey(&self, passphrase)?)
+    }
+
+    /// Serialize the keypair to the OpenSSH private key format
+    ///
+    /// If the passphrase is given (set to `Some(...)`) and cipher is not null,
+    /// then the generated private key will be encrypted.
+    pub fn serialize_openssh(
+        &self,
+        passphrase: Option<&[u8]>,
+        cipher: Cipher,
+    ) -> OsshResult<String> {
+        if let Some(passphrase) = passphrase {
+            Ok(serialize_ossh_privkey(self, passphrase, cipher, 0)?)
+        } else {
+            Ok(serialize_ossh_privkey(self, b"", Cipher::Null, 0)?)
+        }
     }
 
     /// Get the comment of the key
