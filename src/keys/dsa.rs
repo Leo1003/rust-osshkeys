@@ -142,7 +142,7 @@ mod test {
     use super::*;
     use openssl::bn::BigNum;
 
-    const pub_str: &'static str = "ssh-dss AAAAB3NzaC1kc3MAAACBAORLYnYacOdGmSJ99aZ+j2UqtQldYNHvAVVAI42wt/T/GTkg8cXdwwQ8HSJyD6T1e9ebnCXZd/YItX8DCPIP5GLUHVZy5zzKSzwga7zEjKP2j3JZGLAzFIUpStwQ8gur3zmh5DYi7JOdc/kWNpjT86n4fnrP+s8ZxuVDO5bbSasHAAAAFQD62yfFzJxz313aoIVgoMFoz8cF/wAAAIEAj7rvQz2hmuRyFUZIGWpwVHoR3y3SoQjEryX4ZtzwL04ROIXHSKJeOY9cdu2l5fMVYiMBtfWTQTlltFl1H//0hG/g5KBLhhwQ3Y7ul4Q8wsCWZJZeP3jtcO7+p3BLyMa6vvv5ptnMH+jRMgX5wwdszqogk4jCT+7fM2p6brMGccoAAACAD9qfPNxRo+npg+troNZ/FoYJezECqxg0jUyHWClACt7gS0W+r3dJIn9te6Xi7UFGPrLWJtlC++8i27m2FTS0sQUljM2NmRaf6jrCAhwPaJ0ievPJm5kBQmprTqBbdzCNRpI1+hceAnoHbajRwLueFwpoVOy2QjTkvBzd84Oobtw=";
+    const pub_str: &str = "ssh-dss AAAAB3NzaC1kc3MAAACBAORLYnYacOdGmSJ99aZ+j2UqtQldYNHvAVVAI42wt/T/GTkg8cXdwwQ8HSJyD6T1e9ebnCXZd/YItX8DCPIP5GLUHVZy5zzKSzwga7zEjKP2j3JZGLAzFIUpStwQ8gur3zmh5DYi7JOdc/kWNpjT86n4fnrP+s8ZxuVDO5bbSasHAAAAFQD62yfFzJxz313aoIVgoMFoz8cF/wAAAIEAj7rvQz2hmuRyFUZIGWpwVHoR3y3SoQjEryX4ZtzwL04ROIXHSKJeOY9cdu2l5fMVYiMBtfWTQTlltFl1H//0hG/g5KBLhhwQ3Y7ul4Q8wsCWZJZeP3jtcO7+p3BLyMa6vvv5ptnMH+jRMgX5wwdszqogk4jCT+7fM2p6brMGccoAAACAD9qfPNxRo+npg+troNZ/FoYJezECqxg0jUyHWClACt7gS0W+r3dJIn9te6Xi7UFGPrLWJtlC++8i27m2FTS0sQUljM2NmRaf6jrCAhwPaJ0ievPJm5kBQmprTqBbdzCNRpI1+hceAnoHbajRwLueFwpoVOy2QjTkvBzd84Oobtw=";
     const p: [u8; 0x81] = [
         0x00, 0xe4, 0x4b, 0x62, 0x76, 0x1a, 0x70, 0xe7, 0x46, 0x99, 0x22, 0x7d, 0xf5, 0xa6, 0x7e,
         0x8f, 0x65, 0x2a, 0xb5, 0x09, 0x5d, 0x60, 0xd1, 0xef, 0x01, 0x55, 0x40, 0x23, 0x8d, 0xb0,

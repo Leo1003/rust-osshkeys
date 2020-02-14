@@ -291,7 +291,7 @@ mod test {
     use openssl::bn::BigNumContext;
     use openssl::ec::EcPoint;
 
-    const pub_str: &'static str = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKtcK82cEoqjiXyqPpyQAlkOQYs8LL5dDahPah5dqoaJfVHcKS5CJYBX0Ow+Dlj9xKtSQRCyJXOCEtJx+k4LUV0=";
+    const pub_str: &str = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBKtcK82cEoqjiXyqPpyQAlkOQYs8LL5dDahPah5dqoaJfVHcKS5CJYBX0Ow+Dlj9xKtSQRCyJXOCEtJx+k4LUV0=";
     const ident: [u8; 0x08] = [0x6e, 0x69, 0x73, 0x74, 0x70, 0x32, 0x35, 0x36];
     const pub_key: [u8; 0x41] = [
         0x04, 0xab, 0x5c, 0x2b, 0xcd, 0x9c, 0x12, 0x8a, 0xa3, 0x89, 0x7c, 0xaa, 0x3e, 0x9c, 0x90,

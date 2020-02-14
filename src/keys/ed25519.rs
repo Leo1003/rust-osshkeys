@@ -142,7 +142,7 @@ impl PrivateParts for Ed25519KeyPair {
 mod test {
     use super::*;
 
-    const pub_str: &'static str =
+    const pub_str: &str =
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMoWBluPErgKhNja3lHEf7ie6AVzR24mPRd742xEYodC";
     const pub_key: [u8; 0x20] = [
         0xca, 0x16, 0x06, 0x5b, 0x8f, 0x12, 0xb8, 0x0a, 0x84, 0xd8, 0xda, 0xde, 0x51, 0xc4, 0x7f,
