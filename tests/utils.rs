@@ -4,10 +4,11 @@ extern crate hex;
 extern crate osshkeys;
 
 use osshkeys::keys::*;
-use rand::rngs::ThreadRng;
-use rand::RngCore as _;
+use rand::prelude::*;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+const PASSPHRASE_CHARSET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*+-_=/\\|()[]{}`~,.<>;:'\"";
 
 #[inline]
 pub fn fingerprint_assert(key1: &dyn PublicParts, key2: &dyn PublicParts) {
@@ -19,6 +20,19 @@ pub fn fingerprint_assert(key1: &dyn PublicParts, key2: &dyn PublicParts) {
         key1.fingerprint(FingerprintHash::SHA256).unwrap(),
         key2.fingerprint(FingerprintHash::SHA256).unwrap()
     );
+}
+
+// This function is for test only,
+// not providing any security protection.
+pub fn gen_random_pass(len: usize) -> Vec<u8> {
+    let charset_len = PASSPHRASE_CHARSET.len();
+    let mut rng = ThreadRng::default();
+    (0..len)
+        .map(|_| {
+            let i = rng.gen_range(0, charset_len);
+            PASSPHRASE_CHARSET.as_bytes()[i]
+        })
+        .collect()
 }
 
 pub fn fill_random(data: &mut [u8]) {
