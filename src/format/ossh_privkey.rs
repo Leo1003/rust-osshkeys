@@ -193,7 +193,7 @@ pub fn serialize_ossh_privkey(
 ) -> OsshResult<String> {
     let buf = encode_ossh_priv(key, passphrase, cipher, kdf_rounds)?;
     let mut keystr = String::new();
-    keystr.push_str("-----BEGIN OPENSSH PRIVATE KEY-----");
+    keystr.push_str("-----BEGIN OPENSSH PRIVATE KEY-----\n");
     let b64str = base64::encode(&buf);
 
     // Wrap the base64 data
@@ -207,7 +207,7 @@ pub fn serialize_ossh_privkey(
         .chain(std::iter::once(c))
     }));
 
-    keystr.push_str("-----END OPENSSH PRIVATE KEY-----");
+    keystr.push_str("\n-----END OPENSSH PRIVATE KEY-----");
     Ok(keystr)
 }
 
@@ -240,12 +240,16 @@ pub fn encode_ossh_priv(
         rng.fill_bytes(&mut *salt);
 
         // Write KDF informations
-        buf.write_string(&*salt)?;
-        buf.write_uint32(rounds)?;
+        let mut kdfbuf = Vec::with_capacity(salt.len() + 8);
+        kdfbuf.write_string(&*salt)?;
+        kdfbuf.write_uint32(rounds)?;
+
+        buf.write_string(&kdfbuf)?;
     } else {
         buf.write_utf8(KDF_NONE)?;
         buf.write_string(&[0; 0])?;
     }
+    buf.write_uint32(1)?; // Number of keys (Currently always be 1)
     buf.write_string(&key.blob()?)?;
 
     // FIXME: alloc a large size memory to prevent resizing
@@ -316,33 +320,22 @@ fn encode_key<W: Write + ?Sized>(key: &KeyPair, buf: &mut W) -> OsshResult<()> {
     match &key.key {
         KeyPairType::RSA(rsa) => {
             let inner = rsa.ossl_rsa();
-            let n = Zeroizing::new(inner.n().to_vec());
-            let e = Zeroizing::new(inner.e().to_vec());
-            let d = Zeroizing::new(inner.d().to_vec());
-            let iqmp = Zeroizing::new(inner.iqmp().unwrap().to_vec());
-            let p = Zeroizing::new(inner.p().unwrap().to_vec());
-            let q = Zeroizing::new(inner.q().unwrap().to_vec());
 
-            buf.write_string(&n)?;
-            buf.write_string(&e)?;
-            buf.write_string(&d)?;
-            buf.write_string(&iqmp)?;
-            buf.write_string(&p)?;
-            buf.write_string(&q)?;
+            buf.write_mpint(inner.n())?;
+            buf.write_mpint(inner.e())?;
+            buf.write_mpint(inner.d())?;
+            buf.write_mpint(inner.iqmp().unwrap())?;
+            buf.write_mpint(inner.p().unwrap())?;
+            buf.write_mpint(inner.q().unwrap())?;
         }
         KeyPairType::DSA(dsa) => {
             let inner = dsa.ossl_dsa();
-            let p = Zeroizing::new(inner.p().to_vec());
-            let q = Zeroizing::new(inner.q().to_vec());
-            let g = Zeroizing::new(inner.g().to_vec());
-            let pubkey = Zeroizing::new(inner.pub_key().to_vec());
-            let privkey = Zeroizing::new(inner.priv_key().to_vec());
 
-            buf.write_string(&p)?;
-            buf.write_string(&q)?;
-            buf.write_string(&g)?;
-            buf.write_string(&pubkey)?;
-            buf.write_string(&privkey)?;
+            buf.write_mpint(inner.p())?;
+            buf.write_mpint(inner.q())?;
+            buf.write_mpint(inner.g())?;
+            buf.write_mpint(inner.pub_key())?;
+            buf.write_mpint(inner.priv_key())?;
         }
         KeyPairType::ECDSA(ecdsa) => {
             buf.write_utf8(ecdsa.curve().ident())?;
@@ -354,8 +347,7 @@ fn encode_key<W: Write + ?Sized>(key: &KeyPair, buf: &mut W) -> OsshResult<()> {
                 PointConversionForm::UNCOMPRESSED,
                 &mut bn_ctx,
             )?)?;
-            let privkey = Zeroizing::new(inner.private_key().to_vec());
-            buf.write_string(&privkey)?;
+            buf.write_mpint(inner.private_key())?;
         }
         KeyPairType::ED25519(ed25519) => {
             buf.write_string(&ed25519.key.public.to_bytes())?;
