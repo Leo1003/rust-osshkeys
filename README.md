@@ -13,7 +13,7 @@ The main function of this library is to read, write different formats of SSH key
 Also, it provide the ability to generate a key, sign and verify data.
 
 ## Current Status
-The codes is a bit of mess, I need some time to rearrange it... 
+The codes is a bit of mess, I need some time to refactor it...
 
 The library is still under development, so there are some functions that haven't implemented.
 Some api may also change in the future. 
@@ -68,13 +68,12 @@ fn main() {
         - [x] PKCS#8 (Using OpenSSL)
         - [x] PKCS#8 (Encrypted) (Using OpenSSL)
         - [x] Openssh v2
-            - [x] Read
-            - [ ] Write
         - [x] Openssh v2 (Encrypted)
-            - [x] Read
-            - [ ] Write
 - Additional Features
     - [ ] Supporting XMSS keys
     - [ ] Supporting read/write Putty key format(.ppk)
+    - [ ] Supporting more ciphers
+        - [ ] AES GCM mode
+        - [ ] ChaCha20-Poly1305
     - [ ] Without using openssl (To become pure Rust library) (if there exists required cryptography crates being mature enough)
 

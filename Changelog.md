@@ -3,7 +3,10 @@
 ---
 
 ## Unreleased
-- **Fix**
+- **Add**
+    - An unified Cipher struct for encryption
+    - Support for writing OpenSSH private key
+- **API Change**
     - Rename `PublicPart` to `PublicParts`
     - Rename `PrivatePart` to `PrivateParts`
 
