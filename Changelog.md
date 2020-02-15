@@ -6,6 +6,8 @@
 - **Add**
     - An unified Cipher struct for encryption
     - Support for writing OpenSSH private key
+    - `keys::PublicKey::serialize()`
+    - `keys::KeyPair::serialize_publickey()`
 - **API Change**
     - Rename `PublicPart` to `PublicParts`
     - Rename `PrivatePart` to `PrivateParts`

@@ -61,7 +61,7 @@ impl PartialEq for Ed25519PublicKey {
 
 impl fmt::Display for Ed25519PublicKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&serialize_ossh_pubkey(self, None).unwrap())
+        f.write_str(&serialize_ossh_pubkey(self, "").unwrap())
     }
 }
 

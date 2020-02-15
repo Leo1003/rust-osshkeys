@@ -100,7 +100,7 @@ pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> OsshResult<Ed25519PublicK
     )?)
 }
 
-pub fn serialize_ossh_pubkey(key: &dyn PublicParts, comment: Option<&str>) -> OsshResult<String> {
+pub fn serialize_ossh_pubkey(key: &dyn PublicParts, comment: &str) -> OsshResult<String> {
     let mut keystr = String::new();
     write!(
         &mut keystr,
@@ -108,7 +108,7 @@ pub fn serialize_ossh_pubkey(key: &dyn PublicParts, comment: Option<&str>) -> Os
         key.keyname(),
         base64::encode(&key.blob()?)
     )?;
-    if let Some(comment) = comment {
+    if !comment.is_empty() {
         write!(&mut keystr, " {}", comment)?;
     }
     Ok(keystr)

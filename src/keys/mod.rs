@@ -112,6 +112,11 @@ impl PublicKey {
         &mut self.comment
     }
 
+    /// Get the string presentation of the public key
+    pub fn serialize(&self) -> OsshResult<String> {
+        serialize_ossh_pubkey(self, &self.comment)
+    }
+
     fn inner_key(&self) -> &dyn PublicParts {
         match &self.key {
             PublicKeyType::RSA(key) => key,
@@ -148,12 +153,7 @@ impl PublicParts for PublicKey {
 
 impl fmt::Display for PublicKey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.key {
-            PublicKeyType::RSA(key) => write!(f, "{}", key),
-            PublicKeyType::DSA(key) => write!(f, "{}", key),
-            PublicKeyType::ECDSA(key) => write!(f, "{}", key),
-            PublicKeyType::ED25519(key) => write!(f, "{}", key),
-        }
+        write!(f, "{}", self.serialize().unwrap())
     }
 }
 
@@ -318,6 +318,11 @@ impl KeyPair {
     /// Get the mutable comment of the key
     pub fn comment_mut(&mut self) -> &mut String {
         &mut self.comment
+    }
+
+    /// Get the string presentation of the public parts
+    pub fn serialize_publickey(&self) -> OsshResult<String> {
+        serialize_ossh_pubkey(self, &self.comment)
     }
 
     /// Clone the public parts of the key pair
