@@ -207,7 +207,7 @@ pub fn serialize_ossh_privkey(
         .chain(std::iter::once(c))
     }));
 
-    keystr.push_str("\n-----END OPENSSH PRIVATE KEY-----");
+    keystr.push_str("\n-----END OPENSSH PRIVATE KEY-----\n");
     Ok(keystr)
 }
 
