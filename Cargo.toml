@@ -1,7 +1,7 @@
 [package]
 name = "osshkeys"
 description = "A library to read and write OpenSSH public and private keys"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["Leo <leo881003@gmail.com>"]
 keywords = ["ssh", "ssh-keys", "keys", "openssh"]
 repository = "https://github.com/Leo1003/rust-osshkeys"

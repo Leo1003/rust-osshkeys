@@ -2,7 +2,7 @@
 
 ---
 
-## Unreleased
+## 0.3.0 (2020/02/17)
 - **Add**
     - An unified Cipher struct for encryption
     - Support for writing OpenSSH private key

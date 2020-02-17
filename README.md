@@ -22,7 +22,7 @@ Some api may also change in the future.
 ```rust
 #[macro_use]
 extern crate hex_literal;
-use osshkeys::{KeyPair, KeyType, Key as _, PublicPart as _, PrivatePart as _};
+use osshkeys::{KeyPair, KeyType, Key as _, PublicParts as _, PrivateParts as _};
 use osshkeys::keys::FingerprintHash;
 
 fn main() {
