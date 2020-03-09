@@ -2,6 +2,12 @@
 
 ---
 
+## 0.3.1 (2020/03/09)
+- **Dependencies**
+    - Upgrade base64 to 0.12
+
+---
+
 ## 0.3.0 (2020/02/17)
 - **Add**
     - An unified Cipher struct for encryption
@@ -17,7 +23,7 @@
 ## 0.2.2 (2019/12/11)
 - **Add**
     - Support for writing PKCS#8 private keys
-- **Upgrade**
+- **Dependencies**
     - Upgrade rand to 0.7
 
 ---
