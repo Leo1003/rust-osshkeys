@@ -2,16 +2,14 @@ use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use crate::cipher::Cipher;
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicParts};
-use crate::sshbuf::{SshReadExt, SshWriteExt, ZeroizeReadExt};
+use crate::sshbuf::{SshBuf, SshReadExt, SshWriteExt};
 use byteorder::WriteBytesExt;
+use cryptovec::CryptoVec;
 use openssl::dsa::Dsa;
 use openssl::rsa::RsaPrivateKeyBuilder;
-use std::io::Read;
-use std::io::Write;
-
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use std::io::Cursor;
+use std::io::{Cursor, Read, Write};
 use std::str::FromStr;
 use zeroize::Zeroizing;
 
@@ -36,16 +34,10 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
         reader.read_string()?; // Skip public keys
         let encrypted = reader.read_string()?;
 
-        let decrypted = Zeroizing::new(decrypt_ossh_priv(
-            &encrypted,
-            passphrase,
-            &ciphername,
-            &kdfname,
-            &kdf,
-        )?);
-        let mut secret_reader = Cursor::new(decrypted.as_slice());
-        let checksum0 = secret_reader.read_uint32_zeroize()?;
-        let checksum1 = secret_reader.read_uint32_zeroize()?;
+        let mut secret_reader =
+            decrypt_ossh_priv(&encrypted, passphrase, &ciphername, &kdfname, &kdf)?;
+        let checksum0 = Zeroizing::new(secret_reader.read_uint32()?);
+        let checksum1 = Zeroizing::new(secret_reader.read_uint32()?);
         if *checksum0 != *checksum1 {
             return Err(ErrorKind::IncorrectPass.into());
         }
@@ -72,7 +64,7 @@ pub fn decrypt_ossh_priv(
     ciphername: &str,
     kdfname: &str,
     kdf: &[u8],
-) -> OsshResult<Vec<u8>> {
+) -> OsshResult<SshBuf> {
     let cipher = Cipher::from_str(ciphername)?;
 
     // Check if empty passphrase but encrypted
@@ -98,10 +90,10 @@ pub fn decrypt_ossh_priv(
             "bcrypt" => {
                 if let Some(pass) = passphrase {
                     let mut kdfreader = Cursor::new(kdf);
-                    let salt = kdfreader.read_string_zeroize()?;
-                    let round = kdfreader.read_uint32_zeroize()?;
+                    let salt = kdfreader.read_string()?;
+                    let round = kdfreader.read_uint32()?;
                     let mut output = Zeroizing::new(vec![0u8; cipher.key_len() + cipher.iv_len()]);
-                    bcrypt_pbkdf(pass, &salt, *round, &mut output)?;
+                    bcrypt_pbkdf(pass, &salt, round, &mut output)?;
                     output
                 } else {
                     // Should have already checked passphrase
@@ -118,26 +110,30 @@ pub fn decrypt_ossh_priv(
         let iv = &keyder[cipher.key_len()..];
 
         // Decrypt
-        let decrypted = cipher.decrypt(privkey_data, key, iv)?;
+        let mut cvec = CryptoVec::new();
+        cvec.resize(cipher.cal_len(privkey_data.len()));
+        let n = cipher.decrypt_to(&mut cvec, privkey_data, key, iv)?;
+        cvec.resize(n);
 
-        Ok(decrypted)
+        Ok(SshBuf::with_vec(cvec))
     } else {
-        Ok(privkey_data.to_vec())
+        let cvec = CryptoVec::from_slice(privkey_data);
+        Ok(SshBuf::with_vec(cvec))
     }
 }
 
 #[allow(clippy::many_single_char_names)]
-fn decode_key<R: Read + ?Sized>(reader: &mut R) -> OsshResult<KeyPair> {
-    let keystring = reader.read_utf8_zeroize()?;
+fn decode_key(reader: &mut SshBuf) -> OsshResult<KeyPair> {
+    let keystring = Zeroizing::new(reader.read_utf8()?);
     let keyname: &str = keystring.as_str();
     let key = match keyname {
         RSA_NAME | RSA_SHA256_NAME | RSA_SHA512_NAME => {
-            let n = reader.read_mpint_zeroize()?;
-            let e = reader.read_mpint_zeroize()?;
-            let d = reader.read_mpint_zeroize()?;
-            let mut _iqmp = reader.read_mpint_zeroize()?;
-            let p = reader.read_mpint_zeroize()?;
-            let q = reader.read_mpint_zeroize()?;
+            let n = reader.read_mpint()?;
+            let e = reader.read_mpint()?;
+            let d = reader.read_mpint()?;
+            let mut _iqmp = reader.read_mpint()?;
+            let p = reader.read_mpint()?;
+            let q = reader.read_mpint()?;
             let rsa = RsaPrivateKeyBuilder::new(n, e, d)?
                 .set_factors(p, q)?
                 .build();
@@ -151,31 +147,31 @@ fn decode_key<R: Read + ?Sized>(reader: &mut R) -> OsshResult<KeyPair> {
             .into()
         }
         DSA_NAME => {
-            let p = reader.read_mpint_zeroize()?;
-            let q = reader.read_mpint_zeroize()?;
-            let g = reader.read_mpint_zeroize()?;
-            let pubkey = reader.read_mpint_zeroize()?;
-            let privkey = reader.read_mpint_zeroize()?;
+            let p = reader.read_mpint()?;
+            let q = reader.read_mpint()?;
+            let g = reader.read_mpint()?;
+            let pubkey = reader.read_mpint()?;
+            let privkey = reader.read_mpint()?;
             let dsa = Dsa::from_private_components(p, q, g, privkey, pubkey)?;
             DsaKeyPair::from_ossl_dsa(dsa).into()
         }
         NIST_P256_NAME | NIST_P384_NAME | NIST_P521_NAME => {
-            let curvename = reader.read_utf8_zeroize()?;
+            let curvename = Zeroizing::new(reader.read_utf8()?);
             let curvehint = EcCurve::from_name(keyname)?;
             let curve = EcCurve::from_str(&curvename)?;
             if curve != curvehint {
                 return Err(ErrorKind::TypeNotMatch.into());
             }
-            let pubkey = reader.read_string_zeroize()?;
-            let mut privkey = reader.read_mpint_zeroize()?;
+            let pubkey = Zeroizing::new(reader.read_string()?);
+            let mut privkey = reader.read_mpint()?;
 
             let keypair = EcDsaKeyPair::from_bytes(curve, &pubkey, &privkey)?.into();
             privkey.clear(); // Explicity clear the sensitive data
             keypair
         }
         ED25519_NAME => {
-            let pk = Zeroizing::new(reader.read_string_zeroize()?);
-            let sk = Zeroizing::new(reader.read_string_zeroize()?); // Actually is an ed25519 keypair
+            let pk = Zeroizing::new(reader.read_string()?);
+            let sk = Zeroizing::new(reader.read_string()?); // Actually is an ed25519 keypair
             Ed25519KeyPair::from_bytes(&pk, &sk)?.into()
         }
         _ => return Err(ErrorKind::UnsupportType.into()),

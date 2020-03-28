@@ -1,8 +1,8 @@
-use byteorder::{BigEndian, ByteOrder, ReadBytesExt, WriteBytesExt};
+use byteorder::{BigEndian, WriteBytesExt};
+use cryptovec::CryptoVec;
 pub use openssl::bn::{BigNum, BigNumRef};
 use std::io;
 use std::io::Result;
-use std::iter::FromIterator;
 use std::str;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -14,6 +14,8 @@ pub trait SshReadExt {
     ///
     /// By definition, all non-zero value would be interpreted as true.
     fn read_bool(&mut self) -> Result<bool>;
+
+    fn read_uint8(&mut self) -> io::Result<u8>;
 
     /// Read 32 bits unsigned integer in big endian
     fn read_uint32(&mut self) -> io::Result<u32>;
@@ -39,112 +41,80 @@ pub trait SshReadExt {
     /// Integers which is longer than 16384 bits are also not supporting.
     fn read_mpint(&mut self) -> io::Result<BigNum>;
 
+    /*
     /// Read name-list
     ///
     /// It is a list representing in an ASCII string separated by the `,` charactor.
     fn read_list<B: FromIterator<String>>(&mut self) -> io::Result<B>;
+    */
 }
 
 impl<R: io::Read + ?Sized> SshReadExt for R {
     fn read_bool(&mut self) -> io::Result<bool> {
-        let i = self.read_u8()?;
-        Ok(i != 0)
+        let i = Zeroizing::new(self.read_uint8()?);
+        Ok(*i != 0)
     }
+
+    fn read_uint8(&mut self) -> io::Result<u8> {
+        let mut buf = Zeroizing::new([0u8; 1]);
+        self.read_exact(&mut *buf)?;
+        Ok(buf[0])
+    }
+
     fn read_uint32(&mut self) -> io::Result<u32> {
-        self.read_u32::<BigEndian>()
+        let mut buf = Zeroizing::new([0u8; 4]);
+        self.read_exact(&mut *buf)?;
+        Ok(u32::from_be_bytes(*buf))
     }
+
     fn read_uint64(&mut self) -> io::Result<u64> {
-        self.read_u64::<BigEndian>()
+        let mut buf = Zeroizing::new([0u8; 8]);
+        self.read_exact(&mut *buf)?;
+        Ok(u64::from_be_bytes(*buf))
     }
+
     fn read_string(&mut self) -> io::Result<Vec<u8>> {
-        let length = self.read_uint32()? as usize;
-        let mut buf = vec![0u8; length];
-        self.read_exact(&mut buf)?;
-        Ok(buf)
-    }
-    fn read_utf8(&mut self) -> io::Result<String> {
-        let data = self.read_string()?;
-        match String::from_utf8(data) {
-            Ok(string) => Ok(string),
-            Err(_) => Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Invalid UTF-8 sequence",
-            )),
+        let len = self.read_uint32()? as usize;
+        let mut buf = vec![0u8; len];
+        match self.read_exact(buf.as_mut_slice()) {
+            Ok(_) => Ok(buf),
+            Err(e) => {
+                buf.zeroize();
+                Err(e)
+            }
         }
     }
+
+    fn read_utf8(&mut self) -> io::Result<String> {
+        let mut buf = self.read_string()?;
+        // Make data be zeroed even an error occurred
+        // So we cannot directly use `String::from_utf8()`
+        match str::from_utf8(&buf) {
+            Ok(_) => unsafe {
+                // We have checked the string using `str::from_utf8()`
+                // To avoid memory copy, just use `from_utf8_unchecked()`
+                Ok(String::from_utf8_unchecked(buf))
+            },
+            Err(_) => {
+                buf.zeroize();
+                Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Invalid UTF-8 sequence",
+                ))
+            }
+        }
+    }
+
     fn read_mpint(&mut self) -> io::Result<BigNum> {
-        let data = self.read_string()?;
+        let data = Zeroizing::new(self.read_string()?);
         to_bignum(&data)
     }
+    /*
     fn read_list<B: FromIterator<String>>(&mut self) -> io::Result<B> {
         let string = self.read_utf8()?;
         Ok(string.split(',').map(String::from).collect())
     }
-}
-
-/// [io::Read](https://doc.rust-lang.org/std/io/trait.Read.html) extension to securely read ssh data
-///
-/// This trait should behave as same as [SshReadExt](trait.SshReadExt.html), but it should not left any data in memory.
-///
-/// For details, please view [SshReadExt](trait.SshReadExt.html) page.
-pub trait ZeroizeReadExt {
-    fn read_bool_zeroize(&mut self) -> Result<Zeroizing<bool>>;
-    fn read_uint8_zeroize(&mut self) -> io::Result<Zeroizing<u8>>;
-    fn read_uint32_zeroize(&mut self) -> io::Result<Zeroizing<u32>>;
-    fn read_uint64_zeroize(&mut self) -> io::Result<Zeroizing<u64>>;
-    fn read_string_zeroize(&mut self) -> io::Result<Zeroizing<Vec<u8>>>;
-    fn read_utf8_zeroize(&mut self) -> io::Result<Zeroizing<String>>;
-    fn read_mpint_zeroize(&mut self) -> io::Result<BigNum>;
-    fn read_list_zeroize<B: FromIterator<String> + Zeroize>(&mut self) -> io::Result<Zeroizing<B>>;
-}
-
-impl<R: io::Read + ?Sized> ZeroizeReadExt for R {
-    fn read_bool_zeroize(&mut self) -> Result<Zeroizing<bool>> {
-        let i = self.read_uint8_zeroize()?;
-        Ok(Zeroizing::new(*i != 0))
-    }
-    fn read_uint8_zeroize(&mut self) -> io::Result<Zeroizing<u8>> {
-        let mut buf = Zeroizing::new([0u8; 1]);
-        self.read_exact(&mut *buf)?;
-        Ok(Zeroizing::new(buf[0]))
-    }
-    fn read_uint32_zeroize(&mut self) -> io::Result<Zeroizing<u32>> {
-        let mut buf = Zeroizing::new([0u8; 4]);
-        self.read_exact(&mut *buf)?;
-        Ok(Zeroizing::new(BigEndian::read_u32(&*buf)))
-    }
-    fn read_uint64_zeroize(&mut self) -> io::Result<Zeroizing<u64>> {
-        let mut buf = Zeroizing::new([0u8; 8]);
-        self.read_exact(&mut *buf)?;
-        Ok(Zeroizing::new(BigEndian::read_u64(&*buf)))
-    }
-    fn read_string_zeroize(&mut self) -> io::Result<Zeroizing<Vec<u8>>> {
-        let length = self.read_uint32_zeroize()?;
-        let mut buf = Zeroizing::new(vec![0u8; *length as usize]);
-        self.read_exact(&mut buf)?;
-        Ok(buf)
-    }
-    fn read_utf8_zeroize(&mut self) -> io::Result<Zeroizing<String>> {
-        let data = self.read_string_zeroize()?;
-        // Make data be zeroed even an error occurred
-        match str::from_utf8(&data) {
-            Ok(s) => Ok(Zeroizing::new(String::from(s))),
-            Err(_) => Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Invalid UTF-8 sequence",
-            )),
-        }
-    }
-    fn read_mpint_zeroize(&mut self) -> io::Result<BigNum> {
-        let data = self.read_string_zeroize()?;
-        to_bignum(&data)
-    }
-    fn read_list_zeroize<B: FromIterator<String> + Zeroize>(&mut self) -> io::Result<Zeroizing<B>> {
-        let string = self.read_utf8_zeroize()?;
-        Ok(Zeroizing::new(
-            string.split(',').map(String::from).collect(),
-        ))
-    }
+    */
 }
 
 // --------------------------
@@ -285,3 +255,119 @@ impl<W: io::Write + ?Sized> SshWriteExt for W {
         Ok(())
     }
 }
+
+#[derive(Debug, Default)]
+pub struct SshBuf {
+    read_pos: usize,
+    buf: CryptoVec,
+}
+
+impl SshBuf {
+    pub fn new() -> SshBuf {
+        SshBuf {
+            read_pos: 0,
+            buf: CryptoVec::new(),
+        }
+    }
+
+    pub fn with_vec(v: CryptoVec) -> SshBuf {
+        SshBuf {
+            read_pos: 0,
+            buf: v,
+        }
+    }
+
+    pub fn position(&self) -> usize {
+        self.read_pos
+    }
+
+    pub fn set_position(&mut self, offset: usize) {
+        if offset > self.buf.len() {
+            panic!("Offset exceed length");
+        }
+        self.read_pos = offset;
+    }
+
+    pub fn into_inner(self) -> CryptoVec {
+        self.buf
+    }
+
+    pub fn get_ref(&self) -> &CryptoVec {
+        &self.buf
+    }
+}
+
+impl io::Read for SshBuf {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+        if self.read_pos >= self.buf.len() {
+            return Ok(0);
+        }
+        let n = self.buf.write_all_from(self.read_pos, buf)?;
+        self.read_pos += n;
+        Ok(n)
+    }
+}
+
+/*
+impl SshReadExt for SshBuf {
+    fn read_bool(&mut self) -> io::Result<bool> {
+        let i = Zeroizing::new(self.read_uint8()?);
+        Ok(*i != 0)
+    }
+
+    fn read_uint8(&mut self) -> io::Result<u8> {
+        let buf = self.buf[self.read_pos];
+        self.read_pos += 1;
+        Ok(buf)
+    }
+
+    fn read_uint32(&mut self) -> io::Result<u32> {
+        let mut buf = Zeroizing::new([0u8; 4]);
+        self.read_pos += self.buf.write_all_from(self.read_pos, buf.as_mut())?;
+        Ok(u32::from_be_bytes(*buf))
+    }
+
+    fn read_uint64(&mut self) -> io::Result<u64> {
+        let mut buf = Zeroizing::new([0u8; 8]);
+        self.read_pos += self.buf.write_all_from(self.read_pos, buf.as_mut())?;
+        Ok(u64::from_be_bytes(*buf))
+    }
+
+    fn read_string(&mut self) -> io::Result<Vec<u8>> {
+        let len = self.read_uint32()? as usize;
+        let mut buf = vec![0u8; len];
+        let rl = self.buf.write_all_from(self.read_pos, buf.as_mut_slice())?;
+        self.read_pos += rl;
+        if rl != len {
+            buf.zeroize();
+            return Err(io::ErrorKind::UnexpectedEof.into());
+        }
+        Ok(buf)
+    }
+
+    fn read_utf8(&mut self) -> io::Result<String> {
+        let buf = self.read_string()?;
+        // Make data be zeroed even an error occurred
+        // So we cannot directly use `String::from_utf8()`
+        match str::from_utf8(&buf) {
+            Ok(_) => unsafe {
+                // We have checked the string using `str::from_utf8()`
+                // To avoid memory copy, just use `from_utf8_unchecked()`
+                Ok(String::from_utf8_unchecked(buf))
+            },
+            Err(_) => {
+                buf.zeroize();
+                Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Invalid UTF-8 sequence",
+                ))
+            }
+        }
+    }
+
+    fn read_mpint(&mut self) -> io::Result<BigNum> {
+        let buf = Zeroizing::new(self.read_string()?);
+        to_bignum(&buf)
+    }
+}
+*/
