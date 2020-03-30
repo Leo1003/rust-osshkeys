@@ -1,8 +1,7 @@
-use byteorder::{BigEndian, WriteBytesExt};
 use cryptovec::CryptoVec;
 pub use openssl::bn::{BigNum, BigNumRef};
 use std::io;
-use std::io::Result;
+use std::io::{Read, Result, Write};
 use std::str;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -155,6 +154,8 @@ pub trait SshWriteExt {
     /// By definition, **false** should be **0** and **true** should be **1**. Any other value is not allowed.
     fn write_bool(&mut self, value: bool) -> io::Result<()>;
 
+    fn write_uint8(&mut self, value: u8) -> io::Result<()>;
+
     /// Write 32 bits unsigned integer in big endian
     fn write_uint32(&mut self, value: u32) -> io::Result<()>;
 
@@ -177,6 +178,7 @@ pub trait SshWriteExt {
     /// Convert the integer into bytes array and write it.
     fn write_mpint(&mut self, value: &BigNumRef) -> io::Result<()>;
 
+    /*
     /// Write name-list
     ///
     /// Each entry must meets the following rules:
@@ -186,34 +188,50 @@ pub trait SshWriteExt {
     /// - being a valid ASCII string
     fn write_list<S: AsRef<str>, I: IntoIterator<Item = S>>(&mut self, values: I)
         -> io::Result<()>;
+        */
 }
 
 impl<W: io::Write + ?Sized> SshWriteExt for W {
     fn write_bool(&mut self, value: bool) -> io::Result<()> {
         let i = if value { 1u8 } else { 0u8 };
-        self.write_u8(i)?;
+        self.write_uint8(i)?;
         Ok(())
     }
+
+    fn write_uint8(&mut self, value: u8) -> io::Result<()> {
+        self.write_all(&[value])?;
+        Ok(())
+    }
+
     fn write_uint32(&mut self, value: u32) -> io::Result<()> {
-        self.write_u32::<BigEndian>(value)?;
+        let buf = Zeroizing::new(value.to_be_bytes());
+        self.write_all(&*buf)?;
         Ok(())
     }
+
     fn write_uint64(&mut self, value: u64) -> io::Result<()> {
-        self.write_u64::<BigEndian>(value)?;
+        let buf = Zeroizing::new(value.to_be_bytes());
+        self.write_all(&*buf)?;
         Ok(())
     }
+
     fn write_string(&mut self, buf: &[u8]) -> io::Result<()> {
         self.write_uint32(buf.len() as u32)?;
         self.write_all(buf)?;
         Ok(())
     }
+
     fn write_utf8(&mut self, value: &str) -> io::Result<()> {
         self.write_string(value.as_bytes())?;
         Ok(())
     }
+
     fn write_mpint(&mut self, value: &BigNumRef) -> io::Result<()> {
-        let mut buf = vec![0x00u8];
-        buf.append(&mut value.to_vec());
+        let mut buf = Zeroizing::new(vec![0x00u8]);
+        let bnbuf = Zeroizing::new(value.to_vec());
+        buf.reserve(bnbuf.len());
+        buf.extend(bnbuf.as_slice());
+
         // Add a zero byte to make the intgeter unsigned
         if (buf[1] & 0x80) > 0 {
             self.write_string(&buf[..])
@@ -221,6 +239,10 @@ impl<W: io::Write + ?Sized> SshWriteExt for W {
             self.write_string(&buf[1..])
         }
     }
+
+    /*
+    //TODO: Make list as a new struct to make it easiler for
+            implementing memory zeroizing
     fn write_list<S: AsRef<str>, I: IntoIterator<Item = S>>(
         &mut self,
         values: I,
@@ -254,6 +276,7 @@ impl<W: io::Write + ?Sized> SshWriteExt for W {
         self.write_utf8(&list_str)?;
         Ok(())
     }
+    */
 }
 
 #[derive(Debug, Default)]
@@ -295,9 +318,21 @@ impl SshBuf {
     pub fn get_ref(&self) -> &CryptoVec {
         &self.buf
     }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.buf
+    }
+
+    pub fn len(&self) -> usize {
+        self.buf.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.buf.is_empty()
+    }
 }
 
-impl io::Read for SshBuf {
+impl Read for SshBuf {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
         if self.read_pos >= self.buf.len() {
             return Ok(0);
@@ -305,6 +340,17 @@ impl io::Read for SshBuf {
         let n = self.buf.write_all_from(self.read_pos, buf)?;
         self.read_pos += n;
         Ok(n)
+    }
+}
+
+impl Write for SshBuf {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        self.buf.extend(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        Ok(())
     }
 }
 

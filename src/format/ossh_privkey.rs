@@ -248,9 +248,7 @@ pub fn encode_ossh_priv(
     buf.write_uint32(1)?; // Number of keys (Currently always be 1)
     buf.write_string(&key.blob()?)?;
 
-    // FIXME: alloc a large size memory to prevent resizing
-    //let reserve_len = todo!();
-    let mut privbuf = Zeroizing::new(Vec::with_capacity(16384));
+    let mut privbuf = SshBuf::new();
 
     // Generate checksum
     let mut rng = StdRng::from_entropy();
@@ -258,7 +256,7 @@ pub fn encode_ossh_priv(
     privbuf.write_uint32(checksum)?;
     privbuf.write_uint32(checksum)?;
 
-    encode_key(key, &mut *privbuf)?;
+    encode_key(key, &mut privbuf)?;
 
     privbuf.write_utf8(key.comment())?;
 
@@ -271,10 +269,10 @@ pub fn encode_ossh_priv(
 
     // Encrypt
     if cipher.is_some() {
-        let encrypted = encrypt_ossh_priv(&privbuf, passphrase, cipher, rounds, &*salt)?;
+        let encrypted = encrypt_ossh_priv(privbuf.as_slice(), passphrase, cipher, rounds, &*salt)?;
         buf.write_string(&encrypted)?;
     } else {
-        buf.write_string(&privbuf)?;
+        buf.write_string(&privbuf.as_slice())?;
     };
 
     Ok(buf)
