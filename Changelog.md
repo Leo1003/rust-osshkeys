@@ -2,6 +2,19 @@
 
 ---
 
+## Unreleased
+- **Add**
+    - `SshBuf` which uses `CryptoVec` to provide memory zeroizing guarantee when resizing
+    - `Cipher::decrypt_to()`, `Cipher::calc_buffer_len()`
+- **Improve**
+    - Better memory zeroizing of `SshReadExt` and `SshWriteExt` implementations
+    - Make RustCrypto crates as optional dependencies
+    - Add Github Actions test flow for the RustCrypto cipher backend
+- **Breaking Change**
+    - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
+
+---
+
 ## 0.3.1 (2020/03/09)
 - **Dependencies**
     - Upgrade base64 to 0.12
