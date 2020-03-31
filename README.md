@@ -54,8 +54,8 @@ fn main() {
         - Ed25519
     - [x] Documentation
         - [x] Descriptions
-        - [x] Examples
-        - [ ] More Examples
+        - [x] Examples in README
+        - [ ] More examples in `examples/` directory
     - [x] Key generation
     - [x] Public key formats
         - [x] Openssh
@@ -73,5 +73,8 @@ fn main() {
     - [ ] Supporting more ciphers
         - [ ] AES GCM mode
         - [ ] ChaCha20-Poly1305
-    - [ ] Without using openssl (To become pure Rust library) (if there exists required cryptography crates being mature enough)
-
+    - [ ] Supporting keys with certifications
+    - [ ] Without using openssl (Become pure Rust library) (if there exists required cryptography crates and being mature enough)
+        - Currently missing:
+            - DSA library
+            - EcDSA library

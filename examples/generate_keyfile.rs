@@ -1,9 +1,9 @@
 use failure::Error;
 use osshkeys::{cipher::Cipher, KeyPair, KeyType};
 use std::fs;
-use std::path::Path;
 use std::io::Write;
 use std::os::unix::fs::*;
+use std::path::Path;
 
 fn main() -> Result<(), Error> {
     let filename = "id_ed25519";
