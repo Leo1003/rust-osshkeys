@@ -101,21 +101,26 @@ impl From<base64::DecodeError> for Error {
         Self::with_failure(ErrorKind::Base64Error, err)
     }
 }
+
+#[cfg(feature = "rustcrypto-cipher")]
 impl From<block_modes::InvalidKeyIvLength> for Error {
     fn from(err: block_modes::InvalidKeyIvLength) -> Self {
         Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
     }
 }
+#[cfg(feature = "rustcrypto-cipher")]
 impl From<stream_cipher::InvalidKeyNonceLength> for Error {
     fn from(err: stream_cipher::InvalidKeyNonceLength) -> Self {
         Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
     }
 }
+#[cfg(feature = "rustcrypto-cipher")]
 impl From<block_modes::BlockModeError> for Error {
     fn from(err: block_modes::BlockModeError) -> Self {
         Self::with_failure(ErrorKind::IncorrectPass, err)
     }
 }
+
 impl From<nom_pem::PemParsingError> for Error {
     fn from(_err: nom_pem::PemParsingError) -> Self {
         // nom_pem::PemParsingError doesn't implement std::error::Error

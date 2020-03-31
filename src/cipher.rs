@@ -37,27 +37,14 @@ impl Cipher {
         }
     }
 
-    #[cfg(not(feature = "openssl-cipher"))]
-    pub fn cal_len(self, len: usize) -> usize {
-        let bs = self.block_size();
-        let addi = (bs - (len % bs)) % bs;
-        len + addi
-    }
-
-    #[cfg(feature = "openssl-cipher")]
-    pub fn cal_len(self, len: usize) -> usize {
-        let bs = self.block_size();
-        len + bs
-    }
-
     /// Decrypt the data
     ///
     /// Mostly used by the internal codes.
     /// Usually you don't need to call it directly.
     pub fn decrypt(self, src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        let mut buf = vec![0; self.cal_len(src.len())];
-        self.decrypt_to(&mut buf, src, key, iv)?;
-        buf.truncate(src.len());
+        let mut buf = vec![0; self.calc_buffer_len(src.len())];
+        let n = self.decrypt_to(&mut buf, src, key, iv)?;
+        buf.truncate(n);
         Ok(buf)
     }
 
@@ -86,6 +73,28 @@ impl Cipher {
                 }
             }
         }
+    }
+
+    /// Get the required buffer length of the underlying backend
+    ///
+    /// Different cipher backend have different destination buffer length
+    /// requirement. You should make sure the length of `dest` buffer passed to [decrypt_to()](enum.Cipher.html#method.decrypt_to)
+    /// is equal to the result of this function.
+    ///
+    /// ```
+    /// # use osshkeys::cipher::Cipher;
+    /// # use hex_literal::hex;
+    /// let cipher = Cipher::Aes128_Cbc;
+    /// let src = hex!("ed58042b83e18d59bde732638136ac0e");
+    /// let key = hex!("2b7e151628aed2a6abf7158809cf4f3c");
+    /// let iv = hex!("000102030405060708090a0b0c0d0e0f");
+    ///
+    /// let mut buf = vec![0; cipher.calc_buffer_len(src.len())];
+    /// let n = cipher.decrypt_to(&mut buf, &src, &key, &iv).unwrap();
+    /// buf.truncate(n);
+    /// ```
+    pub fn calc_buffer_len(self, len: usize) -> usize {
+        calc_buflen(len, self.block_size())
     }
 
     /// Return the required key length in bytes
@@ -183,7 +192,13 @@ impl FromStr for Cipher {
     }
 }
 
-#[cfg(not(feature = "openssl-cipher"))]
+#[cfg(not(any(feature = "rustcrypto-cipher", feature = "openssl-cipher")))]
+compile_error!("No cipher backend is selected! Please enable one cipher backend feature.");
+
+#[cfg(all(feature = "rustcrypto-cipher", feature = "openssl-cipher"))]
+compile_error!("Multiple cipher backends are selected! Only one cipher backend is supported.");
+
+#[cfg(feature = "rustcrypto-cipher")]
 mod internal_impl {
     use aes::{Aes128, Aes192, Aes256};
     use aes_ctr::{Aes128Ctr, Aes192Ctr, Aes256Ctr};
@@ -205,6 +220,11 @@ mod internal_impl {
         } else {
             Err(ErrorKind::InvalidLength.into())
         }
+    }
+
+    pub fn calc_buflen(len: usize, block_size: usize) -> usize {
+        let addi = (block_size - (len % block_size)) % block_size;
+        len + addi
     }
 
     pub fn aes128cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
@@ -338,6 +358,11 @@ mod internal_impl {
         let mut n = crypt.update(src, &mut dest)?;
         n += crypt.finalize(&mut dest[n..])?;
         Ok(n)
+    }
+
+    pub fn calc_buflen(len: usize, block_size: usize) -> usize {
+        let bs = block_size;
+        len + bs
     }
 
     pub fn aes128cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {

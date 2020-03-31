@@ -111,7 +111,7 @@ pub fn decrypt_ossh_priv(
 
         // Decrypt
         let mut cvec = CryptoVec::new();
-        cvec.resize(cipher.cal_len(privkey_data.len()));
+        cvec.resize(cipher.calc_buffer_len(privkey_data.len()));
         let n = cipher.decrypt_to(&mut cvec, privkey_data, key, iv)?;
         cvec.resize(n);
 
