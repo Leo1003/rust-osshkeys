@@ -115,7 +115,7 @@ impl Ed25519KeyPair {
     /// Clone the public parts to generate public key
     pub fn clone_public_key(&self) -> Result<Ed25519PublicKey, Error> {
         Ok(Ed25519PublicKey {
-            key: self.key.public.clone(),
+            key: self.key.public,
         })
     }
 }

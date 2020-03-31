@@ -355,5 +355,3 @@ impl<W: io::Write + ?Sized> SshWriteExt for W {
     }
     */
 }
-
-
