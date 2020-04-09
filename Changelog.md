@@ -13,6 +13,7 @@
     - Add minimum rustc version in test flow and README
 - **Breaking Change**
     - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
+    - Remove usage of failure crate
 
 ---
 

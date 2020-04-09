@@ -1,11 +1,11 @@
-use failure::Error;
+use osshkeys::error::OsshResult;
 use osshkeys::{cipher::Cipher, KeyPair, KeyType};
 use std::fs;
 use std::io::Write;
 use std::os::unix::fs::*;
 use std::path::Path;
 
-fn main() -> Result<(), Error> {
+fn main() -> OsshResult<()> {
     let filename = "id_ed25519";
 
     // Generate a keypair

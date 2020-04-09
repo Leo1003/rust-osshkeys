@@ -50,7 +50,7 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> Os
         }
     };
 
-    Ok(String::from_utf8(pem).map_err(|e| Error::with_failure(ErrorKind::InvalidPemFormat, e))?)
+    Ok(String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?)
 }
 
 /// Self experimental implementation for decrypting OpenSSL PEM format

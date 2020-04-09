@@ -47,10 +47,6 @@
 //! assert!(publickey.verify(SOME_DATA, &sign).unwrap());
 //! ```
 
-extern crate ed25519_dalek;
-extern crate failure;
-extern crate rand;
-
 /// Processing bcrypt_pbkdf key derive
 mod bcrypt_pbkdf;
 /// Containing the encrypt/decrypt algorithm

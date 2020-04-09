@@ -1,4 +1,5 @@
-use failure::{Backtrace, Error as FailureError, Fail};
+use backtrace::Backtrace;
+use std::error::Error as StdError;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 /// The [Result](https://doc.rust-lang.org/std/result/enum.Result.html) alias of this crate
@@ -7,11 +8,12 @@ pub type OsshResult<T> = Result<T, Error>;
 /// The error type of this crate
 pub struct Error {
     kind: ErrorKind,
-    inner: Option<FailureError>,
+    inner: Option<Box<dyn StdError + Send + Sync + 'static>>,
     bt: Backtrace,
 }
 
 impl Error {
+    #[inline]
     pub(crate) fn from_kind(kind: ErrorKind) -> Self {
         Error {
             kind,
@@ -20,10 +22,11 @@ impl Error {
         }
     }
 
-    pub(crate) fn with_failure<F: Fail>(kind: ErrorKind, failure: F) -> Self {
+    #[inline]
+    pub(crate) fn with_error<E: StdError + Send + Sync + 'static>(kind: ErrorKind, err: E) -> Self {
         Error {
             kind,
-            inner: Some(failure.into()),
+            inner: Some(err.into()),
             bt: Backtrace::new(),
         }
     }
@@ -31,6 +34,10 @@ impl Error {
     /// Get the kind of the error
     pub fn kind(&self) -> ErrorKind {
         self.kind
+    }
+
+    pub fn backtrace(&self) -> &Backtrace {
+        &self.bt
     }
 }
 
@@ -56,17 +63,18 @@ impl Display for Error {
     }
 }
 
-impl Fail for Error {
-    fn name(&self) -> Option<&str> {
-        Some("Osshkeys Error")
-    }
+impl StdError for Error {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        fn hack<'a>(e: &'a (dyn StdError + Send + Sync + 'static)) -> &'a (dyn StdError + 'static) {
+            unsafe {
+                // We need to remove Send and Sync trait bound,
+                // but Rust currently not support trait upcasting. :(
+                // So we cast it to pointer then cast it back.
+                (e as *const (dyn StdError + Send + Sync)).as_ref().unwrap()
+            }
+        }
 
-    fn cause(&self) -> Option<&dyn Fail> {
-        self.inner.as_ref().map(|f| f.as_fail())
-    }
-
-    fn backtrace(&self) -> Option<&Backtrace> {
-        Some(&self.bt)
+        self.inner.as_ref().map(|e| hack(e.as_ref()))
     }
 }
 
@@ -78,27 +86,27 @@ impl From<ErrorKind> for Error {
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
-        Self::with_failure(ErrorKind::IOError, err)
+        Self::with_error(ErrorKind::IOError, err)
     }
 }
 impl From<std::fmt::Error> for Error {
     fn from(err: std::fmt::Error) -> Self {
-        Self::with_failure(ErrorKind::FmtError, err)
+        Self::with_error(ErrorKind::FmtError, err)
     }
 }
 impl From<openssl::error::ErrorStack> for Error {
     fn from(err: openssl::error::ErrorStack) -> Self {
-        Self::with_failure(ErrorKind::OpenSslError, err)
+        Self::with_error(ErrorKind::OpenSslError, err)
     }
 }
 impl From<ed25519_dalek::SignatureError> for Error {
     fn from(err: ed25519_dalek::SignatureError) -> Self {
-        Self::with_failure(ErrorKind::Ed25519Error, err)
+        Self::with_error(ErrorKind::Ed25519Error, err)
     }
 }
 impl From<base64::DecodeError> for Error {
     fn from(err: base64::DecodeError) -> Self {
-        Self::with_failure(ErrorKind::Base64Error, err)
+        Self::with_error(ErrorKind::Base64Error, err)
     }
 }
 
@@ -129,7 +137,7 @@ impl From<nom_pem::PemParsingError> for Error {
 }
 impl From<std::array::TryFromSliceError> for Error {
     fn from(err: std::array::TryFromSliceError) -> Self {
-        Self::with_failure(ErrorKind::InvalidLength, err)
+        Self::with_error(ErrorKind::InvalidLength, err)
     }
 }
 
