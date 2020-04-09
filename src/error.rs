@@ -113,19 +113,19 @@ impl From<base64::DecodeError> for Error {
 #[cfg(feature = "rustcrypto-cipher")]
 impl From<block_modes::InvalidKeyIvLength> for Error {
     fn from(err: block_modes::InvalidKeyIvLength) -> Self {
-        Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
+        Self::with_error(ErrorKind::InvalidKeyIvLength, err)
     }
 }
 #[cfg(feature = "rustcrypto-cipher")]
 impl From<stream_cipher::InvalidKeyNonceLength> for Error {
     fn from(err: stream_cipher::InvalidKeyNonceLength) -> Self {
-        Self::with_failure(ErrorKind::InvalidKeyIvLength, err)
+        Self::with_error(ErrorKind::InvalidKeyIvLength, err)
     }
 }
 #[cfg(feature = "rustcrypto-cipher")]
 impl From<block_modes::BlockModeError> for Error {
     fn from(err: block_modes::BlockModeError) -> Self {
-        Self::with_failure(ErrorKind::IncorrectPass, err)
+        Self::with_error(ErrorKind::IncorrectPass, err)
     }
 }
 
@@ -144,9 +144,9 @@ impl From<std::array::TryFromSliceError> for Error {
 /// Indicate the reason of the error
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ErrorKind {
-    /// The error is caused by OpenSSL, to get the underlying error, use [failure::Fail::cause()](https://docs.rs/failure/^0.1.5/failure/trait.Fail.html#method.cause)
+    /// The error is caused by OpenSSL, to get the underlying error, use [std::error::Error::source()](https://doc.rust-lang.org/std/error/trait.Error.html#method.source)
     OpenSslError,
-    /// The error is caused by ed25519-dalek, to get the underlying error, use [failure::Fail::cause()](https://docs.rs/failure/^0.1.5/failure/trait.Fail.html#method.cause)
+    /// The error is caused by ed25519-dalek, to get the underlying error, use [std::error::Error::source()](https://doc.rust-lang.org/std/error/trait.Error.html#method.source)
     Ed25519Error,
     /// The error is caused by I/O error or reader error
     IOError,
