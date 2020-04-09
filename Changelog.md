@@ -10,6 +10,7 @@
     - Better memory zeroizing of `SshReadExt` and `SshWriteExt` implementations
     - Make RustCrypto crates as optional dependencies
     - Add Github Actions test flow for the RustCrypto cipher backend
+    - Add minimum rustc version in test flow and README
 - **Breaking Change**
     - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
 
