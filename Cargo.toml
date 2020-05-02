@@ -37,7 +37,8 @@ md-5 = "0.8.0"
 sha-1 = "0.8.1"
 sha2 = "0.8.0"
 blowfish = { version = "0.4.0", features = ["bcrypt"] }
-cryptovec = "0.5.0"
+# cryptovec 0.5 cannot be compiled on Windows
+cryptovec = "0.4.6"
 
 # Feature `rustcrypto-cipher` dependencies
 block-modes = { version = "0.3.3", optional = true }
