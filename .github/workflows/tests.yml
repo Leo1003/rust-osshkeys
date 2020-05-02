@@ -15,10 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         rust: [stable, 1.40.0, nightly]
-        os: [ubuntu-latest, macOS-latest]
-        # Temporary disable windows since OpenSSL dependency is not exists
-        # TODO: Waiting for vcpkg actions and use it to install OpenSSL on Windows
-        #os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v1
@@ -30,10 +27,25 @@ jobs:
           override: true
       - name: Run cargo test (with OpenSSL cipher backend)
         uses: actions-rs/cargo@v1
+        if: ${{ runner.os != 'Windows' }}
         with:
           command: test
       - name: Run cargo test (with RustCrypto cipher backend)
         uses: actions-rs/cargo@v1
+        if: ${{ runner.os != 'Windows' }}
         with:
           command: test
           args: --no-default-features --features=rustcrypto-cipher
+      ## Windows
+      - name: Run cargo test (with OpenSSL cipher backend)
+        uses: actions-rs/cargo@v1
+        if: ${{ runner.os == 'Windows' }}
+        with:
+          command: test
+          args: --features=openssl-vendored
+      - name: Run cargo test (with RustCrypto cipher backend)
+        uses: actions-rs/cargo@v1
+        if: ${{ runner.os == 'Windows' }}
+        with:
+          command: test
+          args: --no-default-features --features=rustcrypto-cipher,openssl-vendored

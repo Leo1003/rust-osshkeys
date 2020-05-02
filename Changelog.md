@@ -11,6 +11,7 @@
     - Make RustCrypto crates as optional dependencies
     - Add Github Actions test flow for the RustCrypto cipher backend
     - Add minimum rustc version in test flow and README
+    - Add feature to compile with vendored OpenSSL (#1)
 - **Breaking Change**
     - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
     - Remove usage of failure crate

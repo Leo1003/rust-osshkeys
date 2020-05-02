@@ -20,6 +20,8 @@ openssl-cipher = []
 
 rustcrypto-cipher = ["block-modes", "aes", "aes-ctr", "des", "stream-cipher"]
 
+openssl-vendored = ["openssl/vendored"]
+
 [dependencies]
 base64 = "0.12.0"
 byteorder = "1.3.2"
