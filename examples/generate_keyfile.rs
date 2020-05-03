@@ -1,7 +1,11 @@
+#[macro_use]
+extern crate cfg_if;
+
 use osshkeys::error::OsshResult;
 use osshkeys::{cipher::Cipher, KeyPair, KeyType};
 use std::fs;
 use std::io::Write;
+#[cfg(unix)]
 use std::os::unix::fs::*;
 use std::path::Path;
 
@@ -11,12 +15,17 @@ fn main() -> OsshResult<()> {
     // Generate a keypair
     let keypair = KeyPair::generate(KeyType::ED25519, 256)?;
     // Create the file with permission 0600
-    let mut f = fs::OpenOptions::new()
-        .write(true)
+    let mut fop = fs::OpenOptions::new();
+    fop.write(true)
         .create(true)
-        .truncate(true)
-        .mode(0o600)
-        .open(filename)?;
+        .truncate(true);
+    cfg_if! {
+        if #[cfg(unix)] {
+            fop.mode(0o600);
+        }
+    }
+
+    let mut f = fop.open(filename)?;
     // Serialize the private key and write it
     f.write(
         keypair

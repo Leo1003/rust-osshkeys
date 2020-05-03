@@ -50,3 +50,4 @@ stream-cipher = { version = "0.3.2", features = ["std"], optional = true }
 [dev-dependencies]
 hex = "0.4.0"
 hex-literal = "0.2.1"
+cfg-if = "0.1.10"
