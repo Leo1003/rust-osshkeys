@@ -95,6 +95,10 @@ impl RsaPublicKey {
     pub fn set_sign_type(&mut self, sig: RsaSignature) {
         self.signhash = sig;
     }
+
+    pub(crate) fn ossl_rsa(&self) -> &RsaRef<Public> {
+        &self.rsa
+    }
 }
 
 impl Key for RsaPublicKey {

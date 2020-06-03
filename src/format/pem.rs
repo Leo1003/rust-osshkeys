@@ -53,6 +53,23 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> Os
     Ok(String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?)
 }
 
+pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
+    let pem = match &pubkey.key {
+        PublicKeyType::RSA(key) => key
+            .ossl_rsa()
+            .public_key_to_pem()?,
+        PublicKeyType::DSA(key) => key
+            .ossl_pkey()?
+            .public_key_to_pem()?,
+        PublicKeyType::ECDSA(key) => key
+            .ossl_pkey()?
+            .public_key_to_pem()?,
+        _ => return Err(ErrorKind::UnsupportType.into()),
+    };
+
+    Ok(String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?)
+}
+
 /// Self experimental implementation for decrypting OpenSSL PEM format
 fn pem_decrypt(pemblock: &PemBlock, passphrase: Option<&[u8]>) -> OsshResult<Vec<u8>> {
     let mut encrypted = false;

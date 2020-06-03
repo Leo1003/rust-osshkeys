@@ -125,6 +125,15 @@ impl EcDsaPublicKey {
     pub fn curve(&self) -> EcCurve {
         self.curve
     }
+
+    #[allow(unused)]
+    pub(crate) fn ossl_ec(&self) -> &EcKeyRef<Public> {
+        &self.key
+    }
+
+    pub(crate) fn ossl_pkey(&self) -> Result<PKey<Public>, openssl::error::ErrorStack> {
+        PKey::from_ec_key(self.key.clone())
+    }
 }
 
 impl Key for EcDsaPublicKey {

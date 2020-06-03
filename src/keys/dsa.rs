@@ -28,6 +28,15 @@ impl DsaPublicKey {
         let dsa = Dsa::from_public_components(p, q, g, pub_key)?;
         Ok(Self { dsa })
     }
+
+    #[allow(unused)]
+    pub(crate) fn ossl_dsa(&self) -> &DsaRef<Public> {
+        &self.dsa
+    }
+
+    pub(crate) fn ossl_pkey(&self) -> Result<PKey<Public>, openssl::error::ErrorStack> {
+        PKey::from_dsa(self.dsa.clone())
+    }
 }
 
 impl Key for DsaPublicKey {
