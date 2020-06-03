@@ -107,12 +107,12 @@ impl PublicKey {
         &self.comment
     }
 
-    /// Get the mutable comment of the key
+    /// Get the mutable reference of the key comment
     pub fn comment_mut(&mut self) -> &mut String {
         &mut self.comment
     }
 
-    /// Get the string presentation of the public key
+    /// Serialize as OpenSSH format of the public key
     pub fn serialize(&self) -> OsshResult<String> {
         serialize_ossh_pubkey(self, &self.comment)
     }
@@ -315,12 +315,12 @@ impl KeyPair {
         &self.comment
     }
 
-    /// Get the mutable comment of the key
+    /// Get the mutable reference of the key comment
     pub fn comment_mut(&mut self) -> &mut String {
         &mut self.comment
     }
 
-    /// Get the string presentation of the public parts
+    /// Get the OpenSSH public key of the public parts
     pub fn serialize_publickey(&self) -> OsshResult<String> {
         serialize_ossh_pubkey(self, &self.comment)
     }
