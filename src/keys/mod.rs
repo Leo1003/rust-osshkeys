@@ -88,7 +88,7 @@ pub struct PublicKey {
 
 impl PublicKey {
     /// Parse the openssh public key file
-    pub fn from_keystring(keystr: &str) -> OsshResult<Self> {
+    pub fn from_keystr(keystr: &str) -> OsshResult<Self> {
         Ok(parse_ossh_pubkey(keystr)?)
     }
 

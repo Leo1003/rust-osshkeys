@@ -24,7 +24,7 @@ fn verify_key<P: AsRef<Path>>(keyfile: P, passphrase: Option<&[u8]>) {
         KeyPair::from_keystr(from_utf8(privdata.as_slice()).unwrap(), passphrase).unwrap();
 
     let pubdata = fs::read(pubkeypath).unwrap();
-    let pubkey = PublicKey::from_keystring(from_utf8(pubdata.as_slice()).unwrap()).unwrap();
+    let pubkey = PublicKey::from_keystr(from_utf8(pubdata.as_slice()).unwrap()).unwrap();
 
     utils::fingerprint_assert(&privkey, &pubkey);
 }

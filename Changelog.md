@@ -16,6 +16,7 @@
     - Fix examples compiling problem on Windows
 - **Breaking Change**
     - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
+    - Rename `PublicKey::from_keystring()` to `PublicKey::from_keystr()`
     - Remove usage of failure crate
 
 ---

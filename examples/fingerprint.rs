@@ -10,7 +10,7 @@ fn print_fingerprint<P: Display + AsRef<Path>>(path: P) -> OsshResult<()> {
     print!("{}: ", path);
     match fs::read_to_string(path) {
         Ok(s) => {
-            let pubkey = PublicKey::from_keystring(&s)?;
+            let pubkey = PublicKey::from_keystr(&s)?;
             println!(
                 "SHA256:{}",
                 hex::encode(pubkey.fingerprint(FingerprintHash::SHA256)?)
