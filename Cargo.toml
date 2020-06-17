@@ -32,20 +32,20 @@ zeroize = "1.1.0"
 log = "0.4.8"
 backtrace = "0.3.46"
 nom_pem = "4.0.0"
-digest = "0.8.1"
-md-5 = "0.8.0"
-sha-1 = "0.8.1"
-sha2 = "0.8.0"
+digest = "0.9.0"
+md-5 = "0.9.0"
+sha-1 = "0.9.0"
+sha2 = "0.9.0"
 bcrypt-pbkdf = "0.2.0"
 # cryptovec 0.5 cannot be compiled on Windows
 cryptovec = "0.4.6"
 
 # Feature `rustcrypto-cipher` dependencies
-block-modes = { version = "0.3.3", optional = true }
-aes = { version = "0.3.2", optional = true }
-aes-ctr = { version = "0.3.0", optional = true }
-des = { version = "0.3.0", optional = true }
-stream-cipher = { version = "0.3.2", features = ["std"], optional = true }
+block-modes = { version = "0.4.0", optional = true }
+aes = { version = "0.4.0", optional = true }
+aes-ctr = { version = "0.4.0", optional = true }
+des = { version = "0.4.0", optional = true }
+stream-cipher = { version = "0.4.1", features = ["std"], optional = true }
 
 [dev-dependencies]
 hex = "0.4.0"

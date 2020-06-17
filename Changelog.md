@@ -3,6 +3,11 @@
 ---
 
 ## Unreleased
+- **Breaking Change!!**
+    - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
+    - Rename `PublicKey::from_keystring()` to `PublicKey::from_keystr()`
+    - Remove usage of failure crate
+    - Change to use the `bcrypt-pbkdf` crate, the passphrase type is `&str` now!
 - **Add**
     - `SshBuf` which uses `CryptoVec` to provide memory zeroizing guarantee when resizing
     - `Cipher::decrypt_to()`, `Cipher::calc_buffer_len()`
@@ -11,14 +16,10 @@
     - Make RustCrypto crates as optional dependencies
     - Add Github Actions test flow for the RustCrypto cipher backend
     - Add minimum rustc version in test flow and README
-    - Add feature to compile with vendored OpenSSL (#1)
+    - Add feature to compile with vendored OpenSSL ([#1](https://github.com/Leo1003/rust-osshkeys/issues/1))
+    - Upgrade RustCrypto crates: `digest 0.9`, `stream-cipher 0.4`, `block-modes 0.4`, ...
 - **Fix**
     - Fix examples compiling problem on Windows
-- **Breaking Change**
-    - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
-    - Rename `PublicKey::from_keystring()` to `PublicKey::from_keystr()`
-    - Remove usage of failure crate
-    - Change to use the `bcrypt-pbkdf` crate, the passphrase type is `&str` now!
 
 ---
 

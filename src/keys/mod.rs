@@ -40,8 +40,8 @@ pub enum FingerprintHash {
 impl FingerprintHash {
     fn hash(self, data: &[u8]) -> Vec<u8> {
         fn digest_hash<D: Digest>(hasher: &mut D, data: &[u8]) -> Vec<u8> {
-            hasher.input(data);
-            hasher.result_reset().to_vec()
+            hasher.update(data);
+            hasher.finalize_reset().to_vec()
         }
         match self {
             FingerprintHash::MD5 => digest_hash(&mut Md5::default(), data),

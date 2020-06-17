@@ -132,15 +132,15 @@ fn openssl_kdf(
     digest.reset();
     while key.len() < keylen {
         if !first {
-            digest.input(&dig);
+            digest.update(&dig);
         }
-        digest.input(data);
-        digest.input(salt);
-        dig = digest.result_reset();
+        digest.update(data);
+        digest.update(salt);
+        dig = digest.finalize_reset();
 
         for _ in 1..iter {
-            digest.input(&dig);
-            dig = digest.result_reset();
+            digest.update(&dig);
+            dig = digest.finalize_reset();
         }
 
         for byte in dig.as_ref() {
