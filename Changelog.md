@@ -18,6 +18,7 @@
     - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
     - Rename `PublicKey::from_keystring()` to `PublicKey::from_keystr()`
     - Remove usage of failure crate
+    - Change to use the `bcrypt-pbkdf` crate, the passphrase type is `&str` now!
 
 ---
 

@@ -23,12 +23,13 @@
 //!
 //! # Example
 //! ```rust
+//! # #![allow(unused)]
 //! # #[macro_use] extern crate hex_literal;
 //! use osshkeys::{KeyPair, KeyType, Key as _, PublicParts as _, PrivateParts as _};
 //! use osshkeys::keys::FingerprintHash;
 //!
 //! let keyfile = std::fs::read_to_string("assets/openssh_ed25519_enc").unwrap();
-//! let keypair = KeyPair::from_keystr(&keyfile, Some(b"12345678")).unwrap();
+//! let keypair = KeyPair::from_keystr(&keyfile, Some("12345678")).unwrap();
 //!
 //! // Get the public key
 //! let publickey = keypair.clone_public_key().unwrap();
@@ -47,8 +48,6 @@
 //! assert!(publickey.verify(SOME_DATA, &sign).unwrap());
 //! ```
 
-/// Processing bcrypt_pbkdf key derive
-mod bcrypt_pbkdf;
 /// Containing the encrypt/decrypt algorithm
 pub mod cipher;
 /// Containing the error type of this crate

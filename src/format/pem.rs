@@ -13,9 +13,9 @@ use zeroize::Zeroize;
 const MAX_KEY_LEN: usize = 64;
 
 //TODO: Not to depend on openssl to parse pem file in the future
-pub fn parse_pem_privkey(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
+pub fn parse_pem_privkey(pem: &[u8], passphrase: Option<&str>) -> OsshResult<KeyPair> {
     let pkey = if let Some(passphrase) = passphrase {
-        PKey::private_key_from_pem_passphrase(pem, passphrase)
+        PKey::private_key_from_pem_passphrase(pem, passphrase.as_bytes())
             .map_err(|_| ErrorKind::IncorrectPass)?
     } else {
         PKey::private_key_from_pem(pem)?
@@ -25,10 +25,11 @@ pub fn parse_pem_privkey(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<Ke
 }
 
 //TODO: Not to depend on openssl to parse pem file in the future
-pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> OsshResult<String> {
+pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&str>) -> OsshResult<String> {
     let pem = if let Some(passphrase) = passphrase {
         // TODO: Allow for cipher selection
         let cipher = openssl::symm::Cipher::aes_128_cbc();
+        let passphrase = passphrase.as_bytes();
         match &keypair.key {
             KeyPairType::RSA(key) => key
                 .ossl_rsa()
@@ -55,15 +56,9 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&[u8]>) -> Os
 
 pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
     let pem = match &pubkey.key {
-        PublicKeyType::RSA(key) => key
-            .ossl_rsa()
-            .public_key_to_pem()?,
-        PublicKeyType::DSA(key) => key
-            .ossl_pkey()?
-            .public_key_to_pem()?,
-        PublicKeyType::ECDSA(key) => key
-            .ossl_pkey()?
-            .public_key_to_pem()?,
+        PublicKeyType::RSA(key) => key.ossl_rsa().public_key_to_pem()?,
+        PublicKeyType::DSA(key) => key.ossl_pkey()?.public_key_to_pem()?,
+        PublicKeyType::ECDSA(key) => key.ossl_pkey()?.public_key_to_pem()?,
         _ => return Err(ErrorKind::UnsupportType.into()),
     };
 

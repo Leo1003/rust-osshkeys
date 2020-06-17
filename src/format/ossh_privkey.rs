@@ -1,8 +1,8 @@
-use crate::bcrypt_pbkdf::bcrypt_pbkdf;
 use crate::cipher::Cipher;
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicParts};
 use crate::sshbuf::{SshBuf, SshReadExt, SshWriteExt};
+use bcrypt_pbkdf::bcrypt_pbkdf;
 use byteorder::WriteBytesExt;
 use cryptovec::CryptoVec;
 use openssl::dsa::Dsa;
@@ -19,7 +19,7 @@ const KDF_NONE: &str = "none";
 const DEFAULT_ROUNDS: u32 = 16;
 const SALT_LEN: usize = 16;
 
-pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
+pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&str>) -> OsshResult<KeyPair> {
     if keydata.len() >= 16 && &keydata[0..15] == KEY_MAGIC {
         let mut reader = Cursor::new(keydata);
         reader.set_position(15);
@@ -60,7 +60,7 @@ pub fn decode_ossh_priv(keydata: &[u8], passphrase: Option<&[u8]>) -> OsshResult
 
 pub fn decrypt_ossh_priv(
     privkey_data: &[u8],
-    passphrase: Option<&[u8]>,
+    passphrase: Option<&str>,
     ciphername: &str,
     kdfname: &str,
     kdf: &[u8],
@@ -183,7 +183,7 @@ fn decode_key(reader: &mut SshBuf) -> OsshResult<KeyPair> {
 
 pub fn serialize_ossh_privkey(
     key: &KeyPair,
-    passphrase: &[u8],
+    passphrase: &str,
     cipher: Cipher,
     kdf_rounds: u32,
 ) -> OsshResult<String> {
@@ -209,7 +209,7 @@ pub fn serialize_ossh_privkey(
 
 pub fn encode_ossh_priv(
     key: &KeyPair,
-    passphrase: &[u8],
+    passphrase: &str,
     cipher: Cipher,
     kdf_rounds: u32,
 ) -> OsshResult<Vec<u8>> {
@@ -280,7 +280,7 @@ pub fn encode_ossh_priv(
 
 pub fn encrypt_ossh_priv(
     privkey: &[u8],
-    passphrase: &[u8],
+    passphrase: &str,
     cipher: Cipher,
     kdf_rounds: u32,
     salt: &[u8],

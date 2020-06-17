@@ -6,7 +6,7 @@ pub(crate) mod ossh_pubkey;
 pub(crate) mod pem;
 pub(crate) mod pkcs8;
 
-pub fn parse_keystr(pem: &[u8], passphrase: Option<&[u8]>) -> OsshResult<KeyPair> {
+pub fn parse_keystr(pem: &[u8], passphrase: Option<&str>) -> OsshResult<KeyPair> {
     // HACK: Fix parsing problem of CRLF in nom_pem
     let s;
     let pemdata = if cfg!(windows) {

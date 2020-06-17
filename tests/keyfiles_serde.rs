@@ -21,7 +21,7 @@ const TEST_MATRIX_OSSH: [(KeyType, usize); 6] = [
 
 mod utils;
 
-fn pkcs8_serde_test(keypair: &KeyPair, passphrase: Option<&[u8]>) {
+fn pkcs8_serde_test(keypair: &KeyPair, passphrase: Option<&str>) {
     let pkcs8 = keypair.serialize_pkcs8(passphrase).unwrap();
     let keypair2 = KeyPair::from_keystr(&pkcs8, passphrase).unwrap();
     utils::fingerprint_assert(keypair, &keypair2);
@@ -42,7 +42,7 @@ fn serde_pkcs8_encrypt() {
     }
 }
 
-fn pem_serde_test(keypair: &KeyPair, passphrase: Option<&[u8]>) {
+fn pem_serde_test(keypair: &KeyPair, passphrase: Option<&str>) {
     let pem = keypair.serialize_pem(passphrase).unwrap();
     let keypair2 = KeyPair::from_keystr(&pem, passphrase).unwrap();
     utils::fingerprint_assert(keypair, &keypair2);
@@ -63,7 +63,7 @@ fn serde_pem_encrypt() {
     }
 }
 
-fn openssh_serde_test(keypair: &KeyPair, passphrase: Option<&[u8]>, cipher: Cipher) {
+fn openssh_serde_test(keypair: &KeyPair, passphrase: Option<&str>, cipher: Cipher) {
     let osshpriv = keypair.serialize_openssh(passphrase, cipher).unwrap();
     let keypair2 = KeyPair::from_keystr(&osshpriv, passphrase).unwrap();
     utils::fingerprint_assert(keypair, &keypair2);

@@ -109,6 +109,17 @@ impl From<base64::DecodeError> for Error {
         Self::with_error(ErrorKind::Base64Error, err)
     }
 }
+impl From<bcrypt_pbkdf::Error> for Error {
+    fn from(err: bcrypt_pbkdf::Error) -> Self {
+        use bcrypt_pbkdf::Error::*;
+        let kind = match err {
+            InvalidParamLen => ErrorKind::InvalidLength,
+            InvalidRounds => ErrorKind::InvalidArgument,
+            InvalidOutputLen => ErrorKind::Unknown,
+        };
+        Self::with_error(kind, err)
+    }
+}
 
 #[cfg(feature = "rustcrypto-cipher")]
 impl From<block_modes::InvalidKeyIvLength> for Error {

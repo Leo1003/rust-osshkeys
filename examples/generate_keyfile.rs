@@ -16,9 +16,7 @@ fn main() -> OsshResult<()> {
     let keypair = KeyPair::generate(KeyType::ED25519, 256)?;
     // Create the file with permission 0600
     let mut fop = fs::OpenOptions::new();
-    fop.write(true)
-        .create(true)
-        .truncate(true);
+    fop.write(true).create(true).truncate(true);
     cfg_if! {
         if #[cfg(unix)] {
             fop.mode(0o600);
@@ -29,7 +27,7 @@ fn main() -> OsshResult<()> {
     // Serialize the private key and write it
     f.write(
         keypair
-            .serialize_openssh(Some(b"passw0rd"), Cipher::Aes256_Ctr)?
+            .serialize_openssh(Some("passw0rd"), Cipher::Aes256_Ctr)?
             .as_bytes(),
     )?;
     f.sync_all()?;

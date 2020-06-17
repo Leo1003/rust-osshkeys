@@ -24,13 +24,13 @@ pub fn fingerprint_assert(key1: &dyn PublicParts, key2: &dyn PublicParts) {
 
 // This function is for test only,
 // not providing any security protection.
-pub fn gen_random_pass(len: usize) -> Vec<u8> {
+pub fn gen_random_pass(len: usize) -> String {
     let charset_len = PASSPHRASE_CHARSET.len();
     let mut rng = ThreadRng::default();
     (0..len)
-        .map(|_| {
+        .map(|_| -> char {
             let i = rng.gen_range(0, charset_len);
-            PASSPHRASE_CHARSET.as_bytes()[i]
+            PASSPHRASE_CHARSET.as_bytes()[i].into()
         })
         .collect()
 }

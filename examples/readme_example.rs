@@ -1,3 +1,4 @@
+#![allow(unused)]
 #[macro_use]
 extern crate hex_literal;
 use osshkeys::keys::FingerprintHash;
@@ -5,7 +6,7 @@ use osshkeys::{Key as _, KeyPair, KeyType, PrivateParts as _, PublicParts as _};
 
 fn main() {
     let keyfile = std::fs::read_to_string("assets/openssh_ed25519_enc").unwrap();
-    let keypair = KeyPair::from_keystr(&keyfile, Some(b"12345678")).unwrap();
+    let keypair = KeyPair::from_keystr(&keyfile, Some("12345678")).unwrap();
 
     // Get the public key
     let publickey = keypair.clone_public_key().unwrap();

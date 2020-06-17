@@ -243,7 +243,7 @@ impl KeyPair {
     ///
     /// This is the new format which is supported since OpenSSH 6.5, and it became the default format in OpenSSH 7.8.
     /// The Ed25519 key can only be stored in this type.
-    pub fn from_keystr(pem: &str, passphrase: Option<&[u8]>) -> OsshResult<Self> {
+    pub fn from_keystr(pem: &str, passphrase: Option<&str>) -> OsshResult<Self> {
         Ok(parse_keystr(pem.as_bytes(), passphrase)?)
     }
 
@@ -283,14 +283,14 @@ impl KeyPair {
     /// Serialize the keypair to the OpenSSL PEM format
     ///
     /// If the passphrase is given (set to `Some(...)`), then the generated PEM key will be encrypted.
-    pub fn serialize_pem(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
+    pub fn serialize_pem(&self, passphrase: Option<&str>) -> OsshResult<String> {
         Ok(stringify_pem_privkey(&self, passphrase)?)
     }
 
     /// Serialize the keypair to the OpenSSL PKCS#8 PEM format
     ///
     /// If the passphrase is given (set to `Some(...)`), then the generated PKCS#8 key will be encrypted.
-    pub fn serialize_pkcs8(&self, passphrase: Option<&[u8]>) -> OsshResult<String> {
+    pub fn serialize_pkcs8(&self, passphrase: Option<&str>) -> OsshResult<String> {
         Ok(serialize_pkcs8_privkey(&self, passphrase)?)
     }
 
@@ -300,13 +300,13 @@ impl KeyPair {
     /// then the generated private key will be encrypted.
     pub fn serialize_openssh(
         &self,
-        passphrase: Option<&[u8]>,
+        passphrase: Option<&str>,
         cipher: Cipher,
     ) -> OsshResult<String> {
         if let Some(passphrase) = passphrase {
             Ok(serialize_ossh_privkey(self, passphrase, cipher, 0)?)
         } else {
-            Ok(serialize_ossh_privkey(self, b"", Cipher::Null, 0)?)
+            Ok(serialize_ossh_privkey(self, "", Cipher::Null, 0)?)
         }
     }
 
