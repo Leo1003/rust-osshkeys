@@ -29,6 +29,10 @@ impl DsaPublicKey {
         Ok(Self { dsa })
     }
 
+    pub(crate) fn from_ossl_dsa(key: Dsa<Public>) -> Self {
+        Self { dsa: key }
+    }
+
     #[allow(unused)]
     pub(crate) fn ossl_dsa(&self) -> &DsaRef<Public> {
         &self.dsa

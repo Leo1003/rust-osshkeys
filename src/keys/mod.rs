@@ -7,7 +7,7 @@ use crate::format::pem::*;
 use crate::format::pkcs8::*;
 use digest::Digest;
 use md5::Md5;
-use openssl::pkey::{Id, PKey, PKeyRef, Private};
+use openssl::pkey::{Id, PKey, PKeyRef, Private, Public};
 use sha2::{Sha256, Sha512};
 use std::fmt;
 
@@ -87,9 +87,26 @@ pub struct PublicKey {
 }
 
 impl PublicKey {
-    /// Parse the openssh public key file
+    pub(crate) fn from_ossl_pkey(pkey: &PKeyRef<Public>) -> OsshResult<Self> {
+        match pkey.id() {
+            Id::RSA => {
+                Ok(rsa::RsaPublicKey::from_ossl_rsa(pkey.rsa()?, rsa::RsaSignature::SHA1)?.into())
+            }
+            Id::DSA => Ok(dsa::DsaPublicKey::from_ossl_dsa(pkey.dsa()?).into()),
+            Id::EC => Ok(ecdsa::EcDsaPublicKey::from_ossl_ec(pkey.ec_key()?)?.into()),
+            _ => Err(ErrorKind::UnsupportType.into()),
+        }
+    }
+
+    /// Parse the openssh/PEM format public key file
     pub fn from_keystr(keystr: &str) -> OsshResult<Self> {
-        Ok(parse_ossh_pubkey(keystr)?)
+        if keystr.trim().starts_with("-----BEGIN") {
+            // PEM format
+            Ok(parse_pem_pubkey(keystr.as_bytes())?)
+        } else {
+            // openssh format
+            Ok(parse_ossh_pubkey(keystr)?)
+        }
     }
 
     /// Indicate the key type being stored

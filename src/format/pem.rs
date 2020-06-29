@@ -54,6 +54,11 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&str>) -> Oss
     Ok(String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?)
 }
 
+pub fn parse_pem_pubkey(pem: &[u8]) -> OsshResult<PublicKey> {
+    let pkey = PKey::public_key_from_pem(pem)?;
+    Ok(PublicKey::from_ossl_pkey(&pkey)?)
+}
+
 pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
     let pem = match &pubkey.key {
         PublicKeyType::RSA(key) => key.ossl_rsa().public_key_to_pem()?,

@@ -86,6 +86,15 @@ impl RsaPublicKey {
         })
     }
 
+    pub(crate) fn from_ossl_rsa(key: Rsa<Public>, signhash: RsaSignature) -> OsshResult<Self> {
+        let rsa = Self { rsa: key, signhash };
+        if rsa.size() >= RSA_MIN_SIZE && rsa.size() <= RSA_MAX_SIZE {
+            Ok(rsa)
+        } else {
+            Err(ErrorKind::InvalidKeySize.into())
+        }
+    }
+
     /// Get the signature hash type
     pub fn sign_type(&self) -> RsaSignature {
         self.signhash

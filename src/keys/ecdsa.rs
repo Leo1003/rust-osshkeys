@@ -114,6 +114,17 @@ impl EcDsaPublicKey {
         })
     }
 
+    pub(crate) fn from_ossl_ec(key: EcKey<Public>) -> OsshResult<Self> {
+        let curve = match key.group().curve_name().unwrap_or(Nid::UNDEF) {
+            Nid::X9_62_PRIME256V1 => EcCurve::Nistp256,
+            Nid::SECP384R1 => EcCurve::Nistp384,
+            Nid::SECP521R1 => EcCurve::Nistp521,
+            _ => return Err(ErrorKind::UnsupportCurve.into()),
+        };
+
+        Ok(Self { key, curve })
+    }
+
     pub(crate) fn from_bytes(curve: EcCurve, public_key: &[u8]) -> OsshResult<Self> {
         Ok(Self::new(
             curve,
