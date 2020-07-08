@@ -129,9 +129,14 @@ impl PublicKey {
         &mut self.comment
     }
 
-    /// Serialize as OpenSSH format of the public key
+    /// Serialize the public key as OpenSSH format
     pub fn serialize(&self) -> OsshResult<String> {
         serialize_ossh_pubkey(self, &self.comment)
+    }
+
+    /// Serialize the public key as PEM format
+    pub fn serialize_pem(&self) -> OsshResult<String> {
+        stringify_pem_pubkey(self)
     }
 
     fn inner_key(&self) -> &dyn PublicParts {
