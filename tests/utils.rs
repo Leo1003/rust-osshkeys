@@ -54,3 +54,9 @@ pub fn remove_tmp_folder<P: AsRef<Path>>(path: P) {
         fs::remove_dir_all(path).unwrap();
     }
 }
+
+pub fn locate_crate_files<P: AsRef<Path>>(path: P) -> PathBuf {
+    let mut abspath = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    abspath.push(path);
+    abspath
+}

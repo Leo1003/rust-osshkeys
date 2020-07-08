@@ -3,10 +3,10 @@
 
 use crate::cipher::*;
 use crate::error::*;
-use crate::keys::*;
+use crate::keys::{*, rsa::*};
 use digest::DynDigest;
 use nom_pem::{Block as PemBlock, HeaderEntry, ProcTypeType, RFC1423Algorithm};
-use openssl::pkey::PKey;
+use openssl::{pkey::{PKey, Public}, rsa::Rsa};
 use std::convert::TryInto;
 use zeroize::Zeroize;
 
@@ -55,13 +55,19 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&str>) -> Oss
 }
 
 pub fn parse_pem_pubkey(pem: &[u8]) -> OsshResult<PublicKey> {
-    let pkey = PKey::public_key_from_pem(pem)?;
-    Ok(PublicKey::from_ossl_pkey(&pkey)?)
+    if pem.starts_with(b"-----BEGIN RSA PUBLIC KEY-----") {
+        let rsa = Rsa::<Public>::public_key_from_pem_pkcs1(pem)?;
+        let rsapubkey = RsaPublicKey::from_ossl_rsa(rsa, RsaSignature::SHA1)?;
+        Ok(rsapubkey.into())
+    } else {
+        let pkey = PKey::public_key_from_pem(pem)?;
+        Ok(PublicKey::from_ossl_pkey(&pkey)?)
+    }
 }
 
 pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
     let pem = match &pubkey.key {
-        PublicKeyType::RSA(key) => key.ossl_rsa().public_key_to_pem()?,
+        PublicKeyType::RSA(key) => key.ossl_rsa().public_key_to_pem_pkcs1()?,
         PublicKeyType::DSA(key) => key.ossl_pkey()?.public_key_to_pem()?,
         PublicKeyType::ECDSA(key) => key.ossl_pkey()?.public_key_to_pem()?,
         _ => return Err(ErrorKind::UnsupportType.into()),

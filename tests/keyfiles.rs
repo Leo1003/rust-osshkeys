@@ -9,14 +9,8 @@ mod utils;
 
 const TEST_FILE_PASS: &str = "12345678";
 
-fn locate_crate_files<P: AsRef<Path>>(path: P) -> PathBuf {
-    let mut abspath = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    abspath.push(path);
-    abspath
-}
-
 fn verify_key<P: AsRef<Path>>(keyfile: P, passphrase: Option<&str>) {
-    let keypath = locate_crate_files(keyfile);
+    let keypath = utils::locate_crate_files(keyfile);
     let pubkeypath = keypath.with_extension("pub");
 
     let privdata = fs::read(keypath).unwrap();
