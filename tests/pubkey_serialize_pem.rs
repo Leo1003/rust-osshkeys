@@ -17,17 +17,21 @@ fn verify_pem_convertion<P: AsRef<Path>>(pubkeyfile: P) {
     let pem_pub = fs::read_to_string(pemkeypath).unwrap();
 
     // Openssh --> PEM
-    let pubkey =
-        PublicKey::from_keystr(&ossh_pub).unwrap();
+    let pubkey = PublicKey::from_keystr(&ossh_pub).unwrap();
 
-    assert_eq!(&pem_pub.trim_end(), &pubkey.serialize_pem().unwrap().trim_end());
+    assert_eq!(
+        &pem_pub.trim_end(),
+        &pubkey.serialize_pem().unwrap().trim_end()
+    );
 
     // PEM --> Openssh
 
-    let pubkey =
-        PublicKey::from_keystr(&pem_pub).unwrap();
+    let pubkey = PublicKey::from_keystr(&pem_pub).unwrap();
 
-    assert_eq!(&ossh_pub.trim_end(), &pubkey.serialize().unwrap().trim_end());
+    assert_eq!(
+        &ossh_pub.trim_end(),
+        &pubkey.serialize().unwrap().trim_end()
+    );
 }
 
 #[test]

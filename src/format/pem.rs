@@ -3,10 +3,13 @@
 
 use crate::cipher::*;
 use crate::error::*;
-use crate::keys::{*, rsa::*};
+use crate::keys::{rsa::*, *};
 use digest::DynDigest;
 use nom_pem::{Block as PemBlock, HeaderEntry, ProcTypeType, RFC1423Algorithm};
-use openssl::{pkey::{PKey, Public}, rsa::Rsa};
+use openssl::{
+    pkey::{PKey, Public},
+    rsa::Rsa,
+};
 use std::convert::TryInto;
 use zeroize::Zeroize;
 

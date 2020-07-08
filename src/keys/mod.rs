@@ -135,6 +135,15 @@ impl PublicKey {
     }
 
     /// Serialize the public key as PEM format
+    ///
+    /// # Representation
+    /// - Begin with `-----BEGIN PUBLIC KEY-----` for dsa key.
+    /// - Begin with `-----BEGIN RSA PUBLIC KEY-----` for rsa key.
+    /// - Begin with `-----BEGIN PUBLIC KEY-----` for ecdsa key.
+    /// - This format doesn't support Ed25519
+    ///
+    /// # Note
+    /// This format cannot store the comment!
     pub fn serialize_pem(&self) -> OsshResult<String> {
         stringify_pem_pubkey(self)
     }

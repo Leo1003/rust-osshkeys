@@ -7,6 +7,10 @@ use zeroize::{Zeroize, Zeroizing};
 
 const MAX_BIGNUM: usize = 16384 / 8;
 
+/// A clear-on-drop vector based on `CryptoVec`
+///
+/// This structure is designed for internal use only.
+/// It may disappear/breaking change at any version.
 #[derive(Debug, Default)]
 pub struct SshBuf {
     read_pos: usize,
