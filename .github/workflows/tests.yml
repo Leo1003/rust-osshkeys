@@ -18,6 +18,11 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Set git to use LF on Windows
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - uses: actions/checkout@v1
       - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -25,6 +30,7 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
+      ## non-Windows
       - name: Run cargo test (with OpenSSL cipher backend)
         uses: actions-rs/cargo@v1
         if: ${{ runner.os != 'Windows' }}
