@@ -60,7 +60,7 @@ fn main() {
     - [x] Key generation
     - [x] Public key formats
         - [x] Openssh
-        - [ ] PEM
+        - [x] PEM
     - [x] Private keys
         - [x] PEM (Using OpenSSL)
         - [x] PEM (Encrypted) (Using OpenSSL)

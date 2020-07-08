@@ -11,6 +11,7 @@
 - **Add**
     - `SshBuf` which uses `CryptoVec` to provide memory zeroizing guarantee when resizing
     - `Cipher::decrypt_to()`, `Cipher::calc_buffer_len()`
+    - `PublicKey::serialize_pem()` ([#2](https://github.com/Leo1003/rust-osshkeys/issues/2))
 - **Improve**
     - Better memory zeroizing of `SshReadExt` and `SshWriteExt` implementations
     - Make RustCrypto crates as optional dependencies
