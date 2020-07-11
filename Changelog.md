@@ -1,12 +1,14 @@
 # Changelog
 
+## Unreleased
+
 ---
 
-## Unreleased
+## 0.4.0 (2020/07/11)
 - **Breaking Change!!**
     - Remove `SshReadExt::read_list()`, `SshWriteExt::write_list()`
     - Rename `PublicKey::from_keystring()` to `PublicKey::from_keystr()`
-    - Remove usage of failure crate
+    - Remove the usage of failure crate
     - Change to use the `bcrypt-pbkdf` crate, the passphrase type is `&str` now!
 - **Add**
     - `SshBuf` which uses `CryptoVec` to provide memory zeroizing guarantee when resizing
