@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Dependencies**
+    - Upgrade ed25519-dalek to 1.0.0
+    - Upgrade bcrypt-pbkdf to 0.3.0
+
 ---
 
 ## 0.4.0 (2020/07/11)

@@ -7,12 +7,14 @@ use ed25519_dalek::{
     PublicKey as DalekPublicKey,
     SecretKey as DalekSecretKey,
     Signature,
+    Signer,
+    Verifier,
     PUBLIC_KEY_LENGTH,
     SECRET_KEY_LENGTH,
     KEYPAIR_LENGTH,
 };
 use rand::rngs::OsRng;
-use std::fmt;
+use std::{convert::TryFrom, fmt};
 
 /// The key name returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const ED25519_NAME: &str = "ssh-ed25519";
@@ -48,7 +50,7 @@ impl PublicParts for Ed25519PublicKey {
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
-        let ed25519_sig = Signature::from_bytes(sig)?;
+        let ed25519_sig = Signature::try_from(sig)?;
         Ok(self.key.verify(data, &ed25519_sig).is_ok())
     }
 }
@@ -126,7 +128,7 @@ impl PublicParts for Ed25519KeyPair {
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
-        let ed25519_sig = Signature::from_bytes(sig)?;
+        let ed25519_sig = Signature::try_from(sig)?;
         Ok(self.key.verify(data, &ed25519_sig).is_ok())
     }
 }
