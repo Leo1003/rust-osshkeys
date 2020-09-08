@@ -1,0 +1,59 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release-test:
+    name: Test for Release
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, 1.40.0]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Run format checking
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --check
+      - name: Run cargo test (with OpenSSL cipher backend)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release
+      - name: Run cargo test (with RustCrypto cipher backend)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release --no-default-features --features=rustcrypto-cipher
+
+  release:
+    name: Release & Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: release-test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Cargo Login
+        uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: -- ${{ secrets.CARGO_TOKEN }}
+      - name: Cargo Publish
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
