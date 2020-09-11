@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+---
+
+## 0.4.1 (2020/09/11)
+- **Requirement**
+    - Minimal Rust version is 1.41.0 now
 - **Dependencies**
     - Upgrade ed25519-dalek to 1.0.0
     - Upgrade bcrypt-pbkdf to 0.3.0
