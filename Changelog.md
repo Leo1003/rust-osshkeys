@@ -5,6 +5,10 @@
 - **Dependencies**
     - Upgrade ed25519-dalek to 1.0.0
     - Upgrade bcrypt-pbkdf to 0.3.0
+    - Upgrade block-modes to 0.6.1
+    - Upgrade aes to 0.5.0
+    - Upgrade des to 0.5.0
+    - Upgrade hex-literal to 0.3.1
 
 ---
 
