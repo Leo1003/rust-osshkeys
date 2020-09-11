@@ -3,7 +3,7 @@
 [![Crates](https://img.shields.io/crates/v/osshkeys.svg)](https://crates.io/crates/osshkeys)
 [![Docs](https://docs.rs/osshkeys/badge.svg)](https://docs.rs/osshkeys)
 [![dependency status](https://deps.rs/repo/github/Leo1003/rust-osshkeys/status.svg)](https://deps.rs/repo/github/Leo1003/rust-osshkeys)
-![minimum rustc version](https://img.shields.io/badge/rustc-1.40+-blue.svg)
+![minimum rustc version](https://img.shields.io/badge/rustc-1.41+-blue.svg)
 [![GitHub license](https://img.shields.io/github/license/Leo1003/rust-osshkeys)](https://github.com/Leo1003/rust-osshkeys/blob/master/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Leo1003/rust-osshkeys?logo=github)](https://github.com/Leo1003/rust-osshkeys/issues)
 
