@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+
+---
+
+## 0.4.2
 - **Dependencies**
     - Upgrade aes-ctr to 0.5.0
 
