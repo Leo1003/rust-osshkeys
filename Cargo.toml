@@ -43,9 +43,9 @@ cryptovec = "0.4.6"
 # Feature `rustcrypto-cipher` dependencies
 block-modes = { version = "0.6.1", optional = true }
 aes = { version = "0.5.0", optional = true }
-aes-ctr = { version = "0.4.0", optional = true }
+aes-ctr = { version = "0.5.0", optional = true }
 des = { version = "0.5.0", optional = true }
-stream-cipher = { version = "0.4.1", features = ["std"], optional = true }
+stream-cipher = { version = "0.7.1", features = ["std"], optional = true }
 
 [dev-dependencies]
 hex = "0.4.0"

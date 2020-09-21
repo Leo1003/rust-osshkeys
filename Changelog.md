@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- **Dependencies**
+    - Upgrade aes-ctr to 0.5.0
 
 ---
 
@@ -13,7 +15,6 @@
     - Upgrade block-modes to 0.6.1
     - Upgrade aes to 0.5.0
     - Upgrade des to 0.5.0
-
 
 ---
 
