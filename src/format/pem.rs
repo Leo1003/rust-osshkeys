@@ -128,6 +128,8 @@ fn pem_decrypt(pemblock: &PemBlock, passphrase: Option<&[u8]>) -> OsshResult<Vec
 }
 
 /// Self experimental implementation for OpenSSL kdf
+///
+/// From OpenSSL EVP_BytesToKey()
 fn openssl_kdf(
     data: &[u8],
     salt: &[u8; 8],
