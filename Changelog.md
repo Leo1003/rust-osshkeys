@@ -4,7 +4,7 @@
 
 ---
 
-## 0.4.2
+## 0.4.2 (2020/09/21)
 - **Dependencies**
     - Upgrade aes-ctr to 0.5.0
 
