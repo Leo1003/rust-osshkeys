@@ -1,6 +1,20 @@
 # Changelog
 
 ## Unreleased
+- **Compiler**
+    - Minimum rustc version is now 1.47.0
+- **Dependencies**
+    - Upgrade base64 to 0.13.0
+    - Upgrade byteorder to 1.4.3
+    - Upgrade bcrypt-pbkdf to 0.5.0
+    - stream-cipher is deprecated, changing to use cipher 0.2.5
+    - Upgrade block-modes to 0.7.0
+    - Upgrade aes to 0.6.0
+    - Upgrade aes to 0.6.0
+    - Upgrade des to 0.6.0
+- **DevDependencies**
+    - Upgrade hex-literal to 0.3.1
+    - Upgrade cfg-if to 1.0.0
 
 ---
 

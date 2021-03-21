@@ -128,8 +128,8 @@ impl From<block_modes::InvalidKeyIvLength> for Error {
     }
 }
 #[cfg(feature = "rustcrypto-cipher")]
-impl From<stream_cipher::InvalidKeyNonceLength> for Error {
-    fn from(err: stream_cipher::InvalidKeyNonceLength) -> Self {
+impl From<cipher::stream::InvalidKeyNonceLength> for Error {
+    fn from(err: cipher::stream::InvalidKeyNonceLength) -> Self {
         Self::with_error(ErrorKind::InvalidKeyIvLength, err)
     }
 }

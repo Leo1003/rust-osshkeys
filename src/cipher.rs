@@ -203,8 +203,8 @@ mod internal_impl {
     use aes::{Aes128, Aes192, Aes256};
     use aes_ctr::{Aes128Ctr, Aes192Ctr, Aes256Ctr};
     use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
+    use cipher::{NewStreamCipher, SyncStreamCipher};
     use des::TdesEde3;
-    use stream_cipher::{NewStreamCipher, SyncStreamCipher};
 
     use crate::error::{ErrorKind, OsshResult};
 
