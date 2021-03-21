@@ -475,3 +475,25 @@ pub trait PrivateParts: Key {
     /// Sign the data with the key, returning the "detached" signature
     fn sign(&self, data: &[u8]) -> OsshResult<Vec<u8>>;
 }
+
+// This test is used to print the struct size of [`PublicKey`] and [`KeyPair`].
+// It is intented to be run manually, and the result is read by the developers.
+#[test]
+#[ignore]
+fn test_size() {
+    use std::mem::size_of;
+
+    eprintln!("PublicKey: {} bytes", size_of::<PublicKey>());
+    eprintln!("\tRSA: {} bytes", size_of::<rsa::RsaPublicKey>());
+    eprintln!("\tDSA: {} bytes", size_of::<dsa::DsaPublicKey>());
+    eprintln!("\tECDSA: {} bytes", size_of::<ecdsa::EcDsaPublicKey>());
+    eprintln!(
+        "\tED25519: {} bytes",
+        size_of::<ed25519::Ed25519PublicKey>()
+    );
+    eprintln!("KeyPair: {} bytes", size_of::<KeyPair>());
+    eprintln!("\tRSA: {} bytes", size_of::<rsa::RsaKeyPair>());
+    eprintln!("\tDSA: {} bytes", size_of::<dsa::DsaKeyPair>());
+    eprintln!("\tECDSA: {} bytes", size_of::<ecdsa::EcDsaKeyPair>());
+    eprintln!("\tED25519: {} bytes", size_of::<ed25519::Ed25519KeyPair>());
+}

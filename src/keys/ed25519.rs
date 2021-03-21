@@ -22,14 +22,14 @@ pub const ED25519_NAME: &str = "ssh-ed25519";
 /// Represent the Ed25519 public key
 #[derive(Debug, Clone)]
 pub struct Ed25519PublicKey {
-    key: DalekPublicKey,
+    key: Box<DalekPublicKey>,
 }
 
 impl Ed25519PublicKey {
     /// Create the Ed25519 public key from public components
     pub fn new(key: &[u8; PUBLIC_KEY_LENGTH]) -> Result<Self, ed25519_dalek::SignatureError> {
         Ok(Self {
-            key: DalekPublicKey::from_bytes(key)?,
+            key: Box::new(DalekPublicKey::from_bytes(key)?),
         })
     }
 }
@@ -69,7 +69,7 @@ impl fmt::Display for Ed25519PublicKey {
 
 /// Represent the Ed25519 key pair
 pub struct Ed25519KeyPair {
-    pub(crate) key: DalekKeypair,
+    pub(crate) key: Box<DalekKeypair>,
 }
 
 impl Key for Ed25519KeyPair {
@@ -92,7 +92,7 @@ impl Ed25519KeyPair {
         }
 
         Ok(Ed25519KeyPair {
-            key: DalekKeypair::generate(&mut OsRng),
+            key: Box::new(DalekKeypair::generate(&mut OsRng)),
         })
     }
 
@@ -107,17 +107,17 @@ impl Ed25519KeyPair {
             return Err(ErrorKind::InvalidKey.into());
         }
         Ok(Ed25519KeyPair {
-            key: DalekKeypair {
+            key: Box::new(DalekKeypair {
                 public: DalekPublicKey::from_bytes(pk)?,
                 secret: DalekSecretKey::from_bytes(&sk[..SECRET_KEY_LENGTH])?,
-            },
+            }),
         })
     }
 
     /// Clone the public parts to generate public key
     pub fn clone_public_key(&self) -> Result<Ed25519PublicKey, Error> {
         Ok(Ed25519PublicKey {
-            key: self.key.public,
+            key: Box::new(self.key.public),
         })
     }
 }
