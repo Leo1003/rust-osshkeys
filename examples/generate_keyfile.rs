@@ -25,7 +25,7 @@ fn main() -> OsshResult<()> {
 
     let mut f = fop.open(filename)?;
     // Serialize the private key and write it
-    f.write(
+    f.write_all(
         keypair
             .serialize_openssh(Some("passw0rd"), Cipher::Aes256_Ctr)?
             .as_bytes(),

@@ -175,7 +175,7 @@ impl RsaKeyPair {
         if bits == 0 {
             bits = RSA_DEF_SIZE;
         }
-        if bits < RSA_MIN_SIZE || bits > RSA_MAX_SIZE {
+        if !(RSA_MIN_SIZE..=RSA_MAX_SIZE).contains(&bits) {
             return Err(Error::from_kind(ErrorKind::InvalidKeySize));
         }
         Ok(RsaKeyPair {
