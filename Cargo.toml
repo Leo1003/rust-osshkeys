@@ -1,14 +1,14 @@
 [package]
 name = "osshkeys"
 description = "A library to read and write OpenSSH public and private keys"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Leo <leo881003@gmail.com>"]
+edition = "2018"
 keywords = ["ssh", "ssh-keys", "keys", "openssh"]
 repository = "https://github.com/Leo1003/rust-osshkeys"
 license = "MIT"
 readme = "README.md"
 exclude = [".gitignore"]
-edition = "2018"
 
 [features]
 default = ["openssl-cipher"]
@@ -26,6 +26,7 @@ openssl-vendored = ["openssl/vendored"]
 base64 = "0.13.0"
 byteorder = "1.4.3"
 openssl = "0.10.30"
+# Upgrade to 0.8.x is blocked on ed25519-dalek
 rand = "0.7.2"
 ed25519-dalek = "1.0.0"
 zeroize = "1.1.0"
@@ -37,7 +38,6 @@ md-5 = "0.9.0"
 sha-1 = "0.9.0"
 sha2 = "0.9.0"
 bcrypt-pbkdf = "0.5.0"
-# cryptovec 0.5 cannot be compiled on Windows
 cryptovec = "0.6.1"
 
 # Feature `rustcrypto-cipher` dependencies

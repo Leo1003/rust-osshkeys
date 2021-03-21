@@ -1,8 +1,14 @@
 # Changelog
 
 ## Unreleased
+
+---
+
+## 0.5.0 (2021/03/21)
 - **Compiler**
     - Minimum rustc version is now 1.47.0
+- **Improve**
+    - Fix the large struct size issue for `PublicKey` and `KeyPair`
 - **Dependencies**
     - Upgrade base64 to 0.13.0
     - Upgrade byteorder to 1.4.3
