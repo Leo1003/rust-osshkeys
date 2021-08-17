@@ -200,10 +200,9 @@ compile_error!("Multiple cipher backends are selected! Only one cipher backend i
 
 #[cfg(feature = "rustcrypto-cipher")]
 mod internal_impl {
-    use aes::{Aes128, Aes192, Aes256};
-    use aes_ctr::{Aes128Ctr, Aes192Ctr, Aes256Ctr};
+    use aes::{Aes128, Aes192, Aes256, Aes128Ctr, Aes192Ctr, Aes256Ctr};
     use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
-    use cipher::{NewStreamCipher, SyncStreamCipher};
+    use cipher::{NewCipher, StreamCipher};
     use des::TdesEde3;
 
     use crate::error::{ErrorKind, OsshResult};
@@ -228,7 +227,7 @@ mod internal_impl {
     }
 
     pub fn aes128cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(Aes128Cbc::new_var(key, iv)?.encrypt_vec(src))
+        Ok(Aes128Cbc::new_from_slices(key, iv)?.encrypt_vec(src))
     }
     pub fn aes128cbc_decrypt(
         dest: &mut [u8],
@@ -237,12 +236,12 @@ mod internal_impl {
         iv: &[u8],
     ) -> OsshResult<usize> {
         clone_buffer(dest, src)?;
-        let n = Aes128Cbc::new_var(key, iv)?.decrypt(dest)?.len();
+        let n = Aes128Cbc::new_from_slices(key, iv)?.decrypt(dest)?.len();
         Ok(n)
     }
 
     pub fn aes192cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(Aes192Cbc::new_var(key, iv)?.encrypt_vec(src))
+        Ok(Aes192Cbc::new_from_slices(key, iv)?.encrypt_vec(src))
     }
     pub fn aes192cbc_decrypt(
         dest: &mut [u8],
@@ -251,12 +250,12 @@ mod internal_impl {
         iv: &[u8],
     ) -> OsshResult<usize> {
         clone_buffer(dest, src)?;
-        let n = Aes192Cbc::new_var(key, iv)?.decrypt(dest)?.len();
+        let n = Aes192Cbc::new_from_slices(key, iv)?.decrypt(dest)?.len();
         Ok(n)
     }
 
     pub fn aes256cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(Aes256Cbc::new_var(key, iv)?.encrypt_vec(src))
+        Ok(Aes256Cbc::new_from_slices(key, iv)?.encrypt_vec(src))
     }
     pub fn aes256cbc_decrypt(
         dest: &mut [u8],
@@ -265,12 +264,12 @@ mod internal_impl {
         iv: &[u8],
     ) -> OsshResult<usize> {
         clone_buffer(dest, src)?;
-        let n = Aes256Cbc::new_var(key, iv)?.decrypt(dest)?.len();
+        let n = Aes256Cbc::new_from_slices(key, iv)?.decrypt(dest)?.len();
         Ok(n)
     }
 
     pub fn tdescbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(TdesCbc::new_var(key, iv)?.encrypt_vec(src))
+        Ok(TdesCbc::new_from_slices(key, iv)?.encrypt_vec(src))
     }
     pub fn tdescbc_decrypt(
         dest: &mut [u8],
@@ -279,13 +278,13 @@ mod internal_impl {
         iv: &[u8],
     ) -> OsshResult<usize> {
         clone_buffer(dest, src)?;
-        let n = TdesCbc::new_var(key, iv)?.decrypt(dest)?.len();
+        let n = TdesCbc::new_from_slices(key, iv)?.decrypt(dest)?.len();
         Ok(n)
     }
 
     pub fn aes128ctr_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
         let mut encrypted = Vec::from(src);
-        Aes128Ctr::new_var(key, iv)?.apply_keystream(&mut encrypted);
+        Aes128Ctr::new_from_slices(key, iv)?.apply_keystream(&mut encrypted);
         Ok(encrypted)
     }
     pub fn aes128ctr_decrypt(
@@ -295,13 +294,13 @@ mod internal_impl {
         iv: &[u8],
     ) -> OsshResult<usize> {
         clone_buffer(dest, src)?;
-        Aes128Ctr::new_var(key, iv)?.apply_keystream(dest);
+        Aes128Ctr::new_from_slices(key, iv)?.apply_keystream(dest);
         Ok(src.len())
     }
 
     pub fn aes192ctr_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
         let mut encrypted = Vec::from(src);
-        Aes192Ctr::new_var(key, iv)?.apply_keystream(&mut encrypted);
+        Aes192Ctr::new_from_slices(key, iv)?.apply_keystream(&mut encrypted);
         Ok(encrypted)
     }
     pub fn aes192ctr_decrypt(
@@ -311,13 +310,13 @@ mod internal_impl {
         iv: &[u8],
     ) -> OsshResult<usize> {
         clone_buffer(dest, src)?;
-        Aes192Ctr::new_var(key, iv)?.apply_keystream(dest);
+        Aes192Ctr::new_from_slices(key, iv)?.apply_keystream(dest);
         Ok(src.len())
     }
 
     pub fn aes256ctr_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
         let mut encrypted = Vec::from(src);
-        Aes256Ctr::new_var(key, iv)?.apply_keystream(&mut encrypted);
+        Aes256Ctr::new_from_slices(key, iv)?.apply_keystream(&mut encrypted);
         Ok(encrypted)
     }
     pub fn aes256ctr_decrypt(
@@ -327,7 +326,7 @@ mod internal_impl {
         iv: &[u8],
     ) -> OsshResult<usize> {
         clone_buffer(dest, src)?;
-        Aes256Ctr::new_var(key, iv)?.apply_keystream(dest);
+        Aes256Ctr::new_from_slices(key, iv)?.apply_keystream(dest);
         Ok(src.len())
     }
 }
@@ -366,7 +365,7 @@ mod internal_impl {
     }
 
     pub fn aes128cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(openssl_encrypt(Cipher::aes_128_cbc(), src, key, iv)?)
+        openssl_encrypt(Cipher::aes_128_cbc(), src, key, iv)
     }
     pub fn aes128cbc_decrypt(
         dest: &mut [u8],
@@ -374,11 +373,11 @@ mod internal_impl {
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
-        Ok(openssl_decrypt(Cipher::aes_128_cbc(), dest, src, key, iv)?)
+        openssl_decrypt(Cipher::aes_128_cbc(), dest, src, key, iv)
     }
 
     pub fn aes192cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(openssl_encrypt(Cipher::aes_192_cbc(), src, key, iv)?)
+        openssl_encrypt(Cipher::aes_192_cbc(), src, key, iv)
     }
     pub fn aes192cbc_decrypt(
         dest: &mut [u8],
@@ -386,11 +385,11 @@ mod internal_impl {
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
-        Ok(openssl_decrypt(Cipher::aes_192_cbc(), dest, src, key, iv)?)
+        openssl_decrypt(Cipher::aes_192_cbc(), dest, src, key, iv)
     }
 
     pub fn aes256cbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(openssl_encrypt(Cipher::aes_256_cbc(), src, key, iv)?)
+        openssl_encrypt(Cipher::aes_256_cbc(), src, key, iv)
     }
     pub fn aes256cbc_decrypt(
         dest: &mut [u8],
@@ -398,11 +397,11 @@ mod internal_impl {
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
-        Ok(openssl_decrypt(Cipher::aes_256_cbc(), dest, src, key, iv)?)
+        openssl_decrypt(Cipher::aes_256_cbc(), dest, src, key, iv)
     }
 
     pub fn tdescbc_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(openssl_encrypt(Cipher::des_ede3_cbc(), src, key, iv)?)
+        openssl_encrypt(Cipher::des_ede3_cbc(), src, key, iv)
     }
     pub fn tdescbc_decrypt(
         dest: &mut [u8],
@@ -410,11 +409,11 @@ mod internal_impl {
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
-        Ok(openssl_decrypt(Cipher::des_ede3_cbc(), dest, src, key, iv)?)
+        openssl_decrypt(Cipher::des_ede3_cbc(), dest, src, key, iv)
     }
 
     pub fn aes128ctr_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(openssl_encrypt(Cipher::aes_128_ctr(), src, key, iv)?)
+        openssl_encrypt(Cipher::aes_128_ctr(), src, key, iv)
     }
     pub fn aes128ctr_decrypt(
         dest: &mut [u8],
@@ -422,11 +421,11 @@ mod internal_impl {
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
-        Ok(openssl_decrypt(Cipher::aes_128_ctr(), dest, src, key, iv)?)
+        openssl_decrypt(Cipher::aes_128_ctr(), dest, src, key, iv)
     }
 
     pub fn aes192ctr_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(openssl_encrypt(Cipher::aes_192_ctr(), src, key, iv)?)
+        openssl_encrypt(Cipher::aes_192_ctr(), src, key, iv)
     }
     pub fn aes192ctr_decrypt(
         dest: &mut [u8],
@@ -434,11 +433,11 @@ mod internal_impl {
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
-        Ok(openssl_decrypt(Cipher::aes_192_ctr(), dest, src, key, iv)?)
+        openssl_decrypt(Cipher::aes_192_ctr(), dest, src, key, iv)
     }
 
     pub fn aes256ctr_encrypt(src: &[u8], key: &[u8], iv: &[u8]) -> OsshResult<Vec<u8>> {
-        Ok(openssl_encrypt(Cipher::aes_256_ctr(), src, key, iv)?)
+        openssl_encrypt(Cipher::aes_256_ctr(), src, key, iv)
     }
     pub fn aes256ctr_decrypt(
         dest: &mut [u8],
@@ -446,6 +445,6 @@ mod internal_impl {
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
-        Ok(openssl_decrypt(Cipher::aes_256_ctr(), dest, src, key, iv)?)
+        openssl_decrypt(Cipher::aes_256_ctr(), dest, src, key, iv)
     }
 }
