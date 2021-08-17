@@ -14,8 +14,13 @@ The main function of this library is to read, write different formats of SSH key
 Also, it provide the ability to generate a key, sign and verify data.
 
 ## Current Status
-The library is still under development, so there are some functions that haven't implemented.
-Some api may also change in the future. 
+The library's basic features are implemented.
+
+Since I don't have too much time to work on the additional features currently,
+this project may not be as active as usual.
+But I still maintain the dependencies and release new versions.
+
+It's welcome to submit PRs or issues on this project if you have ideas or questiones.
 
 ## Example
 ```rust
