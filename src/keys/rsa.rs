@@ -122,7 +122,7 @@ impl Key for RsaPublicKey {
 
 impl PublicParts for RsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_rsa_pubkey(&self.rsa)?)
+        encode_rsa_pubkey(&self.rsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -198,7 +198,7 @@ impl RsaKeyPair {
     pub fn clone_public_key(&self) -> Result<RsaPublicKey, Error> {
         let n = self.rsa.n().to_owned()?;
         let e = self.rsa.e().to_owned()?;
-        Ok(RsaPublicKey::new_with_signhash(n, e, self.signhash)?)
+        RsaPublicKey::new_with_signhash(n, e, self.signhash)
     }
 }
 
@@ -214,7 +214,7 @@ impl Key for RsaKeyPair {
 
 impl PublicParts for RsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_rsa_pubkey(&self.rsa)?)
+        encode_rsa_pubkey(&self.rsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {

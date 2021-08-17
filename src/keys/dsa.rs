@@ -55,7 +55,7 @@ impl Key for DsaPublicKey {
 
 impl PublicParts for DsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_dsa_pubkey(&self.dsa)?)
+        encode_dsa_pubkey(&self.dsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -132,7 +132,7 @@ impl Key for DsaKeyPair {
 
 impl PublicParts for DsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_dsa_pubkey(&self.dsa)?)
+        encode_dsa_pubkey(&self.dsa)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {

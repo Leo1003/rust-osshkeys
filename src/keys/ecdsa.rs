@@ -89,7 +89,7 @@ impl FromStr for EcCurve {
 impl TryInto<EcGroup> for EcCurve {
     type Error = openssl::error::ErrorStack;
     fn try_into(self) -> Result<EcGroup, Self::Error> {
-        Ok(EcGroup::from_curve_name(self.nid())?)
+        EcGroup::from_curve_name(self.nid())
     }
 }
 
@@ -159,7 +159,7 @@ impl Key for EcDsaPublicKey {
 
 impl PublicParts for EcDsaPublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_ecdsa_pubkey(self.curve, &self.key)?)
+        encode_ecdsa_pubkey(self.curve, &self.key)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -281,7 +281,7 @@ impl Key for EcDsaKeyPair {
 
 impl PublicParts for EcDsaKeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_ecdsa_pubkey(self.curve, &self.key)?)
+        encode_ecdsa_pubkey(self.curve, &self.key)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -301,7 +301,7 @@ impl PrivateParts for EcDsaKeyPair {
 fn into_ec_point(curve: EcCurve, public_key: &[u8]) -> Result<EcPoint, openssl::error::ErrorStack> {
     let mut bn_ctx = BigNumContext::new()?;
     let group: EcGroup = curve.try_into()?;
-    EcPoint::from_bytes(&group, &public_key, &mut bn_ctx)
+    EcPoint::from_bytes(&group, public_key, &mut bn_ctx)
 }
 
 #[allow(non_upper_case_globals)]

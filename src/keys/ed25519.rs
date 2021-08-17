@@ -46,7 +46,7 @@ impl Key for Ed25519PublicKey {
 
 impl PublicParts for Ed25519PublicKey {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_ed25519_pubkey(&self.key)?)
+        encode_ed25519_pubkey(&self.key)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {
@@ -124,7 +124,7 @@ impl Ed25519KeyPair {
 
 impl PublicParts for Ed25519KeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        Ok(encode_ed25519_pubkey(&self.key.public)?)
+        encode_ed25519_pubkey(&self.key.public)
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {

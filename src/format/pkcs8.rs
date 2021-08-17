@@ -13,5 +13,5 @@ pub fn serialize_pkcs8_privkey(keypair: &KeyPair, passphrase: Option<&str>) -> O
         keypair.ossl_pkey()?.private_key_to_pem_pkcs8()?
     };
 
-    Ok(String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?)
+    String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))
 }

@@ -24,7 +24,7 @@ pub fn parse_pem_privkey(pem: &[u8], passphrase: Option<&str>) -> OsshResult<Key
         PKey::private_key_from_pem(pem)?
     };
 
-    Ok(KeyPair::from_ossl_pkey(&pkey)?)
+    KeyPair::from_ossl_pkey(&pkey)
 }
 
 //TODO: Not to depend on openssl to parse pem file in the future
@@ -54,7 +54,7 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&str>) -> Oss
         }
     };
 
-    Ok(String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?)
+    String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))
 }
 
 pub fn parse_pem_pubkey(pem: &[u8]) -> OsshResult<PublicKey> {
@@ -76,7 +76,7 @@ pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
         _ => return Err(ErrorKind::UnsupportType.into()),
     };
 
-    Ok(String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?)
+    String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))
 }
 
 /// Self experimental implementation for decrypting OpenSSL PEM format

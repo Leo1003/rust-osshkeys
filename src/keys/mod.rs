@@ -60,6 +60,7 @@ pub enum KeyType {
     ED25519,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, PartialEq)]
 pub(crate) enum PublicKeyType {
     RSA(rsa::RsaPublicKey),
@@ -68,6 +69,7 @@ pub(crate) enum PublicKeyType {
     ED25519(ed25519::Ed25519PublicKey),
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub(crate) enum KeyPairType {
     RSA(rsa::RsaKeyPair),
     DSA(dsa::DsaKeyPair),
@@ -275,7 +277,7 @@ impl KeyPair {
     /// This is the new format which is supported since OpenSSH 6.5, and it became the default format in OpenSSH 7.8.
     /// The Ed25519 key can only be stored in this type.
     pub fn from_keystr(pem: &str, passphrase: Option<&str>) -> OsshResult<Self> {
-        Ok(parse_keystr(pem.as_bytes(), passphrase)?)
+        parse_keystr(pem.as_bytes(), passphrase)
     }
 
     /// Generate a key of the specified type and size
@@ -315,14 +317,14 @@ impl KeyPair {
     ///
     /// If the passphrase is given (set to `Some(...)`), then the generated PEM key will be encrypted.
     pub fn serialize_pem(&self, passphrase: Option<&str>) -> OsshResult<String> {
-        Ok(stringify_pem_privkey(&self, passphrase)?)
+        stringify_pem_privkey(self, passphrase)
     }
 
     /// Serialize the keypair to the OpenSSL PKCS#8 PEM format
     ///
     /// If the passphrase is given (set to `Some(...)`), then the generated PKCS#8 key will be encrypted.
     pub fn serialize_pkcs8(&self, passphrase: Option<&str>) -> OsshResult<String> {
-        Ok(serialize_pkcs8_privkey(&self, passphrase)?)
+        serialize_pkcs8_privkey(self, passphrase)
     }
 
     /// Serialize the keypair to the OpenSSH private key format

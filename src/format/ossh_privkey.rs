@@ -272,7 +272,7 @@ pub fn encode_ossh_priv(
         let encrypted = encrypt_ossh_priv(privbuf.as_slice(), passphrase, cipher, rounds, &*salt)?;
         buf.write_string(&encrypted)?;
     } else {
-        buf.write_string(&privbuf.as_slice())?;
+        buf.write_string(privbuf.as_slice())?;
     };
 
     Ok(buf)

@@ -81,7 +81,7 @@ pub(crate) fn decode_ecdsa_pubkey(
         }
     }
     let pub_key = reader.read_string()?;
-    Ok(EcDsaPublicKey::from_bytes(curve, &pub_key)?)
+    EcDsaPublicKey::from_bytes(curve, &pub_key)
 }
 
 pub(crate) fn decode_ed25519_pubkey(keyblob: &[u8]) -> OsshResult<Ed25519PublicKey> {

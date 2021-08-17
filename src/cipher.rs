@@ -200,7 +200,7 @@ compile_error!("Multiple cipher backends are selected! Only one cipher backend i
 
 #[cfg(feature = "rustcrypto-cipher")]
 mod internal_impl {
-    use aes::{Aes128, Aes192, Aes256, Aes128Ctr, Aes192Ctr, Aes256Ctr};
+    use aes::{Aes128, Aes128Ctr, Aes192, Aes192Ctr, Aes256, Aes256Ctr};
     use block_modes::{block_padding::Pkcs7, BlockMode, Cbc};
     use cipher::{NewCipher, StreamCipher};
     use des::TdesEde3;
