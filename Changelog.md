@@ -8,7 +8,7 @@
 - **Compiler**
     - Minimum rustc version is now 1.49.0
 - **Dependencies**
-    - Upgrade bcrypt-pbkdf to 0.6.2
+    - Upgrade bcrypt-pbkdf to 0.7.1
     - aes-ctr is deprecated
     - Upgrade block-modes to 0.8.1
     - Upgrade aes to 0.7.4
