@@ -4,6 +4,18 @@
 
 ---
 
+## 0.5.1 (2021/09/01)
+- **Compiler**
+    - Minimum rustc version is now 1.49.0
+- **Dependencies**
+    - Upgrade bcrypt-pbkdf to 0.6.2
+    - aes-ctr is deprecated
+    - Upgrade block-modes to 0.8.1
+    - Upgrade aes to 0.7.4
+    - Upgrade des to 0.7.0
+
+---
+
 ## 0.5.0 (2021/03/21)
 - **Compiler**
     - Minimum rustc version is now 1.47.0
@@ -15,7 +27,6 @@
     - Upgrade bcrypt-pbkdf to 0.5.0
     - stream-cipher is deprecated, changing to use cipher 0.2.5
     - Upgrade block-modes to 0.7.0
-    - Upgrade aes to 0.6.0
     - Upgrade aes to 0.6.0
     - Upgrade des to 0.6.0
 - **DevDependencies**

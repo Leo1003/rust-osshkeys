@@ -1,7 +1,7 @@
 [package]
 name = "osshkeys"
 description = "A library to read and write OpenSSH public and private keys"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Leo <leo881003@gmail.com>"]
 edition = "2018"
 keywords = ["ssh", "ssh-keys", "keys", "openssh"]
@@ -14,7 +14,7 @@ exclude = [".gitignore"]
 default = ["openssl-cipher"]
 
 # Encrypt/Decrypt by OpenSSL
-# For now, there are other parts still depends on OpenSSL,
+# Currently, there are other parts which still depend on OpenSSL,
 # therefore, unset this feature won't remove the OpenSSL dependency.
 openssl-cipher = []
 
@@ -26,7 +26,7 @@ openssl-vendored = ["openssl/vendored"]
 base64 = "0.13.0"
 byteorder = "1.4.3"
 openssl = "0.10.30"
-# Upgrade to 0.8.x is blocked on ed25519-dalek
+# Upgrade to 0.8.x is blocked by ed25519-dalek
 rand = "0.7.2"
 ed25519-dalek = "1.0.0"
 zeroize = "1.1.0"
