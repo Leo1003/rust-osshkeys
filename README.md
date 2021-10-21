@@ -51,7 +51,13 @@ fn main() {
 }
 ```
 
-## Planning Features
+## Cargo Features
+- `openssl-cipher`: [default] Using OpenSSL as symmetric cipher
+- `rustcrypto-cipher`: Using RustCrypto as symmetric cipher
+    - Choicing this does not remove the `openssl` dependency, since many places still require to use OpenSSL.
+- `openssl-vendored`: Build with `openssl/vendored` feature
+
+## Roadmap
 - Core Features
     - Key Types
         - RSA
@@ -81,19 +87,19 @@ fn main() {
         - [ ] ChaCha20-Poly1305
     - [ ] Supporting keys with certifications
     - [ ] Draw the ASCII art (the picture shown when you generate a key)
-```
-+---[RSA 2048]----+
-|       .++       |
-|       .+..     .|
-|     . .   . . ..|
-|    . .     .E.. |
-|     ...S     .  |
-|      o+.        |
-|     +..o        |
-|  o B .o.        |
-| . + +..         |
-+------[MD5]------+
-```
+    ```
+    +---[RSA 2048]----+
+    |       .++       |
+    |       .+..     .|
+    |     . .   . . ..|
+    |    . .     .E.. |
+    |     ...S     .  |
+    |      o+.        |
+    |     +..o        |
+    |  o B .o.        |
+    | . + +..         |
+    +------[MD5]------+
+    ```
     - [ ] Without using openssl (Become pure Rust library) (if there exists required cryptography crates and being mature enough)
         - Currently missing:
             - DSA library

@@ -1,8 +1,5 @@
 //! A library to handle OpenSSH key and other common SSH key
 //!
-//! The library is still under development, so there are some functions that haven't implemented.
-//! Some api may also change in the future.
-//!
 //! The main function of this library is to read, write different formats of SSH keys.
 //! Also, it provide the ability to generate a key, sign and verify data.
 //!
@@ -20,6 +17,12 @@
 //! - RSA
 //! - EcDSA
 //! - Ed25519
+//!
+//! ## Cargo Features
+//! - `openssl-cipher`: [default] Using OpenSSL as symmetric cipher
+//! - `rustcrypto-cipher`: Using RustCrypto as symmetric cipher
+//!     - Choicing this does not remove the `openssl` dependency, since many places still require to use OpenSSL.
+//! - `openssl-vendored`: Build with `openssl/vendored` feature
 //!
 //! # Example
 //! ```rust
