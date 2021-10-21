@@ -80,6 +80,20 @@ fn main() {
         - [ ] AES GCM mode
         - [ ] ChaCha20-Poly1305
     - [ ] Supporting keys with certifications
+    - [ ] Draw the ASCII art (the picture shown when you generate a key)
+```
++---[RSA 2048]----+
+|       .++       |
+|       .+..     .|
+|     . .   . . ..|
+|    . .     .E.. |
+|     ...S     .  |
+|      o+.        |
+|     +..o        |
+|  o B .o.        |
+| . + +..         |
++------[MD5]------+
+```
     - [ ] Without using openssl (Become pure Rust library) (if there exists required cryptography crates and being mature enough)
         - Currently missing:
             - DSA library
