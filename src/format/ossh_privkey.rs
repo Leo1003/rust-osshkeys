@@ -5,8 +5,9 @@ use crate::sshbuf::{SshBuf, SshReadExt, SshWriteExt};
 use bcrypt_pbkdf::bcrypt_pbkdf;
 use byteorder::WriteBytesExt;
 use cryptovec::CryptoVec;
+use openssl::bn::BigNum;
 use openssl::dsa::Dsa;
-use openssl::rsa::RsaPrivateKeyBuilder;
+use openssl::rsa::Rsa;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use std::io::{Cursor, Read, Write};
@@ -131,13 +132,13 @@ fn decode_key(reader: &mut SshBuf) -> OsshResult<KeyPair> {
             let n = reader.read_mpint()?;
             let e = reader.read_mpint()?;
             let d = reader.read_mpint()?;
-            let mut _iqmp = reader.read_mpint()?;
+            let iqmp = reader.read_mpint()?;
             let p = reader.read_mpint()?;
             let q = reader.read_mpint()?;
-            let rsa = RsaPrivateKeyBuilder::new(n, e, d)?
-                .set_factors(p, q)?
-                .build();
-            _iqmp.clear(); // Explicity clear the sensitive data
+            let one = BigNum::from_u32(1)?;
+            let dmp1 = &d % &(&p - &one);
+            let dmq1 = &d % &(&q - &one);
+            let rsa = Rsa::from_private_components(n, e, d, p, q, dmp1, dmq1, iqmp)?;
             match keyname {
                 RSA_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA1),
                 RSA_SHA256_NAME => RsaKeyPair::from_ossl_rsa(rsa, RsaSignature::SHA2_256),

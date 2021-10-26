@@ -21,6 +21,17 @@ fn verify_key<P: AsRef<Path>>(keyfile: P, passphrase: Option<&str>) {
     let pubkey = PublicKey::from_keystr(from_utf8(pubdata.as_slice()).unwrap()).unwrap();
 
     utils::fingerprint_assert(&privkey, &pubkey);
+
+    // Make sure that privkey can be serialized
+    // https://github.com/Leo1003/rust-osshkeys/issues/4
+    if privkey.keytype() != KeyType::ED25519 {
+        // ED25519 key can only be stored in OpenSSH format
+        let _ = privkey.serialize_pem(None).unwrap();
+        let _ = privkey.serialize_pkcs8(None).unwrap();
+    }
+    let _ = privkey
+        .serialize_openssh(None, osshkeys::cipher::Cipher::Null)
+        .unwrap();
 }
 
 #[test]
