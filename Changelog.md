@@ -4,6 +4,12 @@
 
 ---
 
+## 0.5.2 (2021/10/27)
+- **Bug Fix**
+    - Fix invalid private key by from_keystr for OpenSSH format (#4, #5)
+
+---
+
 ## 0.5.1 (2021/09/01)
 - **Compiler**
     - Minimum rustc version is now 1.51.0
