@@ -20,9 +20,18 @@ pub mod ed25519;
 /// RSA key type
 pub mod rsa;
 
+/// The name of the MD5 hashing algorithm returned by [`FingerprintHash::name()`](enum.FingerprintHash.html#method.name)
+pub const MD5_NAME: &str = "MD5";
+/// The name of the sha2-256 algorithm returned by [`FingerprintHash::name()`](enum.FingerprintHash.html#method.name)
+pub const SHA256_NAME: &str = "SHA256";
+/// The name of the sha2-512 algorithm returned by [`FingerprintHash::name()`](enum.FingerprintHash.html#method.name)
+pub const SHA512_NAME: &str = "SHA512";
+
 /// An enum representing the hash function used to generate fingerprint
 ///
-/// Used with [`PublicPart::fingerprint()`](trait.PublicPart.html#method.fingerprint) to generate different types fingerprint.
+/// Used with [`PublicPart::fingerprint()`](trait.PublicPart.html#method.fingerprint) and
+/// [`PublicPart::fingerprint_randomart()`](trait.PublicPart.html#method.fingerprint) to generate
+/// different types fingerprint and randomarts.
 ///
 /// # Hash Algorithm
 /// MD5: This is the default fingerprint type in older versions of openssh.
@@ -47,6 +56,13 @@ impl FingerprintHash {
             FingerprintHash::MD5 => digest_hash(&mut Md5::default(), data),
             FingerprintHash::SHA256 => digest_hash(&mut Sha256::default(), data),
             FingerprintHash::SHA512 => digest_hash(&mut Sha512::default(), data),
+        }
+    }
+    fn name(self) -> &'static str {
+        match self {
+            FingerprintHash::MD5 => MD5_NAME,
+            FingerprintHash::SHA256 => SHA256_NAME,
+            FingerprintHash::SHA512 => SHA512_NAME,
         }
     }
 }
@@ -167,6 +183,10 @@ impl Key for PublicKey {
 
     fn keyname(&self) -> &'static str {
         self.inner_key().keyname()
+    }
+
+    fn short_keyname(&self) -> &'static str {
+        self.inner_key().short_keyname()
     }
 }
 
@@ -398,6 +418,9 @@ impl Key for KeyPair {
     fn keyname(&self) -> &'static str {
         self.inner_key().keyname()
     }
+    fn short_keyname(&self) -> &'static str {
+        self.inner_key().short_keyname()
+    }
 }
 
 impl PublicParts for KeyPair {
@@ -457,6 +480,8 @@ pub trait Key {
     fn size(&self) -> usize;
     /// The key name of the key
     fn keyname(&self) -> &'static str;
+    /// The short key name of the key
+    fn short_keyname(&self) -> &'static str;
 }
 
 /// A trait for operations of a public key
@@ -469,6 +494,120 @@ pub trait PublicParts: Key {
     fn fingerprint(&self, hash: FingerprintHash) -> OsshResult<Vec<u8>> {
         let b = self.blob()?;
         Ok(hash.hash(&b))
+    }
+
+    // Rewritten from the OpenSSH project. OpenBSD notice is included below.
+
+    /* $OpenBSD: sshkey.c,v 1.120 2022/01/06 22:05:42 djm Exp $ */
+    /*
+     * Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
+     * Copyright (c) 2008 Alexander von Gernler.  All rights reserved.
+     * Copyright (c) 2010,2011 Damien Miller.  All rights reserved.
+     *
+     * Redistribution and use in source and binary forms, with or without
+     * modification, are permitted provided that the following conditions
+     * are met:
+     * 1. Redistributions of source code must retain the above copyright
+     *    notice, this list of conditions and the following disclaimer.
+     * 2. Redistributions in binary form must reproduce the above copyright
+     *    notice, this list of conditions and the following disclaimer in the
+     *    documentation and/or other materials provided with the distribution.
+     *
+     * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+     * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+     * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+     * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+     * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+     * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+     * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+     * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+     * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+     * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+     */
+
+    /// Draw an ASCII-art picture from the fingerprint, also known as "randomart"
+    fn fingerprint_randomart(&self, hash: FingerprintHash) -> OsshResult<String> {
+        const FLDBASE: usize = 8;
+        const FLDSIZE_Y: usize = FLDBASE + 1;
+        const FLDSIZE_X: usize = FLDBASE * 2 + 1;
+
+        // Chars to be used after each other every time the worm intersects with itself.  Matter of
+        // taste.
+        const AUGMENTATION_CHARS: &[u8] = b" .o+=*BOX@%&#/^SE";
+
+        let len = AUGMENTATION_CHARS.len() - 1;
+
+        let mut art = String::with_capacity((FLDSIZE_X + 3) * (FLDSIZE_Y + 2));
+
+        // Initialize field.
+        let mut field = [[0; FLDSIZE_X]; FLDSIZE_Y];
+        let mut x = FLDSIZE_X / 2;
+        let mut y = FLDSIZE_Y / 2;
+
+        // Process raw key.
+        let dgst_raw = self.fingerprint(hash)?;
+        for i in 0..dgst_raw.len() {
+            // Each byte conveys four 2-bit move commands.
+            let mut input = dgst_raw[i];
+            for _ in 0..4 {
+                // Evaluate 2 bit, rest is shifted later.
+                x = if (input & 0x1) != 0 {
+                    x + 1
+                } else {
+                    x.saturating_sub(1)
+                };
+                y = if (input & 0x2) != 0 {
+                    y + 1
+                } else {
+                    y.saturating_sub(1)
+                };
+
+                // Assure we are still in bounds.
+                x = x.min(FLDSIZE_X - 1);
+                y = y.min(FLDSIZE_Y - 1);
+
+                // Augment the field.
+                if field[y][x] < len as u8 - 2 {
+                    field[y][x] += 1;
+                }
+                input >>= 2;
+            }
+        }
+
+        // Mark starting point and end point.
+        field[FLDSIZE_Y / 2][FLDSIZE_X / 2] = len as u8 - 1;
+        field[y][x] = len as u8;
+
+        // Assemble title.
+        let title = format!("[{} {}]", self.short_keyname(), self.size());
+        // If [type size] won't fit, then try [type]; fits "[ED25519-CERT]".
+        let title = if title.chars().count() > FLDSIZE_X {
+            format!("[{}]", self.short_keyname())
+        } else {
+            title
+        };
+
+        // Assemble hash ID.
+        let hash = format!("[{}]", hash.name());
+
+        // Output upper border.
+        art += &format!("+{:-^width$}+\n", title, width = FLDSIZE_X);
+
+        // Output content.
+        for y in 0..FLDSIZE_Y {
+            art.push('|');
+            art.extend(
+                field[y]
+                    .iter()
+                    .map(|&c| AUGMENTATION_CHARS[c as usize] as char),
+            );
+            art += "|\n";
+        }
+
+        // Output lower border.
+        art += &format!("+{:-^width$}+", hash, width = FLDSIZE_X);
+
+        Ok(art)
     }
 }
 

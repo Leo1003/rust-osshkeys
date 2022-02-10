@@ -22,6 +22,14 @@ pub fn fingerprint_assert(key1: &dyn PublicParts, key2: &dyn PublicParts) {
     );
 }
 
+#[inline]
+pub fn fingerprint_randomart_assert(randomart: &str, key: &dyn PublicParts) {
+    assert_eq!(
+        randomart,
+        &key.fingerprint_randomart(FingerprintHash::SHA256).unwrap()
+    );
+}
+
 // This function is for test only,
 // not providing any security protection.
 pub fn gen_random_pass(len: usize) -> String {

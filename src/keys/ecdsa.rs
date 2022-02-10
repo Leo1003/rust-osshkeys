@@ -18,6 +18,8 @@ pub const NIST_P256_NAME: &str = "ecdsa-sha2-nistp256";
 pub const NIST_P384_NAME: &str = "ecdsa-sha2-nistp384";
 /// The name of 521 bits curve key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const NIST_P521_NAME: &str = "ecdsa-sha2-nistp521";
+/// The short name of ECDSA returned by [`Key::short_keyname()`](../trait.Key.html#method.short_keyname)
+pub const ECDSA_SHORT_NAME: &str = "ECDSA";
 
 /// An enum of the supported elliptic curves
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -155,6 +157,10 @@ impl Key for EcDsaPublicKey {
     fn keyname(&self) -> &'static str {
         self.curve.name()
     }
+
+    fn short_keyname(&self) -> &'static str {
+        ECDSA_SHORT_NAME
+    }
 }
 
 impl PublicParts for EcDsaPublicKey {
@@ -276,6 +282,10 @@ impl Key for EcDsaKeyPair {
 
     fn keyname(&self) -> &'static str {
         self.curve.name()
+    }
+
+    fn short_keyname(&self) -> &'static str {
+        ECDSA_SHORT_NAME
     }
 }
 

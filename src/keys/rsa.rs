@@ -17,6 +17,8 @@ pub const RSA_NAME: &str = "ssh-rsa";
 pub const RSA_SHA256_NAME: &str = "rsa-sha2-256";
 /// The sha2-512 algorithm name of RSA key returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const RSA_SHA512_NAME: &str = "rsa-sha2-512";
+/// The short name of the of RSA key returned by [`Key::short_keyname()`](../trait.Key.html#method.short_keyname)
+pub const RSA_SHORT_NAME: &str = "RSA";
 
 /// An enum determining the hash function which used to sign or verify
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -118,6 +120,10 @@ impl Key for RsaPublicKey {
     fn keyname(&self) -> &'static str {
         self.signhash.name()
     }
+
+    fn short_keyname(&self) -> &'static str {
+        RSA_SHORT_NAME
+    }
 }
 
 impl PublicParts for RsaPublicKey {
@@ -209,6 +215,10 @@ impl Key for RsaKeyPair {
 
     fn keyname(&self) -> &'static str {
         self.signhash.name()
+    }
+
+    fn short_keyname(&self) -> &'static str {
+        RSA_SHORT_NAME
     }
 }
 

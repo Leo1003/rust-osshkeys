@@ -12,6 +12,7 @@ const TEST_FILE_PASS: &str = "12345678";
 fn verify_key<P: AsRef<Path>>(keyfile: P, passphrase: Option<&str>) {
     let keypath = utils::locate_crate_files(keyfile);
     let pubkeypath = keypath.with_extension("pub");
+    let randomartpath = keypath.with_extension("randomart");
 
     let privdata = fs::read(keypath).unwrap();
     let privkey =
@@ -20,7 +21,11 @@ fn verify_key<P: AsRef<Path>>(keyfile: P, passphrase: Option<&str>) {
     let pubdata = fs::read(pubkeypath).unwrap();
     let pubkey = PublicKey::from_keystr(from_utf8(pubdata.as_slice()).unwrap()).unwrap();
 
+    let randomartdata = fs::read(randomartpath).unwrap();
+    let randomart = String::from_utf8(randomartdata).unwrap();
+
     utils::fingerprint_assert(&privkey, &pubkey);
+    utils::fingerprint_randomart_assert(&randomart, &pubkey);
 
     // Make sure that privkey can be serialized
     // https://github.com/Leo1003/rust-osshkeys/issues/4
