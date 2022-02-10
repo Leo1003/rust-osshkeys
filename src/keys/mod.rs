@@ -546,9 +546,8 @@ pub trait PublicParts: Key {
 
         // Process raw key.
         let dgst_raw = self.fingerprint(hash)?;
-        for i in 0..dgst_raw.len() {
+        for mut input in dgst_raw.iter().copied() {
             // Each byte conveys four 2-bit move commands.
-            let mut input = dgst_raw[i];
             for _ in 0..4 {
                 // Evaluate 2 bit, rest is shifted later.
                 x = if (input & 0x1) != 0 {
