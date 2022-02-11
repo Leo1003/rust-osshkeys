@@ -80,13 +80,7 @@ fn main() {
         - [x] Openssh v2
         - [x] Openssh v2 (Encrypted)
 - Additional Features
-    - [ ] Supporting XMSS keys
-    - [ ] Supporting read/write Putty key format(.ppk)
-    - [ ] Supporting more ciphers
-        - [ ] AES GCM mode
-        - [ ] ChaCha20-Poly1305
-    - [ ] Supporting keys with certifications
-    - [ ] Draw the ASCII art (the picture shown when you generate a key)
+    - [x] Draw the ASCII art (the picture shown when you generate a key)
     ```
     +---[RSA 2048]----+
     |       .++       |
@@ -100,6 +94,12 @@ fn main() {
     | . + +..         |
     +------[MD5]------+
     ```
+    - [ ] Supporting XMSS keys
+    - [ ] Supporting read/write Putty key format(.ppk)
+    - [ ] Supporting more ciphers
+        - [ ] AES GCM mode
+        - [ ] ChaCha20-Poly1305
+    - [ ] Supporting keys with certifications
     - [ ] Without using openssl (Become pure Rust library) (if there exists required cryptography crates and being mature enough)
         - Currently missing:
             - DSA library
