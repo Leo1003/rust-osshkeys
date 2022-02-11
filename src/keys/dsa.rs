@@ -10,6 +10,8 @@ use std::fmt;
 
 /// The key name returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const DSA_NAME: &str = "ssh-dss";
+/// The key name returned by [`Key::short_keyname()`](../trait.Key.html#method.short_keyname)
+pub const DSA_SHORT_NAME: &str = "DSA";
 
 /// Represent the DSA public key
 #[derive(Debug, Clone)]
@@ -50,6 +52,10 @@ impl Key for DsaPublicKey {
 
     fn keyname(&self) -> &'static str {
         DSA_NAME
+    }
+
+    fn short_keyname(&self) -> &'static str {
+        DSA_SHORT_NAME
     }
 }
 
@@ -127,6 +133,10 @@ impl Key for DsaKeyPair {
 
     fn keyname(&self) -> &'static str {
         DSA_NAME
+    }
+
+    fn short_keyname(&self) -> &'static str {
+        DSA_SHORT_NAME
     }
 }
 

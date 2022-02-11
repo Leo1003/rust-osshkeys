@@ -18,6 +18,8 @@ use std::{convert::TryFrom, fmt};
 
 /// The key name returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const ED25519_NAME: &str = "ssh-ed25519";
+/// The short key name returned by [`Key::short_keyname()`](../trait.Key.html#method.short_keyname)
+pub const ED25519_SHORT_NAME: &str = "ED25519";
 
 /// Represent the Ed25519 public key
 #[derive(Debug, Clone)]
@@ -41,6 +43,10 @@ impl Key for Ed25519PublicKey {
 
     fn keyname(&self) -> &'static str {
         ED25519_NAME
+    }
+
+    fn short_keyname(&self) -> &'static str {
+        ED25519_SHORT_NAME
     }
 }
 
@@ -79,6 +85,10 @@ impl Key for Ed25519KeyPair {
 
     fn keyname(&self) -> &'static str {
         ED25519_NAME
+    }
+
+    fn short_keyname(&self) -> &'static str {
+        ED25519_SHORT_NAME
     }
 }
 
