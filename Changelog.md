@@ -4,6 +4,8 @@
 - **Add**
     - `PublicParts::fingerprint_randomart()` to generate ASCII randomart of a key
         - Thanks for hampuslidin implementing this feature in #6
+- **Compiler**
+    - Minimum rustc version is now 1.56.0
 - **Dependencies**
     - Update digest to 0.10.2 with its related crates
     - Update digest to 0.4.0 with its related crates
