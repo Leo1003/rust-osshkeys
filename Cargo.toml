@@ -18,7 +18,7 @@ default = ["openssl-cipher"]
 # therefore, unset this feature won't remove the OpenSSL dependency.
 openssl-cipher = []
 
-rustcrypto-cipher = ["block-modes", "aes", "des", "cipher"]
+rustcrypto-cipher = ["cbc", "ctr", "aes", "des", "cipher"]
 
 openssl-vendored = ["openssl/vendored"]
 
@@ -41,10 +41,11 @@ bcrypt-pbkdf = "0.7.1"
 cryptovec = "0.6.1"
 
 # Feature `rustcrypto-cipher` dependencies
-block-modes = { version = "0.8.1", optional = true }
-aes = { version = "0.7.4", features = ["ctr"], optional = true }
-des = { version = "0.7.0", optional = true }
-cipher = { version = "0.3.0", features = ["std"], optional = true }
+cipher = { version = "0.4.0", features = ["std", "block-padding", "zeroize"], optional = true }
+cbc = { version = "0.1.0", features = ["zeroize"], optional = true }
+ctr = { version = "0.9.0", features = ["zeroize"], optional = true }
+aes = { version = "0.8.0", optional = true }
+des = { version = "0.8.0", optional = true }
 
 [dev-dependencies]
 hex = "0.4.0"

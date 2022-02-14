@@ -122,20 +122,26 @@ impl From<bcrypt_pbkdf::Error> for Error {
 }
 
 #[cfg(feature = "rustcrypto-cipher")]
-impl From<block_modes::InvalidKeyIvLength> for Error {
-    fn from(err: block_modes::InvalidKeyIvLength) -> Self {
+impl From<cipher::InvalidLength> for Error {
+    fn from(err: cipher::InvalidLength) -> Self {
         Self::with_error(ErrorKind::InvalidKeyIvLength, err)
     }
 }
 #[cfg(feature = "rustcrypto-cipher")]
-impl From<cipher::errors::InvalidLength> for Error {
-    fn from(err: cipher::errors::InvalidLength) -> Self {
-        Self::with_error(ErrorKind::InvalidKeyIvLength, err)
+impl From<cipher::inout::PadError> for Error {
+    fn from(err: cipher::inout::PadError) -> Self {
+        Self::with_error(ErrorKind::InvalidLength, err)
     }
 }
 #[cfg(feature = "rustcrypto-cipher")]
-impl From<block_modes::BlockModeError> for Error {
-    fn from(err: block_modes::BlockModeError) -> Self {
+impl From<cipher::StreamCipherError> for Error {
+    fn from(err: cipher::StreamCipherError) -> Self {
+        Self::with_error(ErrorKind::InvalidLength, err)
+    }
+}
+#[cfg(feature = "rustcrypto-cipher")]
+impl From<cipher::block_padding::UnpadError> for Error {
+    fn from(err: cipher::block_padding::UnpadError) -> Self {
         Self::with_error(ErrorKind::IncorrectPass, err)
     }
 }
