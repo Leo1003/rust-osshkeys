@@ -10,7 +10,6 @@ use openssl::{
     pkey::{PKey, Public},
     rsa::Rsa,
 };
-use std::convert::TryInto;
 use zeroize::Zeroize;
 
 const MAX_KEY_LEN: usize = 64;

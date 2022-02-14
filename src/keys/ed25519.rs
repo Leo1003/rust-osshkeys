@@ -14,7 +14,7 @@ use ed25519_dalek::{
     KEYPAIR_LENGTH,
 };
 use rand::rngs::OsRng;
-use std::{convert::TryFrom, fmt};
+use std::fmt;
 
 /// The key name returned by [`Key::keyname()`](../trait.Key.html#method.keyname)
 pub const ED25519_NAME: &str = "ssh-ed25519";

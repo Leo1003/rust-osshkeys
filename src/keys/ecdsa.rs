@@ -7,7 +7,6 @@ use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::{PKey, Private, Public};
 use openssl::sign::{Signer, Verifier};
-use std::convert::TryInto;
 use std::fmt;
 use std::str::FromStr;
 

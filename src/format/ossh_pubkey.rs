@@ -8,7 +8,6 @@ use openssl::dsa::DsaRef;
 use openssl::ec::{EcKeyRef, PointConversionForm};
 use openssl::pkey::{HasParams, HasPublic};
 use openssl::rsa::RsaRef;
-use std::convert::TryInto;
 use std::fmt::Write as _;
 use std::io;
 use std::str::FromStr;

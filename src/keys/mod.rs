@@ -597,6 +597,7 @@ pub trait PublicParts: Key {
         art += &format!("+{:-^width$}+\n", title, width = FLDSIZE_X);
 
         // Output content.
+        #[allow(clippy::needless_range_loop)]
         for y in 0..FLDSIZE_Y {
             art.push('|');
             art.extend(
