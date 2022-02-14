@@ -348,13 +348,13 @@ mod internal_impl {
 
     fn openssl_decrypt(
         cipher: Cipher,
-        mut dest: &mut [u8],
+        dest: &mut [u8],
         src: &[u8],
         key: &[u8],
         iv: &[u8],
     ) -> OsshResult<usize> {
         let mut crypt = Crypter::new(cipher, Mode::Decrypt, key, Some(iv))?;
-        let mut n = crypt.update(src, &mut dest)?;
+        let mut n = crypt.update(src, dest)?;
         n += crypt.finalize(&mut dest[n..])?;
         Ok(n)
     }

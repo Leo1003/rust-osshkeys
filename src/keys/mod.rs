@@ -5,7 +5,7 @@ use crate::format::ossh_pubkey::*;
 use crate::format::parse_keystr;
 use crate::format::pem::*;
 use crate::format::pkcs8::*;
-use digest::Digest;
+use digest::{Digest, FixedOutputReset};
 use md5::Md5;
 use openssl::pkey::{Id, PKey, PKeyRef, Private, Public};
 use sha2::{Sha256, Sha512};
@@ -48,8 +48,12 @@ pub enum FingerprintHash {
 
 impl FingerprintHash {
     fn hash(self, data: &[u8]) -> Vec<u8> {
-        fn digest_hash<D: Digest>(hasher: &mut D, data: &[u8]) -> Vec<u8> {
-            hasher.update(data);
+        fn digest_hash<D>(hasher: &mut D, data: &[u8]) -> Vec<u8>
+        where
+            D: Digest + FixedOutputReset,
+        {
+            // Fix error[E0034]: multiple applicable items in scope
+            Digest::update(hasher, data);
             hasher.finalize_reset().to_vec()
         }
         match self {
