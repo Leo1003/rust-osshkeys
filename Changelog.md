@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+
+---
+
+## 0.6.0 (2022/02/16)
 - **Add**
     - `PublicParts::fingerprint_randomart()` to generate ASCII randomart of a key
         - Thanks for hampuslidin implementing this feature in #6
