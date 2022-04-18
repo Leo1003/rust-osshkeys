@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- **Compiler**
+    - Minimum rustc version is now 1.57.0
+- **Dependencies**
+    - Upgrade bcrypt-pbkdf to 0.9.0
 
 ---
 
@@ -12,8 +16,8 @@
     - Minimum rustc version is now 1.56.0
     - Migrate to Rust 2021 edition
 - **Dependencies**
-    - Update digest to 0.10.2 with its related crates
-    - Update digest to 0.4.0 with its related crates
+    - Upgrade digest to 0.10.2 with its related crates
+    - Upgrade digest to 0.4.0 with its related crates
 
 ---
 
