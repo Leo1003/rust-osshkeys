@@ -11,7 +11,7 @@
 A Rust library to handle OpenSSH key and other common SSH key
 
 The main function of this library is to read, write different formats of SSH keys.
-Also, it provide the ability to generate a key, sign and verify data.
+Also, it provides the ability to generate a key, sign and verify data.
 
 ## Current Status
 The library's basic features are implemented.
@@ -21,6 +21,14 @@ this project may not be as active as usual.
 But I still maintain the dependencies and release new versions.
 
 It's welcome to submit PRs or issues on this project if you have ideas or questiones.
+
+## Minimum Supported Rust Version (MSRV)
+Rust 1.57 or higher.
+
+The library keeps track of the minimum Rust version which required to compile in CI.
+
+However, the minimum supported Rust version can be changed in the future
+and is not considered as a breaking change(exempt from SemVer).
 
 ## Example
 ```rust
