@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+
+---
+
+## 0.6.1 (2022/05/15)
 - **Compiler**
     - Minimum rustc version is now 1.57.0
 - **Dependencies**
