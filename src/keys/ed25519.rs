@@ -1,6 +1,7 @@
 use super::{Key, PrivateParts, PublicParts};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
+use openssl::pkey::{PKey, Private, Public, Id};
 #[rustfmt::skip]
 use ed25519_dalek::{
     Keypair as DalekKeypair,
@@ -33,6 +34,16 @@ impl Ed25519PublicKey {
         Ok(Self {
             key: Box::new(DalekPublicKey::from_bytes(key)?),
         })
+    }
+
+    pub(crate) fn from_ossl_ed25519(key: &[u8]) -> Result<Self, ed25519_dalek::SignatureError> {
+        Ok(Self {
+            key: Box::new(DalekPublicKey::from_bytes(key)?),
+        })
+    }
+
+    pub(crate) fn ossl_pkey(&self) -> Result<PKey<Public>, openssl::error::ErrorStack> {
+        PKey::public_key_from_raw_bytes(self.key.as_bytes(), Id::ED25519)
     }
 }
 
@@ -129,6 +140,16 @@ impl Ed25519KeyPair {
         Ok(Ed25519PublicKey {
             key: Box::new(self.key.public),
         })
+    }
+
+    pub(crate) fn from_ossl_ed25519(key: &[u8]) -> Result<Self, ed25519_dalek::SignatureError> {
+        Ok(Self {
+            key: Box::new(DalekKeypair::from_bytes(key)?),
+        })
+    }
+
+    pub(crate) fn ossl_pkey(&self) -> Result<PKey<Private>, openssl::error::ErrorStack> {
+        PKey::private_key_from_raw_bytes(&self.key.secret.to_bytes(), Id::ED25519)
     }
 }
 

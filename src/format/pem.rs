@@ -42,14 +42,16 @@ pub fn stringify_pem_privkey(keypair: &KeyPair, passphrase: Option<&str>) -> Oss
             KeyPairType::ECDSA(key) => key
                 .ossl_ec()
                 .private_key_to_pem_passphrase(cipher, passphrase)?,
-            _ => return Err(ErrorKind::UnsupportType.into()),
+            KeyPairType::ED25519(key) => key
+                .ossl_pkey()?
+                .private_key_to_pem_pkcs8_passphrase(cipher, passphrase)?,
         }
     } else {
         match &keypair.key {
             KeyPairType::RSA(key) => key.ossl_rsa().private_key_to_pem()?,
             KeyPairType::DSA(key) => key.ossl_dsa().private_key_to_pem()?,
             KeyPairType::ECDSA(key) => key.ossl_ec().private_key_to_pem()?,
-            _ => return Err(ErrorKind::UnsupportType.into()),
+            KeyPairType::ED25519(key) => key.ossl_pkey()?.private_key_to_pem_pkcs8()?,
         }
     };
 
@@ -72,7 +74,7 @@ pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
         PublicKeyType::RSA(key) => key.ossl_rsa().public_key_to_pem_pkcs1()?,
         PublicKeyType::DSA(key) => key.ossl_pkey()?.public_key_to_pem()?,
         PublicKeyType::ECDSA(key) => key.ossl_pkey()?.public_key_to_pem()?,
-        _ => return Err(ErrorKind::UnsupportType.into()),
+        PublicKeyType::ED25519(key) => key.ossl_pkey()?.public_key_to_pem()?,
     };
 
     String::from_utf8(pem).map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))

@@ -116,6 +116,7 @@ impl PublicKey {
             }
             Id::DSA => Ok(dsa::DsaPublicKey::from_ossl_dsa(pkey.dsa()?).into()),
             Id::EC => Ok(ecdsa::EcDsaPublicKey::from_ossl_ec(pkey.ec_key()?)?.into()),
+            Id::ED25519 => Ok(ed25519::Ed25519PublicKey::from_ossl_ed25519(&pkey.raw_public_key()?)?.into()),
             _ => Err(ErrorKind::UnsupportType.into()),
         }
     }
@@ -162,7 +163,7 @@ impl PublicKey {
     /// - Begin with `-----BEGIN PUBLIC KEY-----` for dsa key.
     /// - Begin with `-----BEGIN RSA PUBLIC KEY-----` for rsa key.
     /// - Begin with `-----BEGIN PUBLIC KEY-----` for ecdsa key.
-    /// - This format doesn't support Ed25519
+    /// - Begin with `-----BEGIN PUBLIC KEY-----` for ed25519 key.
     ///
     /// # Note
     /// This format cannot store the comment!
@@ -269,6 +270,7 @@ impl KeyPair {
             }
             Id::DSA => Ok(dsa::DsaKeyPair::from_ossl_dsa(pkey.dsa()?).into()),
             Id::EC => Ok(ecdsa::EcDsaKeyPair::from_ossl_ec(pkey.ec_key()?)?.into()),
+            Id::ED25519 => Ok(ed25519::Ed25519KeyPair::from_ossl_ed25519(&pkey.raw_private_key()?)?.into()),
             _ => Err(ErrorKind::UnsupportType.into()),
         }
     }
@@ -278,7 +280,7 @@ impl KeyPair {
             KeyPairType::RSA(key) => Ok(PKey::from_rsa(key.ossl_rsa().to_owned())?),
             KeyPairType::DSA(key) => Ok(PKey::from_dsa(key.ossl_dsa().to_owned())?),
             KeyPairType::ECDSA(key) => Ok(PKey::from_ec_key(key.ossl_ec().to_owned())?),
-            _ => Err(ErrorKind::UnsupportType.into()),
+            KeyPairType::ED25519(key) => Ok(key.ossl_pkey()?),
         }
     }
 
@@ -290,7 +292,7 @@ impl KeyPair {
     /// - Begin with `-----BEGIN DSA PRIVATE KEY-----` for dsa key.
     /// - Begin with `-----BEGIN RSA PRIVATE KEY-----` for rsa key.
     /// - Begin with `-----BEGIN EC PRIVATE KEY-----` for ecdsa key.
-    /// - This file type doesn't support Ed25519
+    /// - Begin with `-----BEGIN PRIVATE KEY-----` for Ed25519 key.
     ///
     /// # PKCS#8 Format
     /// - Begin with `-----BEGIN PRIVATE KEY-----`

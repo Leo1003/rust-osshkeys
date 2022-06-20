@@ -43,6 +43,10 @@ pub fn parse_keystr(pem: &[u8], passphrase: Option<&str>) -> OsshResult<KeyPair>
             // Openssl EC Key
             pem::parse_pem_privkey(pem, passphrase)
         }
+        "BEGIN PRIVATE KEY" => {
+            // Openssl Ed25519 Key
+            pem::parse_pem_privkey(pem, passphrase)
+        }
         _ => Err(ErrorKind::UnsupportType.into()),
     }
 }
