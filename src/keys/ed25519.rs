@@ -1,7 +1,7 @@
 use super::{Key, PrivateParts, PublicParts};
 use crate::error::{Error, ErrorKind, OsshResult};
 use crate::format::ossh_pubkey::*;
-use openssl::pkey::{PKey, Private, Public, Id};
+use openssl::pkey::{Id, PKey, Private, Public};
 #[rustfmt::skip]
 use ed25519_dalek::{
     Keypair as DalekKeypair,

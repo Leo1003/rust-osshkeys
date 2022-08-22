@@ -116,7 +116,9 @@ impl PublicKey {
             }
             Id::DSA => Ok(dsa::DsaPublicKey::from_ossl_dsa(pkey.dsa()?).into()),
             Id::EC => Ok(ecdsa::EcDsaPublicKey::from_ossl_ec(pkey.ec_key()?)?.into()),
-            Id::ED25519 => Ok(ed25519::Ed25519PublicKey::from_ossl_ed25519(&pkey.raw_public_key()?)?.into()),
+            Id::ED25519 => {
+                Ok(ed25519::Ed25519PublicKey::from_ossl_ed25519(&pkey.raw_public_key()?)?.into())
+            }
             _ => Err(ErrorKind::UnsupportType.into()),
         }
     }
@@ -270,7 +272,9 @@ impl KeyPair {
             }
             Id::DSA => Ok(dsa::DsaKeyPair::from_ossl_dsa(pkey.dsa()?).into()),
             Id::EC => Ok(ecdsa::EcDsaKeyPair::from_ossl_ec(pkey.ec_key()?)?.into()),
-            Id::ED25519 => Ok(ed25519::Ed25519KeyPair::from_ossl_ed25519(&pkey.raw_private_key()?)?.into()),
+            Id::ED25519 => {
+                Ok(ed25519::Ed25519KeyPair::from_ossl_ed25519(&pkey.raw_private_key()?)?.into())
+            }
             _ => Err(ErrorKind::UnsupportType.into()),
         }
     }
