@@ -1,7 +1,7 @@
 [package]
 name = "osshkeys"
 description = "A library to read and write OpenSSH public and private keys"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["Leo <leo881003@gmail.com>"]
 edition = "2021"
 rust-version = "1.57.0"
