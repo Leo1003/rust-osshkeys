@@ -115,7 +115,7 @@ impl From<bcrypt_pbkdf::Error> for Error {
         let kind = match err {
             InvalidParamLen => ErrorKind::InvalidLength,
             InvalidRounds => ErrorKind::InvalidArgument,
-            InvalidOutputLen => ErrorKind::Unknown,
+            _ => ErrorKind::Unknown,
         };
         Self::with_error(kind, err)
     }

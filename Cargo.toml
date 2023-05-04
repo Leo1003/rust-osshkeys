@@ -38,7 +38,7 @@ digest = "0.10.2"
 md-5 = "0.10.0"
 sha-1 = "0.10.0"
 sha2 = "0.10.1"
-bcrypt-pbkdf = "0.9.0"
+bcrypt-pbkdf = "0.10.0"
 cryptovec = "0.6.1"
 
 # Feature `rustcrypto-cipher` dependencies
