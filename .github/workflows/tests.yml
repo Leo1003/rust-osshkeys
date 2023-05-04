@@ -23,35 +23,24 @@ jobs:
         run: |
           git config --global core.autocrlf false
           git config --global core.eol lf
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
       ## non-Windows
       - name: Run cargo test (with OpenSSL cipher backend)
-        uses: actions-rs/cargo@v1
         if: ${{ runner.os != 'Windows' }}
-        with:
-          command: test
+        run: cargo test
       - name: Run cargo test (with RustCrypto cipher backend)
-        uses: actions-rs/cargo@v1
         if: ${{ runner.os != 'Windows' }}
-        with:
-          command: test
-          args: --no-default-features --features=rustcrypto-cipher
+        run: cargo test --no-default-features --features=rustcrypto-cipher
       ## Windows
       - name: Run cargo test (with OpenSSL cipher backend)
-        uses: actions-rs/cargo@v1
         if: ${{ runner.os == 'Windows' }}
-        with:
-          command: test
-          args: --features=openssl-vendored
+        run: cargo test --features=openssl-vendored
       - name: Run cargo test (with RustCrypto cipher backend)
-        uses: actions-rs/cargo@v1
         if: ${{ runner.os == 'Windows' }}
-        with:
-          command: test
-          args: --no-default-features --features=rustcrypto-cipher,openssl-vendored
+        run: cargo test --no-default-features --features=rustcrypto-cipher,openssl-vendored
