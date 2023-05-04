@@ -21,10 +21,11 @@ pub const RSA_SHA512_NAME: &str = "rsa-sha2-512";
 pub const RSA_SHORT_NAME: &str = "RSA";
 
 /// An enum determining the hash function which used to sign or verify
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum RsaSignature {
     SHA1,
     SHA2_256,
+    #[default]
     SHA2_512,
 }
 
@@ -51,7 +52,7 @@ impl RsaSignature {
     fn get_digest(self) -> MessageDigest {
         use RsaSignature::*;
         match self {
-            SHA1 => MessageDigest::md5(),
+            SHA1 => MessageDigest::sha1(),
             SHA2_256 => MessageDigest::sha256(),
             SHA2_512 => MessageDigest::sha512(),
         }
@@ -71,7 +72,7 @@ impl RsaPublicKey {
         let rsa = Rsa::from_public_components(n, e)?;
         Ok(RsaPublicKey {
             rsa,
-            signhash: RsaSignature::SHA1,
+            signhash: RsaSignature::default(),
         })
     }
 
@@ -186,7 +187,7 @@ impl RsaKeyPair {
         }
         Ok(RsaKeyPair {
             rsa: Rsa::generate(bits as u32)?,
-            signhash: RsaSignature::SHA1,
+            signhash: RsaSignature::default(),
         })
     }
 
@@ -250,7 +251,7 @@ mod test {
     use super::*;
     use openssl::bn::BigNum;
 
-    const pub_str: &str = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9NCtKoC/4Gk+zS8XGtA5aGC9BeFfcOCg/9C14ph4oHVXzWlR5t3HdHJK6EJGLlC6fj5vI+6cviX7NUbXJXQ/hJe4m4c5AGzubX/jfzNTjBa+hB+5CEqSztA20aHgEWzBwoakhkOd0knT6IvHV/vqTzHVbtfWIiof2SenyHv7yD9RbS9SCmkjISi4wQWzJ1Yu0O1CbH/U1c18WnP46/HBiaJcmV9hk/L3vjSoI7kpjXfSq4d3KLnwsUdrFdhh3eN7K4/ZdnrZC8n1liDXyMAWiaAL8cu8K5wmBmnHTcqIwxYu7g+k46OzcaZxVy0i9hFBM2bzvGvsCJOF3Hh6zF15p";
+    const pub_str: &str = "rsa-sha2-512 AAAAB3NzaC1yc2EAAAADAQABAAABAQC9NCtKoC/4Gk+zS8XGtA5aGC9BeFfcOCg/9C14ph4oHVXzWlR5t3HdHJK6EJGLlC6fj5vI+6cviX7NUbXJXQ/hJe4m4c5AGzubX/jfzNTjBa+hB+5CEqSztA20aHgEWzBwoakhkOd0knT6IvHV/vqTzHVbtfWIiof2SenyHv7yD9RbS9SCmkjISi4wQWzJ1Yu0O1CbH/U1c18WnP46/HBiaJcmV9hk/L3vjSoI7kpjXfSq4d3KLnwsUdrFdhh3eN7K4/ZdnrZC8n1liDXyMAWiaAL8cu8K5wmBmnHTcqIwxYu7g+k46OzcaZxVy0i9hFBM2bzvGvsCJOF3Hh6zF15p";
     const e: [u8; 3] = [0x01, 0x00, 0x01];
     const n: [u8; 0x101] = [
         0x00, 0xbd, 0x34, 0x2b, 0x4a, 0xa0, 0x2f, 0xf8, 0x1a, 0x4f, 0xb3, 0x4b, 0xc5, 0xc6, 0xb4,

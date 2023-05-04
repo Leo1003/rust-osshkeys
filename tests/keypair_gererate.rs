@@ -8,7 +8,7 @@ fn rsa_generate() {
     println!("{}", key.clone_public_key().unwrap());
     assert_eq!(key.keytype(), KeyType::RSA);
     assert_eq!(key.size(), 2048);
-    assert_eq!(key.keyname(), "ssh-rsa");
+    assert_eq!(key.keyname(), "rsa-sha2-512");
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn rsa_generate_strange() {
     println!("{}", key.clone_public_key().unwrap());
     assert_eq!(key.keytype(), KeyType::RSA);
     assert_eq!(key.size(), 2500);
-    assert_eq!(key.keyname(), "ssh-rsa");
+    assert_eq!(key.keyname(), "rsa-sha2-512");
 }
 
 #[test]
