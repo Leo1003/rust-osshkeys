@@ -17,10 +17,8 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
           components: rustfmt
-          override: true
       - name: Run format checking
         run: cargo fmt -- --check
       - name: Run cargo test (with OpenSSL cipher backend)
@@ -37,9 +35,7 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: stable
-          override: true
       - name: Cargo Login
         run: cargo login -- ${{ secrets.CARGO_TOKEN }}
       - name: Cargo Publish
