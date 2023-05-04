@@ -24,7 +24,7 @@ rustcrypto-cipher = ["cbc", "ctr", "aes", "des", "cipher"]
 openssl-vendored = ["openssl/vendored"]
 
 [dependencies]
-base64 = "0.13.0"
+base64 = "0.21.0"
 byteorder = "1.4.3"
 openssl = "0.10.30"
 # Upgrade to 0.8.x is blocked by ed25519-dalek

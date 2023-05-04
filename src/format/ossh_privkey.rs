@@ -2,6 +2,7 @@ use crate::cipher::Cipher;
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, KeyPair, PublicParts};
 use crate::sshbuf::{SshBuf, SshReadExt, SshWriteExt};
+use base64::prelude::*;
 use bcrypt_pbkdf::bcrypt_pbkdf;
 use byteorder::WriteBytesExt;
 use cryptovec::CryptoVec;
@@ -191,7 +192,7 @@ pub fn serialize_ossh_privkey(
     let buf = encode_ossh_priv(key, passphrase, cipher, kdf_rounds)?;
     let mut keystr = String::new();
     keystr.push_str("-----BEGIN OPENSSH PRIVATE KEY-----\n");
-    let b64str = base64::encode(&buf);
+    let b64str = BASE64_STANDARD.encode(buf);
 
     // Wrap the base64 data
     keystr.extend(b64str.chars().enumerate().flat_map(|(i, c)| {
