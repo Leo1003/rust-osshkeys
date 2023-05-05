@@ -3,7 +3,7 @@
 [![Crates](https://img.shields.io/crates/v/osshkeys.svg)](https://crates.io/crates/osshkeys)
 [![Docs](https://docs.rs/osshkeys/badge.svg)](https://docs.rs/osshkeys)
 [![dependency status](https://deps.rs/repo/github/Leo1003/rust-osshkeys/status.svg)](https://deps.rs/repo/github/Leo1003/rust-osshkeys)
-![minimum rustc version](https://img.shields.io/badge/rustc-1.57+-blue.svg)
+![minimum rustc version](https://img.shields.io/badge/rustc-1.63+-blue.svg)
 [![GitHub license](https://img.shields.io/github/license/Leo1003/rust-osshkeys)](https://github.com/Leo1003/rust-osshkeys/blob/master/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Leo1003/rust-osshkeys?logo=github)](https://github.com/Leo1003/rust-osshkeys/issues)
 
@@ -16,16 +16,19 @@ Also, it provides the ability to generate a key, sign and verify data.
 ## Current Status
 The library's basic features are implemented.
 
-Since I don't have too much time to work on the additional features currently,
-this project may not be as active as usual.
+~~Since I don't have too much time to work on the additional features currently,
+this project may not be as active as usual.~~
+We have the crates needed to implement those features in the Rust ecosystem today.
+I will use my spare time to add new features.
+
 But I still maintain the dependencies and release new versions.
 
 It's welcome to submit PRs or issues on this project if you have ideas or questiones.
 
 ## Minimum Supported Rust Version (MSRV)
-Rust 1.57 or higher.
+Rust 1.63 or higher.
 
-The library keeps track of the minimum Rust version which required to compile in CI.
+This repository keeps track of the minimum Rust version which required to compile in CI.
 
 However, the minimum supported Rust version can be changed in the future
 and is not considered as a breaking change(exempt from SemVer).
@@ -62,7 +65,7 @@ fn main() {
 ## Cargo Features
 - `openssl-cipher`: [default] Using OpenSSL as symmetric cipher
 - `rustcrypto-cipher`: Using RustCrypto as symmetric cipher
-    - Choicing this does not remove the `openssl` dependency, since many places still require to use OpenSSL.
+    - Choosing this does not remove the `openssl` dependency, since many places still require to use OpenSSL.
 - `openssl-vendored`: Build with `openssl/vendored` feature
 
 ## Roadmap
@@ -72,6 +75,9 @@ fn main() {
         - DSA
         - EcDSA
         - Ed25519
+        - [ ] Supporting FIDO keys
+            - ecdsa-sk
+            - ed25519-sk
     - [x] Documentation
         - [x] Descriptions
         - [x] Examples in README
@@ -89,26 +95,29 @@ fn main() {
         - [x] Openssh v2 (Encrypted)
 - Additional Features
     - [x] Draw the ASCII art (the picture shown when you generate a key)
-    ```
-    +---[RSA 2048]----+
-    |       .++       |
-    |       .+..     .|
-    |     . .   . . ..|
-    |    . .     .E.. |
-    |     ...S     .  |
-    |      o+.        |
-    |     +..o        |
-    |  o B .o.        |
-    | . + +..         |
-    +------[MD5]------+
-    ```
-    - [ ] Supporting XMSS keys
+        ```
+        +---[RSA 2048]----+
+        |       .++       |
+        |       .+..     .|
+        |     . .   . . ..|
+        |    . .     .E.. |
+        |     ...S     .  |
+        |      o+.        |
+        |     +..o        |
+        |  o B .o.        |
+        | . + +..         |
+        +------[MD5]------+
+        ```
+        - [ ] Make the ASCII art as an object
+    - [ ] Supporting the experimental XMSS keys
     - [ ] Supporting read/write Putty key format(.ppk)
     - [ ] Supporting more ciphers
         - [ ] AES GCM mode
         - [ ] ChaCha20-Poly1305
-    - [ ] Supporting keys with certifications
+    - [ ] Supporting keys with certificates
     - [ ] Without using openssl (Become pure Rust library) (if there exists required cryptography crates and being mature enough)
         - Currently missing:
-            - DSA library
-            - EcDSA library
+            - [x] DSA library
+                - Now has [dsa](https://crates.io/crates/dsa) crate
+            - [x] EcDSA library
+                - Now has [ecdsa](https://crates.io/crates/ecdsa) crate
