@@ -1,7 +1,7 @@
-use base64::prelude::*;
 use crate::error::*;
 use crate::keys::{dsa::*, ecdsa::*, ed25519::*, rsa::*, PublicKey, PublicParts};
 use crate::sshbuf::{SshReadExt, SshWriteExt};
+use base64::prelude::*;
 use ed25519_dalek::PublicKey as Ed25519PubKey;
 use ed25519_dalek::PUBLIC_KEY_LENGTH;
 use openssl::bn::BigNumContext;
