@@ -5,11 +5,11 @@ use crate::cipher::*;
 use crate::error::*;
 use crate::keys::{rsa::*, *};
 use digest::DynDigest;
-use nom_pem::{Block as PemBlock, HeaderEntry, ProcTypeType, RFC1423Algorithm};
 use openssl::{
     pkey::{PKey, Public},
     rsa::Rsa,
 };
+use pem::Pem as PemBlock;
 use zeroize::Zeroize;
 
 const MAX_KEY_LEN: usize = 64;
@@ -83,49 +83,53 @@ pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
 /// Self experimental implementation for decrypting OpenSSL PEM format
 fn pem_decrypt(pemblock: &PemBlock, passphrase: Option<&[u8]>) -> OsshResult<Vec<u8>> {
     let mut encrypted = false;
-    for entry in &pemblock.headers {
-        if let HeaderEntry::ProcType(ver, proctype) = entry {
-            if *proctype == ProcTypeType::ENCRYPTED && *ver == 4 {
-                encrypted = true;
-            } else {
-                return Err(ErrorKind::UnsupportType.into());
-            }
+    if let Some(header) = pemblock.headers().get("Proc-Type") {
+        let re = ::regex::Regex::new(r"^([0-9]+),(ENCRYPTED|MIC-ONLY|MIC-CLEAR|CRL)")
+            .expect("regexp should compile");
+        if let Some(caps) = re.captures(header) {
+            let ver = caps.get(1).map_or("", |m| m.as_str());
+            let locktype = caps.get(2).map_or("", |m| m.as_str());
+            encrypted = ("4", "ENCRYPTED") == (ver, locktype)
+        }
+        if !encrypted {
+            return Err(ErrorKind::UnsupportType.into());
         }
     }
     if encrypted {
         let mut decrypted = None;
-        for entry in &pemblock.headers {
-            if let HeaderEntry::DEKInfo(algo, iv) = entry {
-                if let Some(pass) = passphrase {
-                    let ciph = match algo {
-                        RFC1423Algorithm::DES_EDE3_CBC => Cipher::TDes_Cbc,
-                        RFC1423Algorithm::AES_128_CBC => Cipher::Aes128_Cbc,
-                        RFC1423Algorithm::AES_192_CBC => Cipher::Aes192_Cbc,
-                        RFC1423Algorithm::AES_256_CBC => Cipher::Aes256_Cbc,
-                        _ => return Err(ErrorKind::UnsupportCipher.into()),
-                    };
-                    let key = openssl_kdf(
-                        pass,
-                        iv.as_slice().try_into()?,
-                        &mut md5::Md5::default(),
-                        ciph.key_len(),
-                        1,
-                    )?;
-                    decrypted = Some(ciph.decrypt(&pemblock.data, &key, iv)?);
-                } else {
-                    return Err(ErrorKind::IncorrectPass.into());
-                }
-                break;
+        if let Some(header) = pemblock.headers().get("DEK-Info") {
+            let re = ::regex::Regex::new(
+                r"^(DES-CBC|DES-EDE3-CBC|AES-128-CBC|AES-192-CBC|AES-256-CBC),([0-9a-fA-F]+)$",
+            )
+            .expect("regexp should compile");
+            if let Some(caps) = re.captures(header) {
+                let algo = caps.get(1).map_or("", |m| m.as_str());
+                let iv = caps.get(2).map_or("", |m| m.as_str()).as_bytes();
+                let Some(passphrase) = passphrase else { return Err(ErrorKind::IncorrectPass.into()) };
+                let ciph = match algo {
+                    "DES-CBC" => return Err(ErrorKind::UnsupportCipher.into()),
+                    "DES-EDE3-CBC" => Cipher::TDes_Cbc,
+                    "AES-128-CBC" => Cipher::Aes128_Cbc,
+                    "AES-192-CBC" => Cipher::Aes192_Cbc,
+                    "AES-256-CBC" => Cipher::Aes256_Cbc,
+                    _ => return Err(ErrorKind::UnsupportCipher.into()),
+                };
+                let key = openssl_kdf(
+                    passphrase,
+                    &iv.try_into()?,
+                    &mut md5::Md5::default(),
+                    ciph.key_len(),
+                    1,
+                )?;
+                decrypted = Some(ciph.decrypt(pemblock.contents(), &key, iv)?);
             }
         }
         if let Some(data) = decrypted {
-            Ok(data)
-        } else {
-            Err(ErrorKind::InvalidPemFormat.into())
+            return Ok(data);
         }
-    } else {
-        Ok(pemblock.data.clone())
+        return Err(ErrorKind::InvalidPemFormat.into());
     }
+    return Ok(pemblock.contents().to_vec());
 }
 
 /// Self experimental implementation for OpenSSL kdf

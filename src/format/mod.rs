@@ -7,21 +7,12 @@ pub(crate) mod pem;
 pub(crate) mod pkcs8;
 
 pub fn parse_keystr(pem: &[u8], passphrase: Option<&str>) -> OsshResult<KeyPair> {
-    // HACK: Fix parsing problem of CRLF in nom_pem
-    let s;
-    let pemdata = if cfg!(windows) {
-        s = std::str::from_utf8(pem)
-            .map_err(|e| Error::with_error(ErrorKind::InvalidPemFormat, e))?
-            .replace("\r\n", "\n");
-        nom_pem::decode_block(s.as_bytes())?
-    } else {
-        nom_pem::decode_block(pem)?
-    };
+    let pemdata = ::pem::parse(pem)?;
 
-    match pemdata.block_type {
+    match pemdata.tag() {
         "OPENSSH PRIVATE KEY" => {
             // Openssh format
-            ossh_privkey::decode_ossh_priv(&pemdata.data, passphrase)
+            ossh_privkey::decode_ossh_priv(pemdata.contents(), passphrase)
         }
         "PRIVATE KEY" => {
             // PKCS#8 format
