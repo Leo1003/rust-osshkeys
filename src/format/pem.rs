@@ -105,23 +105,26 @@ fn pem_decrypt(pemblock: &PemBlock, passphrase: Option<&[u8]>) -> OsshResult<Vec
             if let Some(caps) = re.captures(header) {
                 let algo = caps.get(1).map_or("", |m| m.as_str());
                 let iv = caps.get(2).map_or("", |m| m.as_str()).as_bytes();
-                let Some(passphrase) = passphrase else { return Err(ErrorKind::IncorrectPass.into()) };
-                let ciph = match algo {
-                    "DES-CBC" => return Err(ErrorKind::UnsupportCipher.into()),
-                    "DES-EDE3-CBC" => Cipher::TDes_Cbc,
-                    "AES-128-CBC" => Cipher::Aes128_Cbc,
-                    "AES-192-CBC" => Cipher::Aes192_Cbc,
-                    "AES-256-CBC" => Cipher::Aes256_Cbc,
-                    _ => return Err(ErrorKind::UnsupportCipher.into()),
+                if let Some(passphrase) = passphrase {
+                    let ciph = match algo {
+                        "DES-CBC" => return Err(ErrorKind::UnsupportCipher.into()),
+                        "DES-EDE3-CBC" => Cipher::TDes_Cbc,
+                        "AES-128-CBC" => Cipher::Aes128_Cbc,
+                        "AES-192-CBC" => Cipher::Aes192_Cbc,
+                        "AES-256-CBC" => Cipher::Aes256_Cbc,
+                        _ => return Err(ErrorKind::UnsupportCipher.into()),
+                    };
+                    let key = openssl_kdf(
+                        passphrase,
+                        &iv.try_into()?,
+                        &mut md5::Md5::default(),
+                        ciph.key_len(),
+                        1,
+                    )?;
+                    decrypted = Some(ciph.decrypt(pemblock.contents(), &key, iv)?);
+                } else {
+                    return Err(ErrorKind::IncorrectPass.into());
                 };
-                let key = openssl_kdf(
-                    passphrase,
-                    &iv.try_into()?,
-                    &mut md5::Md5::default(),
-                    ciph.key_len(),
-                    1,
-                )?;
-                decrypted = Some(ciph.decrypt(pemblock.contents(), &key, iv)?);
             }
         }
         if let Some(data) = decrypted {
