@@ -146,9 +146,8 @@ impl From<cipher::block_padding::UnpadError> for Error {
     }
 }
 
-impl From<nom_pem::PemParsingError> for Error {
-    fn from(_err: nom_pem::PemParsingError) -> Self {
-        // nom_pem::PemParsingError doesn't implement std::error::Error
+impl From<pem::PemError> for Error {
+    fn from(_err: pem::PemError) -> Self {
         Self::from_kind(ErrorKind::InvalidPemFormat)
     }
 }
