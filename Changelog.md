@@ -4,6 +4,21 @@
 
 ---
 
+## 0.7.0 (2023/06/03)
+- **Compiler**
+    - Minimum rustc version is now 1.63.0
+- **Improvment**
+    - Replace deprecated GitHub actions
+    - Change default rsa digest to rsa-sha2-512
+- **Dependencies**
+    - Upgrade hex-literal to 0.4.1
+    - Upgrade bcrypt-pbkdf to 0.10.0
+    - Upgrade base64 to 0.21.0
+    - Replace nom_pem with pem
+        - Thanks for fenollp implementing this feature in #10
+
+---
+
 ## 0.6.2 (2022/08/22)
 - **Improvment**
     - Now support OpenSSL Ed25519 key format
@@ -28,7 +43,7 @@
     - Migrate to Rust 2021 edition
 - **Dependencies**
     - Upgrade digest to 0.10.2 with its related crates
-    - Upgrade digest to 0.4.0 with its related crates
+    - Upgrade cipher to 0.4.0 with its related crates
 
 ---
 
