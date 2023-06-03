@@ -23,6 +23,9 @@ rustcrypto-cipher = ["cbc", "ctr", "aes", "des", "cipher"]
 
 openssl-vendored = ["openssl/vendored"]
 
+# Internal use for experimental codes
+experimental = []
+
 [dependencies]
 base64 = "0.21.0"
 byteorder = "1.4.3"

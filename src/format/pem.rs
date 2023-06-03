@@ -1,6 +1,3 @@
-// Temporary disable unused codes warnings in this file
-#![allow(dead_code)]
-
 use crate::cipher::*;
 use crate::error::*;
 use crate::keys::{rsa::*, *};
@@ -81,6 +78,8 @@ pub fn stringify_pem_pubkey(pubkey: &PublicKey) -> OsshResult<String> {
 }
 
 /// Self experimental implementation for decrypting OpenSSL PEM format
+#[cfg(feature = "experimental")]
+#[allow(dead_code)]
 fn pem_decrypt(pemblock: &PemBlock, passphrase: Option<&[u8]>) -> OsshResult<Vec<u8>> {
     let mut encrypted = false;
     if let Some(header) = pemblock.headers().get("Proc-Type") {
@@ -138,6 +137,8 @@ fn pem_decrypt(pemblock: &PemBlock, passphrase: Option<&[u8]>) -> OsshResult<Vec
 /// Self experimental implementation for OpenSSL kdf
 ///
 /// From OpenSSL EVP_BytesToKey()
+#[cfg(feature = "experimental")]
+#[allow(dead_code)]
 fn openssl_kdf(
     data: &[u8],
     salt: &[u8; 8],
