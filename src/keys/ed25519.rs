@@ -4,15 +4,12 @@ use crate::format::ossh_pubkey::*;
 use openssl::pkey::{Id, PKey, Private, Public};
 #[rustfmt::skip]
 use ed25519_dalek::{
-    Keypair as DalekKeypair,
-    PublicKey as DalekPublicKey,
-    SecretKey as DalekSecretKey,
+    VerifyingKey,
+    SigningKey,
     Signature,
     Signer,
     Verifier,
     PUBLIC_KEY_LENGTH,
-    SECRET_KEY_LENGTH,
-    KEYPAIR_LENGTH,
 };
 use rand::rngs::OsRng;
 use std::fmt;
@@ -25,20 +22,20 @@ pub const ED25519_SHORT_NAME: &str = "ED25519";
 /// Represent the Ed25519 public key
 #[derive(Debug, Clone)]
 pub struct Ed25519PublicKey {
-    key: Box<DalekPublicKey>,
+    key: Box<VerifyingKey>,
 }
 
 impl Ed25519PublicKey {
     /// Create the Ed25519 public key from public components
     pub fn new(key: &[u8; PUBLIC_KEY_LENGTH]) -> Result<Self, ed25519_dalek::SignatureError> {
         Ok(Self {
-            key: Box::new(DalekPublicKey::from_bytes(key)?),
+            key: Box::new(VerifyingKey::from_bytes(key)?),
         })
     }
 
     pub(crate) fn from_ossl_ed25519(key: &[u8]) -> Result<Self, ed25519_dalek::SignatureError> {
         Ok(Self {
-            key: Box::new(DalekPublicKey::from_bytes(key)?),
+            key: Box::new(VerifyingKey::try_from(key)?),
         })
     }
 
@@ -86,7 +83,7 @@ impl fmt::Display for Ed25519PublicKey {
 
 /// Represent the Ed25519 key pair
 pub struct Ed25519KeyPair {
-    pub(crate) key: Box<DalekKeypair>,
+    pub(crate) key: Box<SigningKey>,
 }
 
 impl Key for Ed25519KeyPair {
@@ -113,49 +110,42 @@ impl Ed25519KeyPair {
         }
 
         Ok(Ed25519KeyPair {
-            key: Box::new(DalekKeypair::generate(&mut OsRng)),
+            key: Box::new(SigningKey::generate(&mut OsRng)),
         })
     }
 
     pub(crate) fn from_bytes(pk: &[u8], sk: &[u8]) -> OsshResult<Self> {
-        if pk.len() != PUBLIC_KEY_LENGTH {
-            return Err(ErrorKind::InvalidKeySize.into());
-        }
-        if sk.len() != KEYPAIR_LENGTH {
-            return Err(ErrorKind::InvalidKeySize.into());
-        }
-        if pk != &sk[SECRET_KEY_LENGTH..] {
+        let verify_key = VerifyingKey::try_from(pk)?;
+        let secret_key = SigningKey::from_keypair_bytes(sk.try_into()?)?;
+        if secret_key.verifying_key() != verify_key {
             return Err(ErrorKind::InvalidKey.into());
         }
         Ok(Ed25519KeyPair {
-            key: Box::new(DalekKeypair {
-                public: DalekPublicKey::from_bytes(pk)?,
-                secret: DalekSecretKey::from_bytes(&sk[..SECRET_KEY_LENGTH])?,
-            }),
+            key: Box::new(secret_key),
         })
     }
 
     /// Clone the public parts to generate public key
     pub fn clone_public_key(&self) -> Result<Ed25519PublicKey, Error> {
         Ok(Ed25519PublicKey {
-            key: Box::new(self.key.public),
+            key: Box::new(self.key.verifying_key()),
         })
     }
 
-    pub(crate) fn from_ossl_ed25519(key: &[u8]) -> Result<Self, ed25519_dalek::SignatureError> {
+    pub(crate) fn from_ossl_ed25519(key: &[u8]) -> Result<Self, Error> {
         Ok(Self {
-            key: Box::new(DalekKeypair::from_bytes(key)?),
+            key: Box::new(SigningKey::from_keypair_bytes(key.try_into()?)?),
         })
     }
 
     pub(crate) fn ossl_pkey(&self) -> Result<PKey<Private>, openssl::error::ErrorStack> {
-        PKey::private_key_from_raw_bytes(&self.key.secret.to_bytes(), Id::ED25519)
+        PKey::private_key_from_raw_bytes(&self.key.to_bytes(), Id::ED25519)
     }
 }
 
 impl PublicParts for Ed25519KeyPair {
     fn blob(&self) -> Result<Vec<u8>, Error> {
-        encode_ed25519_pubkey(&self.key.public)
+        encode_ed25519_pubkey(&self.key.verifying_key())
     }
 
     fn verify(&self, data: &[u8], sig: &[u8]) -> Result<bool, Error> {

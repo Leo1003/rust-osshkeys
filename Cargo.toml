@@ -30,9 +30,8 @@ experimental = []
 base64 = "0.21.0"
 byteorder = "1.4.3"
 openssl = "0.10.30"
-# Upgrade to 0.8.x is blocked by ed25519-dalek
-rand = "0.7.2"
-ed25519-dalek = "1.0.0"
+rand = "0.8.5"
+ed25519-dalek = { version = "2.0.0-rc.2", features = ["rand_core"] }
 zeroize = "1.1.0"
 log = "0.4.8"
 backtrace = "0.3.46"

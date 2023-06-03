@@ -346,8 +346,8 @@ fn encode_key<W: Write + ?Sized>(key: &KeyPair, buf: &mut W) -> OsshResult<()> {
             buf.write_mpint(inner.private_key())?;
         }
         KeyPairType::ED25519(ed25519) => {
-            buf.write_string(&ed25519.key.public.to_bytes())?;
-            buf.write_string(&ed25519.key.to_bytes())?; // Actually is an ed25519 keypair
+            buf.write_string(&ed25519.key.verifying_key().to_bytes())?;
+            buf.write_string(&ed25519.key.to_keypair_bytes())?; // Actually is an ed25519 keypair
         }
     }
     Ok(())

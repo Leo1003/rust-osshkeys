@@ -37,7 +37,7 @@ pub fn gen_random_pass(len: usize) -> String {
     let mut rng = ThreadRng::default();
     (0..len)
         .map(|_| -> char {
-            let i = rng.gen_range(0, charset_len);
+            let i = rng.gen_range(0..charset_len);
             PASSPHRASE_CHARSET.as_bytes()[i].into()
         })
         .collect()
